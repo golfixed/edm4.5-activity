@@ -586,7 +586,7 @@ function SettingsTab() {
     setRankBonuses(next)
   }
 
-  const addRow = () => setRankBonuses([...bonuses, bonuses[bonuses.length - 1] ?? 0])
+  const addRow = () => { if (bonuses.length >= 12) return; setRankBonuses([...bonuses, bonuses[bonuses.length - 1] ?? 0]) }
   const removeRow = (idx: number) => {
     if (bonuses.length <= 1) return
     setRankBonuses(bonuses.filter((_, i) => i !== idx))
@@ -670,9 +670,10 @@ function SettingsTab() {
 
       <button
         onClick={addRow}
-        className="px-4 py-2 border-2 border-dashed border-school-primary/40 text-school-primary rounded-lg hover:border-school-primary text-sm w-full"
+        disabled={bonuses.length >= 12}
+        className="px-4 py-2 border-2 border-dashed border-school-primary/40 text-school-primary rounded-lg hover:border-school-primary text-sm w-full disabled:opacity-30 disabled:cursor-not-allowed"
       >
-        + เพิ่มอันดับ
+        {bonuses.length >= 12 ? `ครบ ${bonuses.length} อันดับแล้ว` : '+ เพิ่มอันดับ'}
       </button>
       </div>
 

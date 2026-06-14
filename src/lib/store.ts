@@ -29,7 +29,7 @@ export const defaultGames: Game[] = [
   { id: '4', name: 'เกม 4', icon: '🎯', type: 'physical' },
 ]
 
-export const defaultRankBonuses = [50, 45, 40, 35]
+export const defaultRankBonuses = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
 
 interface StoreActions {
   setTeams: (teams: Team[]) => void
