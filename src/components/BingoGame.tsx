@@ -81,15 +81,17 @@ export default function BingoGame({ game }: { game: Game }) {
   const selectedTeam = teams[selectedTeamIdx] ?? teams[0]
 
   const drawKeyword = useCallback(() => {
+    // If overlay is showing, dismiss it and confirm the keyword
+    if (overlayKeyword) {
+      setCalledKeywords((prev) => [...prev, overlayKeyword])
+      setOverlayKeyword(null)
+      return
+    }
     const remaining = keywords.filter((k) => !calledKeywords.includes(k))
     if (remaining.length === 0) return
     const pick = remaining[Math.floor(Math.random() * remaining.length)]
     setOverlayKeyword(pick)
-    setTimeout(() => {
-      setOverlayKeyword(null)
-      setCalledKeywords((prev) => [...prev, pick])
-    }, 2000)
-  }, [keywords, calledKeywords])
+  }, [keywords, calledKeywords, overlayKeyword])
 
   const undoLast = () => setCalledKeywords((prev) => prev.slice(0, -1))
 
@@ -202,9 +204,10 @@ export default function BingoGame({ game }: { game: Game }) {
           ) : (
             <button
               onClick={drawKeyword}
-              disabled={!!overlayKeyword}
-              className="w-full py-4 bg-school-accent hover:bg-school-accent/80 disabled:opacity-50 text-white font-bold text-xl rounded-xl transition-colors"
-            >🎲 สุ่ม Keyword ถัดไป</button>
+              className="w-full py-4 bg-school-accent hover:bg-school-accent/80 text-white font-bold text-xl rounded-xl transition-colors"
+            >
+              {overlayKeyword ? '▶ ถัดไป' : '🎲 สุ่ม Keyword ถัดไป'}
+            </button>
           )}
           <div className="flex gap-2 items-center">
             <button
