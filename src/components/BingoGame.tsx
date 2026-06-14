@@ -26,31 +26,36 @@ const COLOR_HEX: Record<string, string> = {
 function exportAllCardsToPDF(teams: Team[], keywords: string[], gameName: string) {
   const cardsHTML = teams.map((team) => {
     const card = generateBingoCard(keywords, team.id)
-    const dot = COLOR_HEX[team.color] ?? '#888'
     const cells = card.map((cell) => {
       const isFree = cell === 'FREE'
       return `<div style="
         display:flex;align-items:center;justify-content:center;
-        background:${isFree ? '#fef08a' : '#f9fafb'};
-        border:1px solid ${isFree ? '#ca8a04' : '#d1d5db'};
-        border-radius:6px;padding:4px;text-align:center;
-        font-weight:${isFree ? '700' : '400'};
-        color:${isFree ? '#854d0e' : '#1f2937'};
-        font-size:11px;line-height:1.2;
+        background:${isFree ? '#fef08a' : '#fff'};
+        border:2px solid ${isFree ? '#ca8a04' : '#9ca3af'};
+        border-radius:6px;padding:6px 4px;text-align:center;
+        font-weight:${isFree ? '700' : '500'};
+        color:${isFree ? '#854d0e' : '#111827'};
+        font-size:15px;line-height:1.3;
       ">${cell}</div>`
     }).join('')
 
     return `<div style="
       page-break-after:always;
-      width:190mm;margin:0 auto;padding:10mm 0;
+      width:100%;height:100vh;
+      display:flex;flex-direction:column;justify-content:center;
       font-family:'Noto Sans Thai',Sarabun,sans-serif;
+      padding:8mm;box-sizing:border-box;
     ">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-        <span style="width:14px;height:14px;border-radius:50%;background:${dot};display:inline-block;flex-shrink:0"></span>
-        <span style="font-size:20px;font-weight:700;color:#1f2937">${team.name}</span>
-        <span style="margin-left:auto;font-size:13px;color:#6b7280">${gameName}</span>
+      <!-- Header: game name + name blank -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6mm;">
+        <span style="font-size:22px;font-weight:700;color:#111827">${gameName}</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:15px;color:#6b7280;">ชื่อ:</span>
+          <div style="width:120px;border-bottom:2px solid #374151;"></div>
+        </div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;width:100%;aspect-ratio:1">
+      <!-- Grid -->
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;flex:1;">
         ${cells}
       </div>
     </div>`
@@ -60,11 +65,11 @@ function exportAllCardsToPDF(teams: Team[], keywords: string[], gameName: string
     <meta charset="utf-8"/>
     <title>Bingo Cards — ${gameName}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet"/>
     <style>
       *{box-sizing:border-box;margin:0;padding:0}
       body{background:#fff}
-      @page{size:A4 portrait;margin:15mm}
+      @page{size:A4 landscape;margin:0}
       @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
     </style>
   </head><body>${cardsHTML}</body></html>`
