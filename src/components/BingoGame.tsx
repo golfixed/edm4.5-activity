@@ -4,7 +4,77 @@ import { useState, useCallback } from 'react'
 import { Game } from '@/lib/types'
 import { useStore } from '@/lib/store'
 import { generateBingoCard } from '@/lib/bingo'
+import { Team } from '@/lib/types'
 import Link from 'next/link'
+
+// Tailwind color → hex mapping for PDF (only the ones used by TEAM_COLORS)
+const COLOR_HEX: Record<string, string> = {
+  'bg-red-500': '#ef4444',
+  'bg-orange-500': '#f97316',
+  'bg-yellow-500': '#eab308',
+  'bg-lime-500': '#84cc16',
+  'bg-green-500': '#22c55e',
+  'bg-teal-500': '#14b8a6',
+  'bg-cyan-500': '#06b6d4',
+  'bg-blue-500': '#3b82f6',
+  'bg-indigo-500': '#6366f1',
+  'bg-purple-500': '#a855f7',
+  'bg-pink-500': '#ec4899',
+  'bg-rose-500': '#f43f5e',
+}
+
+function exportAllCardsToPDF(teams: Team[], keywords: string[], gameName: string) {
+  const cardsHTML = teams.map((team) => {
+    const card = generateBingoCard(keywords, team.id)
+    const dot = COLOR_HEX[team.color] ?? '#888'
+    const cells = card.map((cell) => {
+      const isFree = cell === 'FREE'
+      return `<div style="
+        display:flex;align-items:center;justify-content:center;
+        background:${isFree ? '#fef08a' : '#f9fafb'};
+        border:1px solid ${isFree ? '#ca8a04' : '#d1d5db'};
+        border-radius:6px;padding:4px;text-align:center;
+        font-weight:${isFree ? '700' : '400'};
+        color:${isFree ? '#854d0e' : '#1f2937'};
+        font-size:11px;line-height:1.2;
+      ">${cell}</div>`
+    }).join('')
+
+    return `<div style="
+      page-break-after:always;
+      width:190mm;margin:0 auto;padding:10mm 0;
+      font-family:'Noto Sans Thai',Sarabun,sans-serif;
+    ">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="width:14px;height:14px;border-radius:50%;background:${dot};display:inline-block;flex-shrink:0"></span>
+        <span style="font-size:20px;font-weight:700;color:#1f2937">${team.name}</span>
+        <span style="margin-left:auto;font-size:13px;color:#6b7280">${gameName}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;width:100%;aspect-ratio:1">
+        ${cells}
+      </div>
+    </div>`
+  }).join('')
+
+  const html = `<!DOCTYPE html><html><head>
+    <meta charset="utf-8"/>
+    <title>Bingo Cards — ${gameName}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;700&display=swap" rel="stylesheet"/>
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{background:#fff}
+      @page{size:A4 portrait;margin:15mm}
+      @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+    </style>
+  </head><body>${cardsHTML}</body></html>`
+
+  const win = window.open('', '_blank')
+  if (!win) return
+  win.document.write(html)
+  win.document.close()
+  win.onload = () => { win.focus(); win.print() }
+}
 
 type Phase = 'cards' | 'playing'
 
@@ -59,6 +129,14 @@ export default function BingoGame({ game }: { game: Game }) {
               ← กลับ
             </Link>
             <h1 className="text-white font-bold text-lg flex-shrink-0">{game.icon} {game.name}</h1>
+            {/* Export PDF */}
+            <button
+              onClick={() => exportAllCardsToPDF(teams, keywords, game.name)}
+              className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm border border-white/20 transition-colors flex-shrink-0"
+              title="Export ทุกทีมเป็น PDF สำหรับพิมพ์"
+            >
+              🖨️ Print PDF
+            </button>
             {/* Team nav inline */}
             <div className="flex items-center gap-2 ml-auto">
               <button
