@@ -163,15 +163,19 @@ export default function BingoGame({ game }: { game: Game }) {
     <div className={`h-screen flex flex-col overflow-hidden ${bgClass}`} style={bgStyle}>
       <div className="absolute inset-0 bg-black/40" />
 
-      {/* Keyword overlay */}
+      {/* Keyword overlay — click anywhere or button to proceed */}
       {overlayKeyword && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 p-8">
+        <div
+          className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/80 p-8 cursor-pointer"
+          onClick={drawKeyword}
+        >
           <div
-            className="font-extrabold text-school-accent text-center leading-tight"
+            className="font-extrabold text-school-accent text-center leading-tight flex-1 flex items-center"
             style={{ fontSize: 'clamp(3rem, 10vw, 9rem)', textShadow: '0 4px 32px rgba(0,0,0,0.8)' }}
           >
             {overlayKeyword}
           </div>
+          <div className="text-white/50 text-lg mt-4">แตะเพื่อถัดไป →</div>
         </div>
       )}
 
