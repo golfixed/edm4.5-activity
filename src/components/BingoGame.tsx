@@ -194,7 +194,7 @@ export default function BingoGame({ game }: { game: Game }) {
             {calledKeywords.length === 0
               ? <p className="text-gray-400 text-sm">ยังไม่มี keyword ที่เรียก</p>
               : calledKeywords.map((kw, i) => (
-                  <span key={i} className="bg-green-100 text-green-800 border border-green-300 text-sm px-3 py-1 rounded-full font-medium">{kw}</span>
+                  <span key={i} className="bg-green-100 text-green-800 border border-green-300 px-4 py-1.5 rounded-full font-medium" style={{fontSize:'24px'}}>{kw}</span>
                 ))
             }
           </div>
