@@ -234,20 +234,20 @@ function BingoKeywordsEditor({
     <div className="space-y-3">
       <div className="space-y-1">
         <div className="flex items-center justify-between">
-          <label className="text-sm text-gray-600 font-medium">Keywords (1 บรรทัด / คำ)</label>
+          <label className="text-sm text-gray-600 font-medium">Keywords (คั่นด้วย comma)</label>
           <span className={`text-xs font-semibold ${count >= 24 ? 'text-green-600' : 'text-orange-500'}`}>
             {count} / 24 keywords (ต้องการ 24 คำขึ้นไปสำหรับ 5×5)
           </span>
         </div>
         <textarea
-          value={keywords.join('\n')}
+          value={keywords.join(', ')}
           onChange={(e) => {
             const value = e.target.value
-            updateGame(game.id, { bingoKeywords: value.split('\n').map((s) => s.trim()).filter(Boolean) })
+            updateGame(game.id, { bingoKeywords: value.split(',').map((s) => s.trim()).filter(Boolean) })
           }}
-          placeholder="ใส่ keyword 1 บรรทัดต่อ 1 คำ"
-          rows={8}
-          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-school-primary font-mono"
+          placeholder="เคยไปญี่ปุ่น, ใช้ Mechanical Keyboard, มีแมว, ..."
+          rows={6}
+          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-school-primary"
         />
       </div>
       <div className="flex items-center gap-3">
