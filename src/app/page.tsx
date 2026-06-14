@@ -18,9 +18,9 @@ export default function Home() {
     <div className="min-h-screen p-6">
       <header className="mb-8 text-center">
         <h1 className="text-4xl font-bold text-school-primary-dark mb-2">
-          🏫 EDM Activity
+          🏫 EDM 4.5 Active Fun Games
         </h1>
-        <p className="text-school-primary text-lg">ระบบบันทึกคะแนนกิจกรรมโรงเรียน</p>
+        {/* <p className="text-school-primary text-lg">ระบบบันทึกคะแนนกิจกรรมโรงเรียน</p> */}
       </header>
 
       <div className="max-w-5xl mx-auto space-y-6">
