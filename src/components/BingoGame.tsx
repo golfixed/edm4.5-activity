@@ -35,7 +35,7 @@ function exportAllCardsToPDF(teams: Team[], keywords: string[], gameName: string
         border-radius:6px;padding:6px 4px;text-align:center;
         font-weight:${isFree ? '700' : '500'};
         color:${isFree ? '#854d0e' : '#111827'};
-        font-size:15px;line-height:1.3;
+        font-size:20px;line-height:1.3;
       ">${cell}</div>`
     }).join('')
 
@@ -50,7 +50,7 @@ function exportAllCardsToPDF(teams: Team[], keywords: string[], gameName: string
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6mm;">
         <span style="font-size:22px;font-weight:700;color:#111827">${gameName}</span>
         <div style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:15px;color:#6b7280;">ชื่อ:</span>
+          <span style="font-size:15px;color:#6b7280;">ทีม</span>
           <div style="width:120px;border-bottom:2px solid #374151;"></div>
         </div>
       </div>
