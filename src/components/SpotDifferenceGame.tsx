@@ -271,8 +271,8 @@ export default function SpotDifferenceGame({ game }: Props) {
     const correct = currentPair?.correctImage
 
     return (
-      <div className="min-h-screen bg-school-primary-dark flex flex-col">
-        <div className="flex items-center justify-between px-6 py-3 bg-school-primary shadow">
+      <div className="h-screen bg-school-primary-dark flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-3 bg-school-primary shadow flex-shrink-0">
           <button onClick={() => setPhase('setup')} className="text-white hover:text-school-accent text-sm">← ยกเลิก</button>
           <div className="text-center">
             <h1 className="text-white text-lg font-bold">{game.name}</h1>
@@ -286,21 +286,21 @@ export default function SpotDifferenceGame({ game }: Props) {
           </div>
         </div>
 
-        <div className="h-2 bg-white/10">
+        <div className="h-2 bg-white/10 flex-shrink-0">
           <div className={`h-full transition-all duration-1000 ease-linear ${timerColor}`} style={{ width: `${pct * 100}%` }} />
         </div>
 
-        <div className="flex-1 flex gap-4 p-4 overflow-auto">
+        <div className="flex-1 flex gap-4 p-4 min-h-0">
           {(['A', 'B'] as const).map((side) => {
             const imgSrc = side === 'A' ? currentPair?.imageA : currentPair?.imageB
             const isCorrect = correct === side
             return (
-              <div key={side} className="flex-1 flex flex-col min-w-0">
-                <div className="text-center text-school-accent font-bold text-lg mb-2">ภาพ {side}</div>
-                <div className="relative bg-black/30 rounded-xl overflow-hidden">
+              <div key={side} className="flex-1 flex flex-col min-w-0 min-h-0">
+                <div className="text-center text-school-accent font-bold text-lg mb-2 flex-shrink-0">ภาพ {side}</div>
+                <div className="relative bg-black/30 rounded-xl overflow-hidden flex-1 min-h-0">
                   {imgSrc ? (
                     <>
-                      <img src={imgSrc} alt={side} className="w-full h-auto block" draggable={false} />
+                      <img src={imgSrc} alt={side} className="w-full h-full object-contain block" draggable={false} />
                       {revealed && correct !== undefined && (
                         <div className={`absolute inset-0 flex items-center justify-center ${isCorrect ? 'bg-green-500/60' : 'bg-red-600/60'}`}>
                           <span
@@ -332,7 +332,7 @@ export default function SpotDifferenceGame({ game }: Props) {
           })}
         </div>
 
-        <div className="bg-school-primary/90 px-6 py-4 flex items-center justify-between">
+        <div className="bg-school-primary/90 px-6 py-4 flex items-center justify-between flex-shrink-0">
           <button
             onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
             disabled={currentIndex === 0}
