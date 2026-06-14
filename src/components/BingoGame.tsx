@@ -87,28 +87,99 @@ function playReveal(ctx: AudioContext) {
   })
 }
 
-type Phase = 'cards' | 'playing'
+// Export pre-generated cards directly (no team association)
+function exportCardsDirectToPDF(cards: string[][], gameName: string) {
+  const cardsHTML = cards.map((card, ci) => {
+    const cells = card.map((cell) => {
+      const isFree = cell === 'FREE'
+      return `<div style="
+        display:flex;align-items:center;justify-content:center;
+        background:${isFree ? '#fef08a' : '#fff'};
+        border:2px solid ${isFree ? '#ca8a04' : '#9ca3af'};
+        border-radius:6px;padding:6px 4px;text-align:center;
+        font-weight:${isFree ? '700' : '500'};
+        color:${isFree ? '#854d0e' : '#111827'};
+        font-size:20px;line-height:1.3;
+      ">${cell}</div>`
+    }).join('')
+
+    return `<div style="
+      page-break-after:always;width:100%;height:100vh;
+      display:flex;flex-direction:column;justify-content:center;
+      font-family:'Sarabun',sans-serif;padding:8mm;box-sizing:border-box;
+    ">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6mm;">
+        <span style="font-size:22px;font-weight:700;color:#111827">${gameName} — แผ่นที่ ${ci + 1}</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:15px;color:#6b7280;">ทีม</span>
+          <div style="width:120px;border-bottom:2px solid #374151;"></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;flex:1;">
+        ${cells}
+      </div>
+    </div>`
+  }).join('')
+
+  const html = `<!DOCTYPE html><html><head>
+    <meta charset="utf-8"/>
+    <title>${gameName}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700;800&display=swap" rel="stylesheet"/>
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{background:#fff;font-family:'Sarabun',sans-serif}
+      @page{size:A4 landscape;margin:0}
+      @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+    </style>
+  </head><body>${cardsHTML}</body></html>`
+
+  const win = window.open('', '_blank')
+  if (!win) return
+  win.document.write(html)
+  win.document.close()
+  win.onload = () => { win.focus(); win.print() }
+}
+
+type Phase = 'home' | 'preview' | 'playing'
+
+// Generate N truly-random cards (new seeds each time)
+function generateRandomCards(keywords: string[], count: number): string[][] {
+  return Array.from({ length: count }, (_, i) =>
+    generateBingoCard(keywords, `${Date.now()}-${i}-${Math.random()}`)
+  )
+}
 
 export default function BingoGame({ game }: { game: Game }) {
   const { teams } = useStore()
   const keywords = game.bingoKeywords ?? []
 
-  const [phase, setPhase] = useState<Phase>('cards')
-  const [selectedTeamIdx, setSelectedTeamIdx] = useState(0)
+  const [phase, setPhase] = useState<Phase>('home')
+  const [cardCount, setCardCount] = useState(teams.length || 12)
+  const [cards, setCards] = useState<string[][]>([])
+  const [previewIdx, setPreviewIdx] = useState(0)
+
   const [calledKeywords, setCalledKeywords] = useState<string[]>([])
   const [overlayKeyword, setOverlayKeyword] = useState<string | null>(null)
-  const [shuffleWord, setShuffleWord] = useState<string | null>(null) // cycling word during animation
+  const [shuffleWord, setShuffleWord] = useState<string | null>(null)
   const audioCtxRef = useRef<AudioContext | null>(null)
-
-  const selectedTeam = teams[selectedTeamIdx] ?? teams[0]
 
   const getAudioCtx = () => {
     if (!audioCtxRef.current) audioCtxRef.current = new AudioContext()
     return audioCtxRef.current
   }
 
+  const openPreview = () => {
+    setCards(generateRandomCards(keywords, cardCount))
+    setPreviewIdx(0)
+    setPhase('preview')
+  }
+
+  const startGame = () => {
+    setCalledKeywords([])
+    setPhase('playing')
+  }
+
   const drawKeyword = useCallback(() => {
-    // If overlay is showing, dismiss it and confirm the keyword
     if (overlayKeyword) {
       setCalledKeywords((prev) => [...prev, overlayKeyword])
       setOverlayKeyword(null)
@@ -118,25 +189,17 @@ export default function BingoGame({ game }: { game: Game }) {
     if (remaining.length === 0) return
     const pick = remaining[Math.floor(Math.random() * remaining.length)]
 
-    // Shuffle animation: cycle random words, slowing down, then reveal
     const ctx = getAudioCtx()
     const pool = keywords.length > 1 ? keywords : [pick]
-    let step = 0
     const totalSteps = 14
-    // intervals: start fast (60ms) → slow (300ms)
     const intervals = Array.from({ length: totalSteps }, (_, i) =>
       Math.round(60 + (300 - 60) * (i / (totalSteps - 1)))
     )
-
     setShuffleWord(pool[Math.floor(Math.random() * pool.length)])
-
     let idx = 0
     const tick = () => {
       if (idx >= totalSteps) {
-        setShuffleWord(null)
-        setOverlayKeyword(pick)
-        playReveal(ctx)
-        return
+        setShuffleWord(null); setOverlayKeyword(pick); playReveal(ctx); return
       }
       playTick(ctx, 880 - idx * 20, 0.04, 0.25)
       setShuffleWord(pool[Math.floor(Math.random() * pool.length)])
@@ -153,44 +216,79 @@ export default function BingoGame({ game }: { game: Game }) {
     : {}
   const bgClass = game.backgroundImage ? '' : 'bg-gradient-to-br from-gray-900 to-gray-800'
 
-  // ── Cards phase ──────────────────────────────────────────────────────────
-  if (phase === 'cards') {
-    const card = selectedTeam ? generateBingoCard(keywords, selectedTeam.id) : []
+  // ── Home phase ───────────────────────────────────────────────────────────
+  if (phase === 'home') {
+    return (
+      <div className={`h-screen flex flex-col overflow-hidden ${bgClass}`} style={bgStyle}>
+        <div className="absolute inset-0 bg-black/50" />
+        <div className="relative z-10 flex flex-col h-full">
+          {/* Top bar */}
+          <div className="flex items-center justify-between px-6 py-4">
+            <Link href="/" className="text-white/70 hover:text-white text-sm">← กลับ</Link>
+            <h1 className="text-white font-bold text-xl">{game.icon} {game.name}</h1>
+            <span className="w-16" />
+          </div>
 
+          {/* Center content */}
+          <div className="flex-1 flex flex-col items-center justify-center gap-8 px-8">
+            {/* Card count input */}
+            <div className="flex items-center gap-3 bg-white/10 border border-white/20 rounded-2xl px-6 py-3">
+              <span className="text-white text-lg">จำนวนกระดาษ</span>
+              <button onClick={() => setCardCount(c => Math.max(1, c - 1))}
+                className="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold text-lg transition-colors">−</button>
+              <span className="text-white font-extrabold text-3xl w-12 text-center">{cardCount}</span>
+              <button onClick={() => setCardCount(c => c + 1)}
+                className="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold text-lg transition-colors">+</button>
+              <span className="text-white/60 text-base">แผ่น</span>
+            </div>
+
+            {/* Big buttons */}
+            <div className="flex flex-col gap-4 w-full max-w-sm">
+              <button
+                onClick={openPreview}
+                className="w-full py-5 bg-white/15 hover:bg-white/25 border-2 border-white/30 text-white font-bold text-2xl rounded-2xl transition-all"
+              >🃏 แสดงตัวอย่างกระดาษ</button>
+              <button
+                onClick={startGame}
+                className="w-full py-5 bg-school-accent hover:bg-school-accent/80 text-white font-bold text-2xl rounded-2xl transition-all shadow-lg"
+              >🎲 เริ่มเกม</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Preview phase ─────────────────────────────────────────────────────────
+  if (phase === 'preview') {
+    const card = cards[previewIdx] ?? []
     return (
       <div className={`h-screen flex flex-col overflow-hidden ${bgClass}`} style={bgStyle}>
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative z-10 flex flex-col h-full p-4 gap-3">
-
           {/* Header */}
           <div className="flex items-center gap-2">
-            <Link href="/" className="text-white/70 hover:text-white text-sm flex-shrink-0">← กลับ</Link>
-            <h1 className="text-white font-bold text-lg flex-shrink-0 mx-auto">{game.icon} {game.name}</h1>
+            <button onClick={() => setPhase('home')} className="text-white/70 hover:text-white text-sm flex-shrink-0">← กลับ</button>
+            <h1 className="text-white font-bold text-lg mx-auto">{game.icon} {game.name}</h1>
             <button
-              onClick={() => exportAllCardsToPDF(teams, keywords, game.name)}
+              onClick={() => exportCardsDirectToPDF(cards, game.name)}
               className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm border border-white/20 transition-colors flex-shrink-0"
             >🖨️ Print PDF</button>
-            {/* Team nav */}
-            <button onClick={() => setSelectedTeamIdx((i) => (i - 1 + teams.length) % teams.length)}
+            <button onClick={() => setPreviewIdx((i) => (i - 1 + cards.length) % cards.length)}
               className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm border border-white/20 transition-colors flex-shrink-0">←</button>
-            {selectedTeam && (
-              <div className="flex items-center gap-1.5 bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 flex-shrink-0">
-                <span className={`w-3 h-3 rounded-full ${selectedTeam.color}`} />
-                <span className="text-white font-semibold text-sm whitespace-nowrap">{selectedTeam.name}</span>
-              </div>
-            )}
-            <button onClick={() => setSelectedTeamIdx((i) => (i + 1) % teams.length)}
+            <div className="bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-white text-sm font-semibold whitespace-nowrap flex-shrink-0">
+              แผ่น {previewIdx + 1} / {cards.length}
+            </div>
+            <button onClick={() => setPreviewIdx((i) => (i + 1) % cards.length)}
               className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm border border-white/20 transition-colors flex-shrink-0">→</button>
           </div>
 
-          {/* Bingo card */}
+          {/* Card */}
           <div className="flex-1 flex items-center justify-center min-h-0">
             <div className="grid grid-cols-5 gap-1 w-full max-w-lg">
               {card.map((cell, idx) => (
                 <div key={idx} className={`aspect-square flex items-center justify-center rounded-lg border text-center p-1 ${
-                  cell === 'FREE'
-                    ? 'bg-yellow-200 border-yellow-400 font-bold text-yellow-800'
-                    : 'bg-white/90 border-white/50 text-gray-800'
+                  cell === 'FREE' ? 'bg-yellow-200 border-yellow-400 font-bold text-yellow-800' : 'bg-white/90 border-white/50 text-gray-800'
                 }`}>
                   <span className="text-xs leading-tight">{cell}</span>
                 </div>
@@ -198,11 +296,9 @@ export default function BingoGame({ game }: { game: Game }) {
             </div>
           </div>
 
-          {/* CTA */}
-          <button
-            onClick={() => { setCalledKeywords([]); setPhase('playing') }}
+          <button onClick={startGame}
             className="w-full py-3 bg-school-accent hover:bg-school-accent/80 text-white font-bold text-lg rounded-xl transition-colors"
-          >🎲 เริ่มสุ่ม Keyword</button>
+          >🎲 เริ่มเกม</button>
         </div>
       </div>
     )
@@ -218,27 +314,17 @@ export default function BingoGame({ game }: { game: Game }) {
       {/* Shuffle animation overlay */}
       {shuffleWord && !overlayKeyword && (
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white p-12">
-          <div
-            className="font-extrabold text-gray-300 text-center leading-tight"
-            style={{ fontSize: 'clamp(3rem, 10vw, 9rem)' }}
-          >
-            {shuffleWord}
-          </div>
+          <div className="font-extrabold text-gray-300 text-center leading-tight"
+            style={{ fontSize: 'clamp(3rem, 10vw, 9rem)' }}>{shuffleWord}</div>
         </div>
       )}
 
-      {/* Keyword overlay — full screen, light bg, click to proceed */}
+      {/* Keyword overlay — click to proceed */}
       {overlayKeyword && (
-        <div
-          className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white cursor-pointer p-12"
-          onClick={drawKeyword}
-        >
-          <div
-            className="font-extrabold text-gray-900 text-center leading-tight flex-1 flex items-center"
-            style={{ fontSize: 'clamp(3rem, 10vw, 9rem)' }}
-          >
-            {overlayKeyword}
-          </div>
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white cursor-pointer p-12"
+          onClick={drawKeyword}>
+          <div className="font-extrabold text-gray-900 text-center leading-tight flex-1 flex items-center"
+            style={{ fontSize: 'clamp(3rem, 10vw, 9rem)' }}>{overlayKeyword}</div>
           <div className="text-gray-400 text-xl">แตะเพื่อถัดไป →</div>
         </div>
       )}
@@ -246,9 +332,7 @@ export default function BingoGame({ game }: { game: Game }) {
       <div className="flex flex-col h-full p-4 gap-3 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between flex-shrink-0">
-          <button onClick={() => setPhase('cards')} className="text-gray-500 hover:text-gray-800 text-sm">
-            🃏 ดูกระดาษ Bingo
-          </button>
+          <button onClick={() => setPhase('home')} className="text-gray-500 hover:text-gray-800 text-sm">← กลับ</button>
           <h1 className="text-gray-800 font-bold text-lg">{game.icon} {game.name}</h1>
           <span className="text-gray-500 text-sm">เรียกไปแล้ว {calledKeywords.length} / {keywords.length}</span>
         </div>
