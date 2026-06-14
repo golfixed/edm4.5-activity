@@ -163,8 +163,11 @@ export default function BingoGame({ game }: { game: Game }) {
 
       {/* Keyword overlay */}
       {overlayKeyword && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70">
-          <div className="bg-black/80 rounded-3xl px-12 py-8 text-4xl font-extrabold text-school-accent text-center max-w-xl">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 p-8">
+          <div
+            className="font-extrabold text-school-accent text-center leading-tight"
+            style={{ fontSize: 'clamp(3rem, 10vw, 9rem)', textShadow: '0 4px 32px rgba(0,0,0,0.8)' }}
+          >
             {overlayKeyword}
           </div>
         </div>
@@ -210,6 +213,10 @@ export default function BingoGame({ game }: { game: Game }) {
               className="flex-1 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-30 text-white rounded-lg text-sm border border-white/20 transition-colors"
             >↩ ยกเลิกล่าสุด</button>
             <span className="text-white/50 text-sm px-2">เหลือ {remaining.length} keyword</span>
+            <Link
+              href="/admin"
+              className="px-4 py-2 bg-red-500/80 hover:bg-red-500 text-white rounded-lg text-sm font-semibold transition-colors whitespace-nowrap"
+            >🏁 จบเกม → ใส่คะแนน</Link>
           </div>
         </div>
       </div>
