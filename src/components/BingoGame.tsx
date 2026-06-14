@@ -160,42 +160,41 @@ export default function BingoGame({ game }: { game: Game }) {
   const allCalled = remaining.length === 0
 
   return (
-    <div className={`h-screen flex flex-col overflow-hidden ${bgClass}`} style={bgStyle}>
-      <div className="absolute inset-0 bg-black/40" />
+    <div className="h-screen flex flex-col overflow-hidden bg-gray-50">
 
-      {/* Keyword overlay — click anywhere or button to proceed */}
+      {/* Keyword overlay — full screen, light bg, click to proceed */}
       {overlayKeyword && (
         <div
-          className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/80 p-8 cursor-pointer"
+          className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white cursor-pointer p-12"
           onClick={drawKeyword}
         >
           <div
-            className="font-extrabold text-school-accent text-center leading-tight flex-1 flex items-center"
-            style={{ fontSize: 'clamp(3rem, 10vw, 9rem)', textShadow: '0 4px 32px rgba(0,0,0,0.8)' }}
+            className="font-extrabold text-gray-900 text-center leading-tight flex-1 flex items-center"
+            style={{ fontSize: 'clamp(3rem, 10vw, 9rem)' }}
           >
             {overlayKeyword}
           </div>
-          <div className="text-white/50 text-lg mt-4">แตะเพื่อถัดไป →</div>
+          <div className="text-gray-400 text-xl">แตะเพื่อถัดไป →</div>
         </div>
       )}
 
-      <div className="relative z-10 flex flex-col h-full p-4 gap-3 overflow-hidden">
+      <div className="flex flex-col h-full p-4 gap-3 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between flex-shrink-0">
-          <button onClick={() => setPhase('cards')} className="text-white/70 hover:text-white text-sm">
+          <button onClick={() => setPhase('cards')} className="text-gray-500 hover:text-gray-800 text-sm">
             🃏 ดูกระดาษ Bingo
           </button>
-          <h1 className="text-white font-bold text-lg">{game.icon} {game.name}</h1>
-          <span className="text-white/60 text-sm">เรียกไปแล้ว {calledKeywords.length} / {keywords.length}</span>
+          <h1 className="text-gray-800 font-bold text-lg">{game.icon} {game.name}</h1>
+          <span className="text-gray-500 text-sm">เรียกไปแล้ว {calledKeywords.length} / {keywords.length}</span>
         </div>
 
         {/* Called keywords */}
-        <div className="flex-1 overflow-y-auto min-h-0">
+        <div className="flex-1 overflow-y-auto min-h-0 bg-white rounded-2xl p-3 border border-gray-200">
           <div className="flex flex-wrap gap-2 content-start">
             {calledKeywords.length === 0
-              ? <p className="text-white/40 text-sm">ยังไม่มี keyword ที่เรียก</p>
+              ? <p className="text-gray-400 text-sm">ยังไม่มี keyword ที่เรียก</p>
               : calledKeywords.map((kw, i) => (
-                  <span key={i} className="bg-green-500/80 text-white text-sm px-3 py-1 rounded-full">{kw}</span>
+                  <span key={i} className="bg-green-100 text-green-800 border border-green-300 text-sm px-3 py-1 rounded-full font-medium">{kw}</span>
                 ))
             }
           </div>
@@ -204,25 +203,25 @@ export default function BingoGame({ game }: { game: Game }) {
         {/* Controls */}
         <div className="flex-shrink-0 space-y-2">
           {allCalled ? (
-            <div className="text-center py-4 text-2xl font-bold text-school-accent">🎉 เรียกครบทุก keyword แล้ว!</div>
+            <div className="text-center py-4 text-2xl font-bold text-school-primary">🎉 เรียกครบทุก keyword แล้ว!</div>
           ) : (
             <button
               onClick={drawKeyword}
-              className="w-full py-4 bg-school-accent hover:bg-school-accent/80 text-white font-bold text-xl rounded-xl transition-colors"
+              className="w-full py-4 bg-school-primary hover:bg-school-primary-dark text-white font-bold text-xl rounded-xl transition-colors shadow"
             >
-              {overlayKeyword ? '▶ ถัดไป' : '🎲 สุ่ม Keyword ถัดไป'}
+              🎲 สุ่ม Keyword ถัดไป
             </button>
           )}
           <div className="flex gap-2 items-center">
             <button
               onClick={undoLast}
               disabled={calledKeywords.length === 0}
-              className="flex-1 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-30 text-white rounded-lg text-sm border border-white/20 transition-colors"
+              className="flex-1 py-2 bg-white hover:bg-gray-100 disabled:opacity-30 text-gray-700 rounded-lg text-sm border border-gray-300 transition-colors"
             >↩ ยกเลิกล่าสุด</button>
-            <span className="text-white/50 text-sm px-2">เหลือ {remaining.length} keyword</span>
+            <span className="text-gray-400 text-sm px-2">เหลือ {remaining.length} keyword</span>
             <Link
               href="/admin"
-              className="px-4 py-2 bg-red-500/80 hover:bg-red-500 text-white rounded-lg text-sm font-semibold transition-colors whitespace-nowrap"
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-semibold transition-colors whitespace-nowrap shadow"
             >🏁 จบเกม → ใส่คะแนน</Link>
           </div>
         </div>
