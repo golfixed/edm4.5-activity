@@ -12,7 +12,7 @@ interface Props {
 export default function PhysicalGame({ game }: Props) {
   const { teams, scores, addScore } = useStore()
   const [selectedTeamId, setSelectedTeamId] = useState<string>(teams[0]?.id ?? '')
-  const [points, setPoints] = useState(10)
+  const [points, setPoints] = useState(1)
 
   const gameScores = scores.filter((s) => s.gameId === game.id)
 
@@ -23,13 +23,17 @@ export default function PhysicalGame({ game }: Props) {
     addScore({ teamId: selectedTeamId, gameId: game.id, points: (existing?.points ?? 0) + p })
   }
 
+  const handleSubtractScore = (extra = 0) => {
+    if (!selectedTeamId) return
+    const p = extra > 0 ? extra : points
+    const existing = gameScores.find((s) => s.teamId === selectedTeamId)
+    const current = existing?.points ?? 0
+    addScore({ teamId: selectedTeamId, gameId: game.id, points: Math.max(0, current - p) })
+  }
+
   const bg = game.backgroundImage
     ? { backgroundImage: `url(${game.backgroundImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }
     : undefined
-
-  const ranked = [...teams]
-    .map((t) => ({ team: t, pts: gameScores.find((s) => s.teamId === t.id)?.points ?? 0 }))
-    .sort((a, b) => b.pts - a.pts)
 
   return (
     <div
@@ -48,60 +52,79 @@ export default function PhysicalGame({ game }: Props) {
           <span className="w-12" />
         </div>
 
-        {/* Scoreboard — fills remaining space */}
+        {/* Team grid — original order, click to select */}
         <div className="flex-1 min-h-0 px-4 pb-2 grid gap-2"
-          style={{ gridTemplateColumns: `repeat(${Math.min(ranked.length, 6)}, 1fr)` }}
+          style={{ gridTemplateColumns: `repeat(${Math.min(teams.length, 6)}, 1fr)` }}
         >
-          {ranked.map(({ team, pts }, idx) => {
-            const isFirst = idx === 0
+          {teams.map((team) => {
+            const pts = gameScores.find((s) => s.teamId === team.id)?.points ?? 0
+            const selected = selectedTeamId === team.id
             return (
-              <div
+              <button
                 key={team.id}
-                className={`flex flex-col items-center justify-center rounded-2xl transition-all ${
-                  isFirst ? 'bg-yellow-400/30 border-2 border-yellow-300' : 'bg-black/40 border border-white/10'
+                onClick={() => setSelectedTeamId(team.id)}
+                className={`flex flex-col items-center justify-center rounded-2xl transition-all border-2 ${
+                  selected
+                    ? 'bg-school-accent/30 border-school-accent scale-105 shadow-lg shadow-school-accent/30'
+                    : 'bg-black/40 border-white/10 hover:border-white/30'
                 }`}
               >
-                <span className="text-white/50 text-sm mb-1">#{idx + 1}</span>
                 <span className={`w-4 h-4 rounded-full ${team.color} mb-1`} />
-                <span className="text-white font-semibold text-sm text-center leading-tight px-1">{team.name}</span>
-                <span className={`font-black tabular-nums mt-1 ${isFirst ? 'text-yellow-300' : 'text-school-accent'}`}
-                  style={{ fontSize: 'clamp(1.5rem, 3vw, 3rem)' }}>
+                <span className="text-white font-bold text-3xl text-center leading-tight px-1">{team.name}</span>
+                <span
+                  className={`font-black tabular-nums mt-1 ${selected ? 'text-school-accent' : 'text-white/80'}`}
+                  style={{ fontSize: 'clamp(1.5rem, 3vw, 3rem)' }}
+                >
                   {pts}
                 </span>
-              </div>
+              </button>
             )
           })}
         </div>
 
         {/* Bottom input panel */}
         <div className="flex-shrink-0 p-4 pt-0">
-          <div className="bg-black/60 backdrop-blur rounded-2xl px-6 py-4 flex flex-col sm:flex-row gap-4 items-center">
+          <div className="bg-black/60 backdrop-blur rounded-2xl px-4 py-4 flex flex-col sm:flex-row gap-3 items-center">
             <h2 className="text-white font-bold text-lg flex-shrink-0">บันทึกคะแนน</h2>
-            <select
-              value={selectedTeamId}
-              onChange={(e) => setSelectedTeamId(e.target.value)}
-              className="bg-white/10 text-white border border-white/30 rounded-lg px-3 py-2 focus:outline-none focus:border-white"
-            >
-              {teams.map((t) => (
-                <option key={t.id} value={t.id} className="text-black">{t.name}</option>
-              ))}
-            </select>
+            {/* Input + custom score buttons */}
             <div className="flex gap-2 items-center">
               <input
                 type="number" min="0" value={points}
                 onChange={(e) => setPoints(parseInt(e.target.value) || 0)}
                 className="w-20 px-3 py-2 rounded-lg border border-white/30 bg-white/10 text-white text-center focus:outline-none focus:border-white"
               />
-              <button onClick={() => handleAddScore()}
-                className="px-4 py-2 bg-school-accent text-school-primary-dark font-bold rounded-lg hover:bg-white transition-colors whitespace-nowrap">
+              <button
+                onClick={() => handleAddScore()}
+                disabled={!selectedTeamId}
+                className="px-4 py-2 bg-school-accent text-school-primary-dark font-bold rounded-lg hover:bg-white transition-colors whitespace-nowrap disabled:opacity-40"
+              >
                 + คะแนน
               </button>
+              <button
+                onClick={() => handleSubtractScore()}
+                disabled={!selectedTeamId}
+                className="px-4 py-2 bg-red-500/80 text-white font-bold rounded-lg hover:bg-red-500 transition-colors whitespace-nowrap disabled:opacity-40"
+              >
+                − คะแนน
+              </button>
             </div>
+            {/* Quick add buttons (left) */}
             <div className="flex gap-2">
               {[1, 5, 10, 50].map((q) => (
                 <button key={q} onClick={() => handleAddScore(q)}
-                  className="px-3 py-2 bg-school-primary-light/70 text-white rounded-lg hover:bg-school-primary-light font-bold">
+                  disabled={!selectedTeamId}
+                  className="px-3 py-2 bg-school-primary-light/70 text-white rounded-lg hover:bg-school-primary-light font-bold disabled:opacity-40">
                   +{q}
+                </button>
+              ))}
+            </div>
+            {/* Quick subtract buttons (right) */}
+            <div className="flex gap-2">
+              {[1, 5, 10, 50].map((q) => (
+                <button key={q} onClick={() => handleSubtractScore(q)}
+                  disabled={!selectedTeamId}
+                  className="px-3 py-2 bg-red-700/60 text-white rounded-lg hover:bg-red-700/80 font-bold disabled:opacity-40">
+                  −{q}
                 </button>
               ))}
             </div>
