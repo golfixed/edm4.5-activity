@@ -9,13 +9,13 @@ import { GameState } from './types'
 const ROOT = 'edm-activity'
 const LS_KEY = 'edm-activity' // old Zustand persist key
 
-function writeState(state: Omit<GameState, 'activeGameId'>) {
-  fbSet(ref(db, ROOT), {
+export function writeState(state: Omit<GameState, 'activeGameId'>) {
+  return fbSet(ref(db, ROOT), {
     teams: state.teams,
     games: state.games,
     scores: state.scores,
     rankBonuses: state.rankBonuses,
-  }).catch(console.error)
+  })
 }
 
 /** Read and clear old Zustand-persist localStorage data */

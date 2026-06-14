@@ -3,6 +3,8 @@
 import { useState, useRef } from 'react'
 import { useStore, TEAM_COLORS_LIST } from '@/lib/store'
 import { Team, Game, Score, ImagePair, ImageSet } from '@/lib/types'
+import { writeState } from '@/lib/useFirebaseSync'
+import { isFirebaseConfigured } from '@/lib/firebase'
 import Link from 'next/link'
 
 type Tab = 'teams' | 'games' | 'scores' | 'settings'
@@ -570,8 +572,10 @@ function ScoresTab() {
 }
 
 function SettingsTab() {
-  const { rankBonuses, setRankBonuses } = useStore()
+  const store = useStore()
+  const { rankBonuses, setRankBonuses } = store
   const bonuses = rankBonuses ?? [50, 45, 40, 35]
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'loading' | 'ok' | 'err'>('idle')
 
   const updateBonus = (idx: number, val: number) => {
     const next = [...bonuses]
@@ -585,8 +589,50 @@ function SettingsTab() {
     setRankBonuses(bonuses.filter((_, i) => i !== idx))
   }
 
+  const handleForceSync = async () => {
+    if (!isFirebaseConfigured) { setSyncStatus('err'); return }
+    setSyncStatus('loading')
+    try {
+      await writeState({ teams: store.teams, games: store.games, scores: store.scores, rankBonuses: store.rankBonuses })
+      setSyncStatus('ok')
+      setTimeout(() => setSyncStatus('idle'), 3000)
+    } catch {
+      setSyncStatus('err')
+      setTimeout(() => setSyncStatus('idle'), 3000)
+    }
+  }
+
   return (
-    <div className="bg-white rounded-2xl shadow p-6 max-w-md">
+    <div className="space-y-6 max-w-md">
+
+      {/* Firebase sync */}
+      <div className="bg-white rounded-2xl shadow p-6">
+        <h2 className="text-xl font-bold text-school-primary mb-1">ซิงค์ข้อมูลกับ Firebase</h2>
+        <p className="text-gray-500 text-sm mb-4">
+          อัปโหลดข้อมูลปัจจุบันทั้งหมดขึ้น Firebase ทับข้อมูลเดิม — ใช้เมื่อต้องการให้ local dev ตรงกับ production
+        </p>
+        <button
+          onClick={handleForceSync}
+          disabled={syncStatus === 'loading'}
+          className={`w-full py-2.5 rounded-xl font-semibold transition-all text-sm ${
+            syncStatus === 'ok'  ? 'bg-green-500 text-white' :
+            syncStatus === 'err' ? 'bg-red-500 text-white' :
+            syncStatus === 'loading' ? 'bg-gray-300 text-gray-500 cursor-wait' :
+            'bg-school-primary text-white hover:bg-school-primary-dark'
+          }`}
+        >
+          {syncStatus === 'loading' ? '⏳ กำลังอัปโหลด…' :
+           syncStatus === 'ok'      ? '✓ อัปโหลดสำเร็จ' :
+           syncStatus === 'err'     ? '✗ เกิดข้อผิดพลาด' :
+           '☁️ อัปโหลดข้อมูลปัจจุบันขึ้น Firebase'}
+        </button>
+        {!isFirebaseConfigured && (
+          <p className="text-red-400 text-xs mt-2">⚠️ ยังไม่ได้ตั้งค่า Firebase environment variables</p>
+        )}
+      </div>
+
+      {/* Rank bonuses */}
+      <div className="bg-white rounded-2xl shadow p-6">
       <h2 className="text-xl font-bold text-school-primary mb-1">ตั้งค่าคะแนนสุทธิ</h2>
       <p className="text-gray-500 text-sm mb-6">
         กำหนดคะแนนตามอันดับ — แถวสุดท้ายใช้กับอันดับที่เหลือทั้งหมด
@@ -625,6 +671,8 @@ function SettingsTab() {
       >
         + เพิ่มอันดับ
       </button>
+      </div>
+
     </div>
   )
 }
