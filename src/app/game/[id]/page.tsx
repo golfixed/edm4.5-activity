@@ -3,6 +3,7 @@
 import { useStore } from '@/lib/store'
 import SpotDifferenceGame from '@/components/SpotDifferenceGame'
 import PhysicalGame from '@/components/PhysicalGame'
+import BingoGame from '@/components/BingoGame'
 import Link from 'next/link'
 
 export default function GamePage({ params }: { params: { id: string } }) {
@@ -24,6 +25,10 @@ export default function GamePage({ params }: { params: { id: string } }) {
 
   if (game.type === 'spot-difference') {
     return <SpotDifferenceGame game={game} />
+  }
+
+  if (game.type === 'human-bingo') {
+    return <BingoGame game={game} />
   }
 
   return <PhysicalGame game={game} />

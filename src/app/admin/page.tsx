@@ -170,6 +170,7 @@ function GamesTab() {
               >
                 <option value="spot-difference">จับผิดภาพ</option>
                 <option value="physical">กีฬา/กิจกรรม</option>
+                <option value="human-bingo">Human Bingo</option>
               </select>
               <button onClick={() => deleteGame(game.id)} className="text-red-500 hover:text-red-700 text-sm">
                 ลบ
@@ -187,6 +188,10 @@ function GamesTab() {
                 />
                 {game.backgroundImage && <span className="text-green-600 text-sm">✓ อัปโหลดแล้ว</span>}
               </div>
+            )}
+
+            {game.type === 'human-bingo' && (
+              <BingoKeywordsEditor game={game} updateGame={updateGame} handleBgUpload={handleBgUpload} />
             )}
 
             {game.type === 'spot-difference' && (
@@ -208,6 +213,52 @@ function GamesTab() {
             )}
           </div>
         ))}
+      </div>
+    </div>
+  )
+}
+
+function BingoKeywordsEditor({
+  game,
+  updateGame,
+  handleBgUpload,
+}: {
+  game: Game
+  updateGame: (id: string, partial: Partial<Game>) => void
+  handleBgUpload: (id: string, file: File) => void
+}) {
+  const keywords = game.bingoKeywords ?? []
+  const count = keywords.length
+
+  return (
+    <div className="space-y-3">
+      <div className="space-y-1">
+        <div className="flex items-center justify-between">
+          <label className="text-sm text-gray-600 font-medium">Keywords (1 บรรทัด / คำ)</label>
+          <span className={`text-xs font-semibold ${count >= 24 ? 'text-green-600' : 'text-orange-500'}`}>
+            {count} / 24 keywords (ต้องการ 24 คำขึ้นไปสำหรับ 5×5)
+          </span>
+        </div>
+        <textarea
+          value={keywords.join('\n')}
+          onChange={(e) => {
+            const value = e.target.value
+            updateGame(game.id, { bingoKeywords: value.split('\n').map((s) => s.trim()).filter(Boolean) })
+          }}
+          placeholder="ใส่ keyword 1 บรรทัดต่อ 1 คำ"
+          rows={8}
+          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-school-primary font-mono"
+        />
+      </div>
+      <div className="flex items-center gap-3">
+        <label className="text-sm text-gray-600">ภาพพื้นหลัง:</label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleBgUpload(game.id, f) }}
+          className="text-sm"
+        />
+        {game.backgroundImage && <span className="text-green-600 text-sm">✓ อัปโหลดแล้ว</span>}
       </div>
     </div>
   )

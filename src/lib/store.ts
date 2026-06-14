@@ -24,7 +24,7 @@ export const defaultTeams: Team[] = Array.from({ length: 12 }, (_, i) => ({
 
 export const defaultGames: Game[] = [
   { id: '1', name: 'เกมทายโลโก้', icon: '🔍', type: 'spot-difference', timerSeconds: 30 },
-  { id: '2', name: 'เกม 2', icon: '🏃', type: 'physical' },
+  { id: '2', name: 'Human Bingo', icon: '🎯', type: 'human-bingo', bingoKeywords: ['เคยไปญี่ปุ่น','ใช้ Mechanical Keyboard','มีแมว','เล่นเกม','เคย deploy พัง','ดื่มกาแฟทุกวัน','มี package มาส่งออฟฟิศ','ใช้ dark mode','ดู anime','นอนหลังเที่ยงคืน','เคยตอบ LGTM','มี tab เกิน 20','เล่นฟิตเนส','เคยประชุม mute ไม่เป็น','ชอบขับรถ','เคยลาเพราะนอนต่อ','มี Steam account','ใช้ ChatGPT ทำงาน','ชอบกินชาบู','เคยทำ OT ถึงดึก','มี keyboard เกิน 1 ตัว','ใช้ iPad','ฟัง podcast','เคยลืมเปิดกล้อง'] },
   { id: '3', name: 'เกม 3', icon: '⚽', type: 'physical' },
   { id: '4', name: 'เกม 4', icon: '🎯', type: 'physical' },
 ]

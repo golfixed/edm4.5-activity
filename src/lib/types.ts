@@ -22,8 +22,9 @@ export interface Game {
   id: string
   name: string
   icon?: string
-  type: 'spot-difference' | 'physical'
+  type: 'spot-difference' | 'physical' | 'human-bingo'
   backgroundImage?: string // base64 or URL
+  bingoKeywords?: string[]
   imageSets?: ImageSet[]
   timerSeconds?: number
   soundStart?: string
