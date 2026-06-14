@@ -54,34 +54,29 @@ export default function BingoGame({ game }: { game: Game }) {
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative z-10 flex flex-col h-full p-4 gap-3">
           {/* Header */}
-          <div className="flex items-center justify-between">
-            <Link href="/" className="text-white/70 hover:text-white text-sm">
-              ← กลับหน้าหลัก
+          <div className="flex items-center justify-between gap-2">
+            <Link href="/" className="text-white/70 hover:text-white text-sm flex-shrink-0">
+              ← กลับ
             </Link>
-            <h1 className="text-white font-bold text-lg">{game.icon} {game.name}</h1>
-            <div className="w-24" />
-          </div>
-
-          {/* Team selector */}
-          <div className="flex items-center gap-3 justify-center">
-            <select
-              value={selectedTeamIdx}
-              onChange={(e) => setSelectedTeamIdx(Number(e.target.value))}
-              className="bg-white/10 text-white border border-white/30 rounded-lg px-3 py-1.5 text-sm focus:outline-none"
-            >
-              {teams.map((t, i) => (
-                <option key={t.id} value={i} className="text-black">{t.name}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Card header */}
-          {selectedTeam && (
-            <div className="flex items-center gap-2 justify-center">
-              <span className={`w-4 h-4 rounded-full ${selectedTeam.color}`} />
-              <span className="text-white font-semibold">{selectedTeam.name}</span>
+            <h1 className="text-white font-bold text-lg flex-shrink-0">{game.icon} {game.name}</h1>
+            {/* Team nav inline */}
+            <div className="flex items-center gap-2 ml-auto">
+              <button
+                onClick={() => setSelectedTeamIdx((i) => (i - 1 + teams.length) % teams.length)}
+                className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm border border-white/20 transition-colors"
+              >←</button>
+              {selectedTeam && (
+                <div className="flex items-center gap-1.5 bg-white/10 border border-white/20 rounded-lg px-3 py-1.5">
+                  <span className={`w-3 h-3 rounded-full flex-shrink-0 ${selectedTeam.color}`} />
+                  <span className="text-white font-semibold text-sm whitespace-nowrap">{selectedTeam.name}</span>
+                </div>
+              )}
+              <button
+                onClick={() => setSelectedTeamIdx((i) => (i + 1) % teams.length)}
+                className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm border border-white/20 transition-colors"
+              >→</button>
             </div>
-          )}
+          </div>
 
           {/* Bingo card */}
           <div className="flex-1 flex items-center justify-center min-h-0">
@@ -99,22 +94,6 @@ export default function BingoGame({ game }: { game: Game }) {
                 </div>
               ))}
             </div>
-          </div>
-
-          {/* Navigation row */}
-          <div className="flex gap-2 justify-center">
-            <button
-              onClick={() => setSelectedTeamIdx((i) => (i - 1 + teams.length) % teams.length)}
-              className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm border border-white/20 transition-colors"
-            >
-              ← ทีมก่อนหน้า
-            </button>
-            <button
-              onClick={() => setSelectedTeamIdx((i) => (i + 1) % teams.length)}
-              className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm border border-white/20 transition-colors"
-            >
-              ทีมถัดไป →
-            </button>
           </div>
 
           {/* CTA */}
