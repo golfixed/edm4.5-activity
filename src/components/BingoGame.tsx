@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react'
 import { Game } from '@/lib/types'
 import { useStore } from '@/lib/store'
-import { generateBingoCard } from '@/lib/bingo'
+import { generateBingoCard, checkNewBingo } from '@/lib/bingo'
 import { Team } from '@/lib/types'
 import Link from 'next/link'
 
@@ -84,15 +84,21 @@ function exportAllCardsToPDF(teams: Team[], keywords: string[], gameName: string
 type Phase = 'cards' | 'playing'
 
 export default function BingoGame({ game }: { game: Game }) {
-  const { teams } = useStore()
+  const { teams, scores, addScore } = useStore()
   const keywords = game.bingoKeywords ?? []
 
   const [phase, setPhase] = useState<Phase>('cards')
   const [selectedTeamIdx, setSelectedTeamIdx] = useState(0)
 
+  // Score config
+  const [pointPerKeyword, setPointPerKeyword] = useState(1)
+  const [bonusPerBingo, setBonusPerBingo] = useState(5)
+
   // Playing phase state
   const [calledKeywords, setCalledKeywords] = useState<string[]>([])
   const [overlayKeyword, setOverlayKeyword] = useState<string | null>(null)
+  const [bingoTeam, setBingoTeam] = useState<string | null>(null)
+  const [completedLines, setCompletedLines] = useState<Map<string, Set<string>>>(new Map())
 
   const selectedTeam = teams[selectedTeamIdx] ?? teams[0]
 
@@ -103,9 +109,51 @@ export default function BingoGame({ game }: { game: Game }) {
     setOverlayKeyword(pick)
     setTimeout(() => {
       setOverlayKeyword(null)
-      setCalledKeywords((prev) => [...prev, pick])
+      setCalledKeywords((prev) => {
+        const newCalled = [...prev, pick]
+        const newCalledSet = new Set(newCalled)
+
+        // Auto-scoring: award points to each team
+        let firstBingoTeamName: string | null = null
+        setCompletedLines((prevLines) => {
+          const updatedLines = new Map(prevLines)
+          for (const team of teams) {
+            const card = generateBingoCard(keywords, team.id)
+            // Award point if keyword is in this team's card
+            if (card.includes(pick)) {
+              const existing = scores.find((s) => s.teamId === team.id && s.gameId === game.id)
+              addScore({ teamId: team.id, gameId: game.id, points: (existing?.points ?? 0) + pointPerKeyword })
+            }
+            // Check for new bingo line
+            const teamLines = updatedLines.get(team.id) ?? new Set<string>()
+            const line = checkNewBingo(newCalledSet, card)
+            if (line) {
+              const lineKey = line.join(',')
+              if (!teamLines.has(lineKey)) {
+                teamLines.add(lineKey)
+                // Award bonus
+                const existing = scores.find((s) => s.teamId === team.id && s.gameId === game.id)
+                // Points already updated above if card contains pick; re-read from scores won't reflect
+                // the update yet (state async), so we compute on top of what we just set
+                const basePoints = (existing?.points ?? 0) + (card.includes(pick) ? pointPerKeyword : 0)
+                addScore({ teamId: team.id, gameId: game.id, points: basePoints + bonusPerBingo })
+                if (!firstBingoTeamName) firstBingoTeamName = team.name
+              }
+            }
+            updatedLines.set(team.id, teamLines)
+          }
+          return updatedLines
+        })
+
+        if (firstBingoTeamName) {
+          setBingoTeam(firstBingoTeamName)
+          setTimeout(() => setBingoTeam(null), 2000)
+        }
+
+        return newCalled
+      })
     }, 2000)
-  }, [keywords, calledKeywords])
+  }, [keywords, calledKeywords, teams, scores, game.id, pointPerKeyword, bonusPerBingo, addScore])
 
   const undoLast = () => {
     setCalledKeywords((prev) => prev.slice(0, -1))
@@ -179,6 +227,30 @@ export default function BingoGame({ game }: { game: Game }) {
             </div>
           </div>
 
+          {/* Score config */}
+          <div className="flex items-center gap-4 justify-center bg-white/10 border border-white/20 rounded-xl px-4 py-2">
+            <label className="text-white/80 text-sm flex items-center gap-2">
+              คะแนนต่อคำ:
+              <input
+                type="number"
+                min={0}
+                value={pointPerKeyword}
+                onChange={(e) => setPointPerKeyword(Number(e.target.value))}
+                className="w-14 text-center bg-white/20 text-white rounded-lg border border-white/30 px-2 py-1 text-sm"
+              />
+            </label>
+            <label className="text-white/80 text-sm flex items-center gap-2">
+              โบนัส Bingo:
+              <input
+                type="number"
+                min={0}
+                value={bonusPerBingo}
+                onChange={(e) => setBonusPerBingo(Number(e.target.value))}
+                className="w-14 text-center bg-white/20 text-white rounded-lg border border-white/30 px-2 py-1 text-sm"
+              />
+            </label>
+          </div>
+
           {/* CTA */}
           <button
             onClick={goToPlaying}
@@ -208,6 +280,15 @@ export default function BingoGame({ game }: { game: Game }) {
         </div>
       )}
 
+      {/* Bingo overlay */}
+      {bingoTeam && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 pointer-events-none">
+          <div className="bg-yellow-400 rounded-3xl px-12 py-8 text-4xl font-extrabold text-gray-900 text-center max-w-lg">
+            🎉 BINGO! {bingoTeam}
+          </div>
+        </div>
+      )}
+
       <div className="relative z-10 flex flex-col h-full p-4 gap-3 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between flex-shrink-0">
@@ -222,6 +303,22 @@ export default function BingoGame({ game }: { game: Game }) {
             เรียกไปแล้ว {calledKeywords.length} / {keywords.length}
           </span>
         </div>
+
+        {/* Live scoreboard */}
+        {teams.length > 0 && (
+          <div className="flex-shrink-0 flex flex-wrap gap-2 bg-black/20 rounded-xl px-3 py-2">
+            {teams.map((team) => {
+              const pts = scores.find((s) => s.teamId === team.id && s.gameId === game.id)?.points ?? 0
+              return (
+                <div key={team.id} className="flex items-center gap-1.5">
+                  <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${team.color}`} />
+                  <span className="text-white/80 text-xs">{team.name}</span>
+                  <span className="bg-white/20 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[24px] text-center">{pts}</span>
+                </div>
+              )
+            })}
+          </div>
+        )}
 
         {/* Called keywords */}
         <div className="flex-1 overflow-y-auto min-h-0">
