@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { Game, Team } from '@/lib/types'
 import { useStore } from '@/lib/store'
 import { generateBingoCard } from '@/lib/bingo'
@@ -52,9 +52,10 @@ function exportAllCardsToPDF(teams: Team[], keywords: string[], gameName: string
     <meta charset="utf-8"/>
     <title>Bingo Cards — ${gameName}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700;800&display=swap" rel="stylesheet"/>
     <style>
-      *{box-sizing:border-box;margin:0;padding:0}body{background:#fff}
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{background:#fff;font-family:'Sarabun',sans-serif}
       @page{size:A4 landscape;margin:0}
       @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
     </style>
@@ -67,6 +68,25 @@ function exportAllCardsToPDF(teams: Team[], keywords: string[], gameName: string
   win.onload = () => { win.focus(); win.print() }
 }
 
+// Web Audio tick sound
+function playTick(ctx: AudioContext, freq = 880, duration = 0.04, vol = 0.3) {
+  const osc = ctx.createOscillator()
+  const gain = ctx.createGain()
+  osc.connect(gain); gain.connect(ctx.destination)
+  osc.frequency.value = freq
+  osc.type = 'sine'
+  gain.gain.setValueAtTime(vol, ctx.currentTime)
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration)
+  osc.start(); osc.stop(ctx.currentTime + duration)
+}
+
+function playReveal(ctx: AudioContext) {
+  // Rising chord ding
+  [523, 659, 784, 1047].forEach((freq, i) => {
+    setTimeout(() => playTick(ctx, freq, 0.3, 0.4), i * 60)
+  })
+}
+
 type Phase = 'cards' | 'playing'
 
 export default function BingoGame({ game }: { game: Game }) {
@@ -77,8 +97,15 @@ export default function BingoGame({ game }: { game: Game }) {
   const [selectedTeamIdx, setSelectedTeamIdx] = useState(0)
   const [calledKeywords, setCalledKeywords] = useState<string[]>([])
   const [overlayKeyword, setOverlayKeyword] = useState<string | null>(null)
+  const [shuffleWord, setShuffleWord] = useState<string | null>(null) // cycling word during animation
+  const audioCtxRef = useRef<AudioContext | null>(null)
 
   const selectedTeam = teams[selectedTeamIdx] ?? teams[0]
+
+  const getAudioCtx = () => {
+    if (!audioCtxRef.current) audioCtxRef.current = new AudioContext()
+    return audioCtxRef.current
+  }
 
   const drawKeyword = useCallback(() => {
     // If overlay is showing, dismiss it and confirm the keyword
@@ -90,7 +117,33 @@ export default function BingoGame({ game }: { game: Game }) {
     const remaining = keywords.filter((k) => !calledKeywords.includes(k))
     if (remaining.length === 0) return
     const pick = remaining[Math.floor(Math.random() * remaining.length)]
-    setOverlayKeyword(pick)
+
+    // Shuffle animation: cycle random words, slowing down, then reveal
+    const ctx = getAudioCtx()
+    const pool = keywords.length > 1 ? keywords : [pick]
+    let step = 0
+    const totalSteps = 14
+    // intervals: start fast (60ms) → slow (300ms)
+    const intervals = Array.from({ length: totalSteps }, (_, i) =>
+      Math.round(60 + (300 - 60) * (i / (totalSteps - 1)))
+    )
+
+    setShuffleWord(pool[Math.floor(Math.random() * pool.length)])
+
+    let idx = 0
+    const tick = () => {
+      if (idx >= totalSteps) {
+        setShuffleWord(null)
+        setOverlayKeyword(pick)
+        playReveal(ctx)
+        return
+      }
+      playTick(ctx, 880 - idx * 20, 0.04, 0.25)
+      setShuffleWord(pool[Math.floor(Math.random() * pool.length)])
+      idx++
+      setTimeout(tick, intervals[idx - 1])
+    }
+    setTimeout(tick, intervals[0])
   }, [keywords, calledKeywords, overlayKeyword])
 
   const undoLast = () => setCalledKeywords((prev) => prev.slice(0, -1))
@@ -161,6 +214,18 @@ export default function BingoGame({ game }: { game: Game }) {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-gray-50">
+
+      {/* Shuffle animation overlay */}
+      {shuffleWord && !overlayKeyword && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white p-12">
+          <div
+            className="font-extrabold text-gray-300 text-center leading-tight"
+            style={{ fontSize: 'clamp(3rem, 10vw, 9rem)' }}
+          >
+            {shuffleWord}
+          </div>
+        </div>
+      )}
 
       {/* Keyword overlay — full screen, light bg, click to proceed */}
       {overlayKeyword && (
