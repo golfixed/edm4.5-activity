@@ -220,10 +220,23 @@ function SoundUploader({
   game: Game
   updateGame: (id: string, partial: Partial<Game>) => void
 }) {
-  const readAudio = (file: File, key: 'soundStart' | 'soundTick' | 'soundTimeUp') => {
-    const reader = new FileReader()
-    reader.onload = (e) => updateGame(game.id, { [key]: e.target?.result as string })
-    reader.readAsDataURL(file)
+  const [uploading, setUploading] = useState<string | null>(null)
+
+  const handleAudio = async (file: File, key: 'soundStart' | 'soundTick' | 'soundTimeUp') => {
+    setUploading(key)
+    try {
+      const { uploadAudio } = await import('@/lib/uploadAudio')
+      const url = await uploadAudio(file, game.id, key)
+      updateGame(game.id, { [key]: url })
+    } finally {
+      setUploading(null)
+    }
+  }
+
+  const handleDelete = async (key: 'soundStart' | 'soundTick' | 'soundTimeUp') => {
+    const { deleteAudio } = await import('@/lib/uploadAudio')
+    await deleteAudio(game.id, key)
+    updateGame(game.id, { [key]: undefined })
   }
 
   const previewSound = (src?: string) => {
@@ -245,12 +258,16 @@ function SoundUploader({
           <div key={key} className="flex items-center gap-3 bg-white rounded-lg px-3 py-2 border border-gray-100">
             <span className="text-sm font-medium text-gray-700 w-28 flex-shrink-0">{label}</span>
             <span className="text-xs text-gray-400 flex-1">{hint}</span>
-            <input
-              type="file"
-              accept="audio/*"
-              onChange={(e) => { const f = e.target.files?.[0]; if (f) readAudio(f, key) }}
-              className="text-xs w-40"
-            />
+            {uploading === key ? (
+              <span className="text-xs text-school-primary animate-pulse w-40 text-center">⏳ กำลังอัปโหลด…</span>
+            ) : (
+              <input
+                type="file"
+                accept="audio/*"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAudio(f, key) }}
+                className="text-xs w-40"
+              />
+            )}
             {game[key] ? (
               <button
                 onClick={() => previewSound(game[key] as string)}
@@ -263,7 +280,7 @@ function SoundUploader({
             )}
             {game[key] && (
               <button
-                onClick={() => updateGame(game.id, { [key]: undefined })}
+                onClick={() => handleDelete(key)}
                 className="text-red-400 hover:text-red-600 text-xs flex-shrink-0"
               >
                 ลบ
