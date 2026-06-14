@@ -242,14 +242,17 @@ function SoundUploader({
       <h3 className="font-semibold text-school-primary-dark text-sm">🔊 เสียงเกม</h3>
       <div className="space-y-2">
         {soundFields.map(({ key, label, hint }) => (
-          <div key={key} className="flex items-center gap-3 bg-white rounded-lg px-3 py-2 border border-gray-100">
+          <div key={key} className={`flex items-center gap-3 rounded-lg px-3 py-2 border ${game[key] ? 'bg-green-50 border-green-200' : 'bg-white border-gray-100'}`}>
             <span className="text-sm font-medium text-gray-700 w-28 flex-shrink-0">{label}</span>
             <span className="text-xs text-gray-400 flex-1">{hint}</span>
+            {game[key] && (
+              <span className="text-xs text-green-600 font-medium flex-shrink-0">✓ มีไฟล์แล้ว</span>
+            )}
             <input
               type="file"
               accept="audio/*"
               onChange={(e) => { const f = e.target.files?.[0]; if (f) readAudio(f, key) }}
-              className="text-xs w-40"
+              className="text-xs w-32 flex-shrink-0"
             />
             {game[key] ? (
               <button
