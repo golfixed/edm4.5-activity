@@ -71,6 +71,9 @@ export default function PhysicalGame({ game }: Props) {
               >
                 <span className={`w-4 h-4 rounded-full ${team.color} mb-1`} />
                 <span className="text-white font-bold text-3xl text-center leading-tight px-1">{team.name}</span>
+                {team.captain && (
+                  <span className="text-white/60 text-sm text-center leading-tight px-1">({team.captain})</span>
+                )}
                 <span
                   className={`font-black tabular-nums mt-1 ${selected ? 'text-school-accent' : 'text-white/80'}`}
                   style={{ fontSize: 'clamp(1.5rem, 3vw, 3rem)' }}

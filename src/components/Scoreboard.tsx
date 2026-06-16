@@ -40,7 +40,7 @@ export default function Scoreboard({ compact = false }: Props) {
                 className={`w-3 h-3 rounded-full ${team.color} flex-shrink-0`}
               />
               <span className="flex-1 font-medium text-gray-800">
-                {team.name}
+                {team.name}{team.captain ? ` (${team.captain})` : ''}
               </span>
               <span className="font-bold text-school-primary text-lg">
                 {getTotalScore(state, team.id)}
@@ -96,12 +96,13 @@ export default function Scoreboard({ compact = false }: Props) {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <span
-                        className={`w-4 h-4 rounded-full ${team.color} flex-shrink-0`}
-                      />
-                      <span className="font-medium text-gray-800">
-                        {team.name}
-                      </span>
+                      <span className={`w-4 h-4 rounded-full ${team.color} flex-shrink-0`} />
+                      <div>
+                        <span className="font-medium text-gray-800">{team.name}</span>
+                        {team.captain && (
+                          <span className="text-gray-400 text-xs ml-1">({team.captain})</span>
+                        )}
+                      </div>
                     </div>
                   </td>
                   {games.map((g) => {

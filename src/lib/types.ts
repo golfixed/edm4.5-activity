@@ -2,6 +2,7 @@ export interface Team {
   id: string
   name: string
   color: string // tailwind bg color class
+  captain?: string
 }
 
 export interface ImagePair {

@@ -56,6 +56,10 @@ function TeamsTab() {
     setTeams(teams.map((t) => (t.id === id ? { ...t, name } : t)))
   }
 
+  const updateCaptain = (id: string, captain: string) => {
+    setTeams(teams.map((t) => (t.id === id ? { ...t, captain } : t)))
+  }
+
   const deleteTeam = (id: string) => {
     setTeams(teams.filter((t) => t.id !== id))
   }
@@ -82,6 +86,7 @@ function TeamsTab() {
           <tr className="bg-school-bg">
             <th className="px-4 py-2 text-left text-school-primary-dark">สี</th>
             <th className="px-4 py-2 text-left text-school-primary-dark">ชื่อทีม</th>
+            <th className="px-4 py-2 text-left text-school-primary-dark">หัวหน้าทีม</th>
             <th className="px-4 py-2"></th>
           </tr>
         </thead>
@@ -96,6 +101,14 @@ function TeamsTab() {
                   value={team.name}
                   onChange={(e) => updateName(team.id, e.target.value)}
                   className="border border-gray-200 rounded px-2 py-1 w-full focus:outline-none focus:border-school-primary"
+                />
+              </td>
+              <td className="px-4 py-2">
+                <input
+                  value={team.captain ?? ''}
+                  onChange={(e) => updateCaptain(team.id, e.target.value)}
+                  placeholder="ชื่อหัวหน้าทีม"
+                  className="border border-gray-200 rounded px-2 py-1 w-full focus:outline-none focus:border-school-primary text-gray-600"
                 />
               </td>
               <td className="px-4 py-2 text-right">

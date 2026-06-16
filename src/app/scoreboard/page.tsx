@@ -75,12 +75,16 @@ export default function ScoreboardPage() {
               {/* Color dot */}
               <span className={`rounded-full flex-shrink-0 ${team.color} ${isTop3 ? 'w-6 h-6' : 'w-4 h-4'}`} />
 
-              {/* Team name */}
-              <span
-                className="flex-1 font-extrabold"
-                style={{ fontSize: isTop3 ? 'clamp(1.6rem,3vw,2.4rem)' : 'clamp(1.2rem,2vw,1.6rem)' }}
-              >
-                {team.name}
+              {/* Team name + captain */}
+              <span className="flex-1 flex items-baseline gap-3 min-w-0">
+                <span className="font-extrabold" style={{ fontSize: isTop3 ? 'clamp(1.6rem,3vw,2.4rem)' : 'clamp(1.2rem,2vw,1.6rem)' }}>
+                  {team.name}
+                </span>
+                {team.captain && (
+                  <span className="text-white/50 font-normal" style={{ fontSize: isTop3 ? '1.1rem' : '0.9rem' }}>
+                    ({team.captain})
+                  </span>
+                )}
               </span>
 
               {/* Per-game scores */}
