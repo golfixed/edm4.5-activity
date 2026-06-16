@@ -28,6 +28,7 @@ export interface Game {
   bingoKeywords?: string[]
   imageSets?: ImageSet[]
   timerSeconds?: number
+  weight?: number // % score weight for rank calculation, default 100
   soundStart?: string
   soundTick?: string
   soundTimeUp?: string

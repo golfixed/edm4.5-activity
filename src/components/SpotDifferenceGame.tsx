@@ -299,44 +299,44 @@ export default function SpotDifferenceGame({ game }: Props) {
             const isCorrect = correct === side
             return (
               <div key={side} className="flex-1 flex flex-col min-w-0 min-h-0">
-                {/* Reveal banner — outside image, 100px tall */}
-                {revealed && correct !== undefined && (
-                  <div className={`flex-shrink-0 flex items-center justify-center rounded-t-xl ${
-                    isCorrect ? 'bg-green-500' : 'bg-red-500'
-                  }`} style={{ height: 100 }}>
-                    {isCorrect ? (
-                      <svg width="80" height="80" viewBox="0 0 48 48" fill="none">
-                        <polyline points="6,26 18,40 42,10" stroke="white" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    ) : (
-                      <svg width="80" height="80" viewBox="0 0 48 48" fill="none">
-                        <line x1="8" y1="8" x2="40" y2="40" stroke="white" strokeWidth="6" strokeLinecap="round"/>
-                        <line x1="40" y1="8" x2="8" y2="40" stroke="white" strokeWidth="6" strokeLinecap="round"/>
-                      </svg>
-                    )}
-                  </div>
-                )}
-                <div className={`relative bg-black/30 flex-1 min-h-0 transition-all duration-300 ${
-                  revealed && correct !== undefined ? 'rounded-b-xl' : 'rounded-xl'
-                } ${
+                <div className={`flex flex-col flex-1 min-h-0 transition-all duration-300 rounded-xl overflow-hidden ${
                   revealed && correct !== undefined
                     ? isCorrect
                       ? 'ring-4 ring-green-400 shadow-[0_0_24px_4px_rgba(74,222,128,0.5)]'
                       : 'ring-4 ring-red-400 shadow-[0_0_24px_4px_rgba(248,113,113,0.4)]'
-                    : 'overflow-hidden'
+                    : ''
                 }`}>
-                  {imgSrc ? (
-                    <>
-                      <img src={imgSrc} alt={side} className="w-full h-full object-contain block" draggable={false} />
-                      {revealed && correct === undefined && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                          <span className="text-white/60 text-sm">ยังไม่ได้ตั้งเฉลย</span>
-                        </div>
+                  {/* Reveal banner — 100px, same width as image via shared wrapper */}
+                  {revealed && correct !== undefined && (
+                    <div className={`flex-shrink-0 flex items-center justify-center ${
+                      isCorrect ? 'bg-green-500' : 'bg-red-500'
+                    }`} style={{ height: 100 }}>
+                      {isCorrect ? (
+                        <svg width="80" height="80" viewBox="0 0 48 48" fill="none">
+                          <polyline points="6,26 18,40 42,10" stroke="white" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      ) : (
+                        <svg width="80" height="80" viewBox="0 0 48 48" fill="none">
+                          <line x1="8" y1="8" x2="40" y2="40" stroke="white" strokeWidth="6" strokeLinecap="round"/>
+                          <line x1="40" y1="8" x2="8" y2="40" stroke="white" strokeWidth="6" strokeLinecap="round"/>
+                        </svg>
                       )}
-                    </>
-                  ) : (
-                    <div className="h-48 flex items-center justify-center"><span className="text-white/40">ไม่มีภาพ</span></div>
+                    </div>
                   )}
+                  <div className="relative bg-black/30 flex-1 min-h-0">
+                    {imgSrc ? (
+                      <>
+                        <img src={imgSrc} alt={side} className="w-full h-full object-contain block" draggable={false} />
+                        {revealed && correct === undefined && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                            <span className="text-white/60 text-sm">ยังไม่ได้ตั้งเฉลย</span>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="h-48 flex items-center justify-center"><span className="text-white/40">ไม่มีภาพ</span></div>
+                    )}
+                  </div>
                 </div>
               </div>
             )
@@ -394,7 +394,10 @@ export default function SpotDifferenceGame({ game }: Props) {
               <div key={team.id} className="flex items-center gap-4">
                 <span className="text-white/50 text-sm w-6 text-right">{rank + 1}.</span>
                 <span className={`w-5 h-5 rounded-full flex-shrink-0 ${team.color}`} />
-                <span className="text-white font-medium flex-1">{team.name}</span>
+                <span className="text-white font-medium flex-1">
+                  {team.name}
+                  {team.captain && <span className="text-white/50 text-sm font-normal ml-1">({team.captain})</span>}
+                </span>
                 <input
                   type="number" min="0"
                   value={finalScores[team.id] ?? 0}

@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useStore, getTotalScore, getRankedTeams } from '@/lib/store'
+import { useStore, getTotalScore, getRankedTeams, getGameRank } from '@/lib/store'
 import Link from 'next/link'
 
 export default function ScoreboardPage() {
@@ -49,7 +49,7 @@ export default function ScoreboardPage() {
           {games.map((g) => (
             <span key={g.id} className="w-28 text-center truncate">{g.name}</span>
           ))}
-          <span className="w-24 text-center border-l border-white/20 pl-4">รวม</span>
+          <span className="w-28 text-center border-l border-white/20 pl-4">Total Score Rank</span>
         </div>
       </div>
 
@@ -87,25 +87,36 @@ export default function ScoreboardPage() {
                 )}
               </span>
 
-              {/* Per-game scores */}
+              {/* Per-game: raw score (rank) */}
               {games.map((g) => {
-                const s = state.scores.find(
-                  (sc) => sc.teamId === team.id && sc.gameId === g.id
-                )
+                const rank = getGameRank(state, g.id, team.id)
+                const raw = state.scores.find((sc) => sc.teamId === team.id && sc.gameId === g.id)?.points
                 return (
                   <div key={g.id} className="w-28 text-center">
-                    <span
-                      className={`font-bold tabular-nums ${s ? 'text-white' : 'text-white/30'}`}
-                      style={{ fontSize: isTop3 ? '1.5rem' : '1.1rem' }}
-                    >
-                      {s ? s.points : '—'}
-                    </span>
+                    {rank !== null ? (
+                      <span>
+                        <span
+                          className="font-bold tabular-nums text-white"
+                          style={{ fontSize: isTop3 ? '1.5rem' : '1.1rem' }}
+                        >
+                          {raw ?? 0}
+                        </span>
+                        <span
+                          className="text-white/50 tabular-nums ml-1"
+                          style={{ fontSize: isTop3 ? '1rem' : '0.8rem' }}
+                        >
+                          (#{rank})
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="text-white/30" style={{ fontSize: isTop3 ? '1.5rem' : '1.1rem' }}>—</span>
+                    )}
                   </div>
                 )
               })}
 
-              {/* Total */}
-              <div className="w-24 text-center border-l border-white/20 pl-4">
+              {/* Total Score Rank */}
+              <div className="w-28 text-center border-l border-white/20 pl-4">
                 <span
                   className="font-black tabular-nums text-school-accent"
                   style={{ fontSize: isTop3 ? 'clamp(2rem,4vw,3rem)' : 'clamp(1.4rem,2.5vw,2rem)' }}

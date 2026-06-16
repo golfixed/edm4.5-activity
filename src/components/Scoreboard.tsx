@@ -1,6 +1,6 @@
 'use client'
 
-import { useStore, getTotalScore, getRankedTeams } from '@/lib/store'
+import { useStore, getTotalScore, getRankedTeams, getGameRank, getGameRankPoints, defaultRankBonuses } from '@/lib/store'
 
 interface Props {
   compact?: boolean
@@ -10,18 +10,12 @@ export default function Scoreboard({ compact = false }: Props) {
   const state = useStore()
   const ranked = getRankedTeams(state)
   const games = state.games
-  const rankBonuses = state.rankBonuses ?? [50, 45, 40, 35]
 
   const rankIcon = (rank: number) => {
     if (rank === 1) return '👑'
     if (rank === 2) return '🥈'
     if (rank === 3) return '🥉'
     return String(rank)
-  }
-
-  const rankToBonus = (rank: number) => {
-    const idx = rank - 1
-    return rankBonuses[idx] ?? rankBonuses[rankBonuses.length - 1] ?? 0
   }
 
   if (compact) {
@@ -36,9 +30,7 @@ export default function Scoreboard({ compact = false }: Props) {
               <span className="w-8 text-center font-bold text-school-primary">
                 {rankIcon(idx + 1)}
               </span>
-              <span
-                className={`w-3 h-3 rounded-full ${team.color} flex-shrink-0`}
-              />
+              <span className={`w-3 h-3 rounded-full ${team.color} flex-shrink-0`} />
               <span className="flex-1 font-medium text-gray-800">
                 {team.name}{team.captain ? ` (${team.captain})` : ''}
               </span>
@@ -61,25 +53,20 @@ export default function Scoreboard({ compact = false }: Props) {
         <table className="w-full">
           <thead>
             <tr className="bg-school-bg">
-              <th className="px-4 py-3 text-left text-school-primary-dark font-bold">
-                อันดับ
-              </th>
-              <th className="px-4 py-3 text-left text-school-primary-dark font-bold">
-                ทีม
-              </th>
-              {games.map((g) => (
-                <th
-                  key={g.id}
-                  className="px-4 py-3 text-center text-school-primary-dark font-bold"
-                >
-                  {g.name}
-                </th>
-              ))}
-              <th className="px-4 py-3 text-center text-school-primary-dark font-bold">
-                รวม
-              </th>
+              <th className="px-4 py-3 text-left text-school-primary-dark font-bold">อันดับ</th>
+              <th className="px-4 py-3 text-left text-school-primary-dark font-bold">ทีม</th>
+              {games.map((g) => {
+                const rankPoints = state.rankBonuses?.length ? state.rankBonuses : defaultRankBonuses
+                const maxRp = Math.round((rankPoints[0] ?? 10) * (g.weight ?? 100) / 100)
+                return (
+                  <th key={g.id} className="px-4 py-3 text-center text-school-primary-dark font-bold">
+                    <div>{g.name}</div>
+                    <div className="text-gray-400 text-xs font-normal">สูงสุด {maxRp} คะแนน</div>
+                  </th>
+                )
+              })}
               <th className="px-4 py-3 text-center text-amber-700 font-bold bg-amber-50">
-                คะแนนสุทธิ
+                Total Score Rank
               </th>
             </tr>
           </thead>
@@ -91,9 +78,7 @@ export default function Scoreboard({ compact = false }: Props) {
                   key={team.id}
                   className={`border-b border-gray-100 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
                 >
-                  <td className="px-4 py-3 text-center text-xl">
-                    {rankIcon(idx + 1)}
-                  </td>
+                  <td className="px-4 py-3 text-center text-xl">{rankIcon(idx + 1)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <span className={`w-4 h-4 rounded-full ${team.color} flex-shrink-0`} />
@@ -106,23 +91,23 @@ export default function Scoreboard({ compact = false }: Props) {
                     </div>
                   </td>
                   {games.map((g) => {
-                    const score = state.scores.find(
-                      (s) => s.teamId === team.id && s.gameId === g.id
-                    )
+                    const rank = getGameRank(state, g.id, team.id)
+                    const raw = state.scores.find((s) => s.teamId === team.id && s.gameId === g.id)?.points
+                    const rp = getGameRankPoints(state, g.id, team.id)
+                    const weighted = Math.round(rp * (g.weight ?? 100) / 100)
                     return (
-                      <td
-                        key={g.id}
-                        className="px-4 py-3 text-center text-gray-600"
-                      >
-                        {score ? score.points : '-'}
+                      <td key={g.id} className="px-4 py-3 text-center text-gray-700">
+                        {rank !== null ? (
+                          <span>
+                            <span className="font-semibold">{raw ?? 0}</span>
+                            <span className="text-gray-400 text-xs ml-1">({weighted} คะแนน)</span>
+                          </span>
+                        ) : '-'}
                       </td>
                     )
                   })}
-                  <td className="px-4 py-3 text-center font-bold text-school-primary text-lg">
-                    {total}
-                  </td>
                   <td className="px-4 py-3 text-center font-bold text-amber-600 text-lg bg-amber-50">
-                    {rankToBonus(idx + 1)}
+                    {total}
                   </td>
                 </tr>
               )

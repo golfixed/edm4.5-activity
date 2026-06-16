@@ -29,7 +29,7 @@ export const defaultGames: Game[] = [
   { id: '4', name: 'เกม 4', icon: '🎯', type: 'physical' },
 ]
 
-export const defaultRankBonuses = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
+export const defaultRankBonuses = [10, 8, 7, 6, 5]
 
 interface StoreActions {
   setTeams: (teams: Team[]) => void
@@ -71,10 +71,45 @@ export const useStore = create<Store>()((set, get) => ({
   _hydrate: (partial) => set(partial),
 }))
 
+// Returns the rank position (1-based) of a team in a single game. Returns null if no scores recorded.
+export function getGameRank(state: GameState, gameId: string, teamId: string): number | null {
+  const hasAnyScore = state.scores.some((s) => s.gameId === gameId)
+  if (!hasAnyScore) return null
+  const myScore = state.scores.find((s) => s.teamId === teamId && s.gameId === gameId)?.points ?? 0
+  return state.teams.filter((t) => {
+    const pts = state.scores.find((s) => s.teamId === t.id && s.gameId === gameId)?.points ?? 0
+    return pts > myScore
+  }).length + 1
+}
+
+// Returns rank points earned by a team in a single game.
+// Rank is determined by comparing raw scores; teams with no entry are treated as 0.
+// Ties share the same rank (e.g. two 1st-place ties both get rank-1 points).
+// Returns 0 if the game has no scores recorded yet.
+export function getGameRankPoints(state: GameState, gameId: string, teamId: string): number {
+  const rankPoints = state.rankBonuses?.length ? state.rankBonuses : defaultRankBonuses
+  const lastPoints = rankPoints[rankPoints.length - 1] ?? 0
+
+  const hasAnyScore = state.scores.some((s) => s.gameId === gameId)
+  if (!hasAnyScore) return 0
+
+  const myScore = state.scores.find((s) => s.teamId === teamId && s.gameId === gameId)?.points ?? 0
+  const rank = state.teams.filter((t) => {
+    const pts = state.scores.find((s) => s.teamId === t.id && s.gameId === gameId)?.points ?? 0
+    return pts > myScore
+  }).length + 1
+
+  return rankPoints[rank - 1] ?? lastPoints
+}
+
 export function getTotalScore(state: GameState, teamId: string): number {
-  return state.scores
-    .filter((s) => s.teamId === teamId)
-    .reduce((sum, s) => sum + s.points, 0)
+  return Math.round(
+    state.games.reduce((sum, game) => {
+      const rp = getGameRankPoints(state, game.id, teamId)
+      const weight = game.weight ?? 100
+      return sum + rp * weight / 100
+    }, 0)
+  )
 }
 
 export function getRankedTeams(state: GameState): Team[] {

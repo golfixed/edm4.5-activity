@@ -185,6 +185,18 @@ function GamesTab() {
                 <option value="physical">กีฬา/กิจกรรม</option>
                 <option value="human-bingo">Human Bingo</option>
               </select>
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <input
+                  type="number"
+                  min="0"
+                  max="500"
+                  value={game.weight ?? 100}
+                  onChange={(e) => updateGame(game.id, { weight: parseInt(e.target.value) || 0 })}
+                  className="w-16 border border-gray-200 rounded px-2 py-1 text-center focus:outline-none focus:border-school-primary"
+                  title="% weight"
+                />
+                <span className="text-gray-400 text-sm">%</span>
+              </div>
               <button onClick={() => deleteGame(game.id)} className="text-red-500 hover:text-red-700 text-sm">
                 ลบ
               </button>
@@ -700,9 +712,9 @@ function SettingsTab() {
 
       {/* Rank bonuses */}
       <div className="bg-white rounded-2xl shadow p-6">
-      <h2 className="text-xl font-bold text-school-primary mb-1">ตั้งค่าคะแนนสุทธิ</h2>
+      <h2 className="text-xl font-bold text-school-primary mb-1">ตั้งค่าคะแนน Rank</h2>
       <p className="text-gray-500 text-sm mb-6">
-        กำหนดคะแนนตามอันดับ — แถวสุดท้ายใช้กับอันดับที่เหลือทั้งหมด
+        คะแนนที่ได้ต่อ rank ในแต่ละเกม — รวมทุกเกมเป็นคะแนนรวม — แถวสุดท้ายใช้กับอันดับที่เหลือทั้งหมด
       </p>
 
       <div className="space-y-2 mb-4">
