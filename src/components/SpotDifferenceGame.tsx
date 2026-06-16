@@ -322,7 +322,13 @@ export default function SpotDifferenceGame({ game }: Props) {
                   <div className="text-center text-school-accent font-bold text-lg mb-2 flex-shrink-0">ภาพ {side}</div>
                 )}
 
-                <div className="relative bg-black/30 rounded-xl overflow-hidden flex-1 min-h-0">
+                <div className={`relative bg-black/30 rounded-xl overflow-hidden flex-1 min-h-0 transition-all duration-300 ${
+                  revealed && correct !== undefined
+                    ? isCorrect
+                      ? 'ring-4 ring-green-400 shadow-[0_0_24px_4px_rgba(74,222,128,0.5)]'
+                      : 'ring-4 ring-red-400 shadow-[0_0_24px_4px_rgba(248,113,113,0.4)]'
+                    : ''
+                }`}>
                   {imgSrc ? (
                     <>
                       <img src={imgSrc} alt={side} className="w-full h-full object-contain block" draggable={false} />
