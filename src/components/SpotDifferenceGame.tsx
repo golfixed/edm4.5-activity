@@ -172,7 +172,10 @@ export default function SpotDifferenceGame({ game }: Props) {
                           : 'border-white/30 text-white hover:border-white/60'}`}
                     >
                       <span className={`w-3 h-3 rounded-full flex-shrink-0 ${team.color}`} />
-                      {team.name}
+                      <span className="flex flex-col items-start leading-tight">
+                        <span>{team.name}</span>
+                        {team.captain && <span className="text-white/50 text-xs font-normal">({team.captain})</span>}
+                      </span>
                       {selected && <span className="ml-auto text-school-accent text-xs">✓</span>}
                     </button>
                   )
