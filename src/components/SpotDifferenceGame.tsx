@@ -299,33 +299,33 @@ export default function SpotDifferenceGame({ game }: Props) {
             const isCorrect = correct === side
             return (
               <div key={side} className="flex-1 flex flex-col min-w-0 min-h-0">
-                <div className="text-center text-school-accent font-bold text-lg mb-2 flex-shrink-0">ภาพ {side}</div>
-                <div className={`relative bg-black/30 rounded-xl overflow-hidden flex-1 min-h-0 transition-all duration-300 ${
-                  revealed && correct !== undefined
-                    ? isCorrect
-                      ? 'ring-4 ring-green-400 shadow-[0_0_24px_4px_rgba(74,222,128,0.5)]'
-                      : 'ring-4 ring-red-400 shadow-[0_0_24px_4px_rgba(248,113,113,0.4)]'
-                    : ''
-                }`}>
+                {/* Header bar — plain label or result banner */}
+                {revealed && correct !== undefined ? (
+                  <div className={`flex items-center justify-center gap-3 rounded-xl mb-2 py-3 flex-shrink-0 ${
+                    isCorrect ? 'bg-green-500' : 'bg-red-500'
+                  }`}>
+                    {isCorrect ? (
+                      <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
+                        <polyline points="8,26 20,38 40,14" stroke="white" strokeWidth="5.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    ) : (
+                      <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
+                        <line x1="10" y1="10" x2="38" y2="38" stroke="white" strokeWidth="5.5" strokeLinecap="round"/>
+                        <line x1="38" y1="10" x2="10" y2="38" stroke="white" strokeWidth="5.5" strokeLinecap="round"/>
+                      </svg>
+                    )}
+                    <span className="text-white font-extrabold text-2xl">
+                      {isCorrect ? 'ถูกต้อง' : 'ผิด'}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="text-center text-school-accent font-bold text-lg mb-2 flex-shrink-0">ภาพ {side}</div>
+                )}
+
+                <div className="relative bg-black/30 rounded-xl overflow-hidden flex-1 min-h-0">
                   {imgSrc ? (
                     <>
                       <img src={imgSrc} alt={side} className="w-full h-full object-contain block" draggable={false} />
-                      {revealed && correct !== undefined && (
-                        <div className="absolute top-3 right-3">
-                          {isCorrect ? (
-                            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <circle cx="24" cy="24" r="24" fill="#16a34a" fillOpacity="0.92"/>
-                              <polyline points="12,25 20,33 36,16" stroke="white" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                          ) : (
-                            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <circle cx="24" cy="24" r="24" fill="#dc2626" fillOpacity="0.92"/>
-                              <line x1="14" y1="14" x2="34" y2="34" stroke="white" strokeWidth="4.5" strokeLinecap="round"/>
-                              <line x1="34" y1="14" x2="14" y2="34" stroke="white" strokeWidth="4.5" strokeLinecap="round"/>
-                            </svg>
-                          )}
-                        </div>
-                      )}
                       {revealed && correct === undefined && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black/50">
                           <span className="text-white/60 text-sm">ยังไม่ได้ตั้งเฉลย</span>
