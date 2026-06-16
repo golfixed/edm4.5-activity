@@ -312,20 +312,19 @@ export default function SpotDifferenceGame({ game }: Props) {
                     <>
                       <img src={imgSrc} alt={side} className="w-full h-full object-contain block" draggable={false} />
                       {revealed && correct !== undefined && (
-                        <div className={`absolute top-0 left-0 right-0 flex items-center justify-center gap-2 py-2 ${
+                        <div className={`absolute top-0 left-0 right-0 flex items-center justify-center py-4 ${
                           isCorrect ? 'bg-green-500/90' : 'bg-red-500/90'
-                        }`}>
+                        }`} style={{ height: '30%' }}>
                           {isCorrect ? (
-                            <svg width="24" height="24" viewBox="0 0 48 48" fill="none">
-                              <polyline points="8,26 20,38 40,14" stroke="white" strokeWidth="5.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            <svg width="100%" height="100%" viewBox="0 0 48 48" fill="none" style={{ maxWidth: 120 }}>
+                              <polyline points="6,26 18,40 42,10" stroke="white" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>
                           ) : (
-                            <svg width="24" height="24" viewBox="0 0 48 48" fill="none">
-                              <line x1="10" y1="10" x2="38" y2="38" stroke="white" strokeWidth="5.5" strokeLinecap="round"/>
-                              <line x1="38" y1="10" x2="10" y2="38" stroke="white" strokeWidth="5.5" strokeLinecap="round"/>
+                            <svg width="100%" height="100%" viewBox="0 0 48 48" fill="none" style={{ maxWidth: 120 }}>
+                              <line x1="8" y1="8" x2="40" y2="40" stroke="white" strokeWidth="6" strokeLinecap="round"/>
+                              <line x1="40" y1="8" x2="8" y2="40" stroke="white" strokeWidth="6" strokeLinecap="round"/>
                             </svg>
                           )}
-                          <span className="text-white font-extrabold text-xl">{isCorrect ? 'ถูกต้อง' : 'ผิด'}</span>
                         </div>
                       )}
                       {revealed && correct === undefined && (
