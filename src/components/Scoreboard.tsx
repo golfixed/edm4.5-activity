@@ -100,14 +100,14 @@ export default function Scoreboard({ compact = false }: Props) {
                         {rank !== null ? (
                           <span>
                             <span className="font-semibold">{raw ?? 0}</span>
-                            <span className="text-gray-400 text-xs ml-1">({weighted} คะแนน)</span>
+                            <span className="text-gray-400 text-xs ml-1">({weighted} pt.)</span>
                           </span>
                         ) : '-'}
                       </td>
                     )
                   })}
                   <td className="px-4 py-3 text-center font-bold text-amber-600 text-lg bg-amber-50">
-                    {total}
+                    {total} <span className="text-xs font-normal">pt.</span>
                   </td>
                 </tr>
               )

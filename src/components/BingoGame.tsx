@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { Game, Team } from '@/lib/types'
 import { useStore } from '@/lib/store'
 import { generateBingoCard } from '@/lib/bingo'
@@ -68,7 +68,7 @@ function exportAllCardsToPDF(teams: Team[], keywords: string[], gameName: string
   win.onload = () => { win.focus(); win.print() }
 }
 
-// Web Audio tick sound
+// Web Audio helpers
 function playTick(ctx: AudioContext, freq = 880, duration = 0.04, vol = 0.3) {
   const osc = ctx.createOscillator()
   const gain = ctx.createGain()
@@ -81,15 +81,64 @@ function playTick(ctx: AudioContext, freq = 880, duration = 0.04, vol = 0.3) {
 }
 
 function playReveal(ctx: AudioContext) {
-  // Rising chord ding
   [523, 659, 784, 1047].forEach((freq, i) => {
     setTimeout(() => playTick(ctx, freq, 0.3, 0.4), i * 60)
   })
 }
 
+// Returns a stop function; loops 3 descending beeps until stopped
+function startTimeUpLoop(ctx: AudioContext): () => void {
+  let stopped = false
+  const master = ctx.createGain()
+  master.gain.value = 1
+  master.connect(ctx.destination)
+
+  const pattern = [880, 660, 440]
+  const beepDur = 0.22
+  const gap = 0.28
+  const cycleDur = (pattern.length * gap + 0.4) * 1000
+
+  const playOnce = () => {
+    if (stopped) return
+    pattern.forEach((freq, i) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain); gain.connect(master)
+      osc.type = 'square'
+      osc.frequency.value = freq
+      const t = ctx.currentTime + i * gap
+      gain.gain.setValueAtTime(0.35, t)
+      gain.gain.exponentialRampToValueAtTime(0.001, t + beepDur)
+      osc.start(t); osc.stop(t + beepDur)
+    })
+    setTimeout(playOnce, cycleDur)
+  }
+  playOnce()
+  return () => {
+    stopped = true
+    master.gain.setValueAtTime(0, ctx.currentTime)
+    master.disconnect()
+  }
+}
+
+function playCountdownTick(ctx: AudioContext, remaining: number) {
+  if (remaining <= 0) return
+  else if (remaining <= 5) {
+    // Urgent: high double-beep
+    playTick(ctx, 1200, 0.06, 0.5)
+    setTimeout(() => playTick(ctx, 1200, 0.06, 0.5), 120)
+  } else if (remaining <= 10) {
+    // Warning: higher pitch
+    playTick(ctx, 1000, 0.05, 0.35)
+  } else {
+    // Normal tick
+    playTick(ctx, 700, 0.04, 0.15)
+  }
+}
+
 // Export pre-generated cards directly (no team association)
 function exportCardsDirectToPDF(cards: string[][], gameName: string) {
-  const cardsHTML = cards.map((card, ci) => {
+  const cardsHTML = cards.map((card) => {
     const cells = card.map((cell) => {
       const isFree = cell === 'FREE'
       return `<div style="
@@ -109,7 +158,7 @@ function exportCardsDirectToPDF(cards: string[][], gameName: string) {
       font-family:'Sarabun',sans-serif;padding:8mm;box-sizing:border-box;
     ">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6mm;">
-        <span style="font-size:22px;font-weight:700;color:#111827">${gameName} — แผ่นที่ ${ci + 1}</span>
+        <span style="font-size:22px;font-weight:700;color:#111827">${gameName}</span>
         <div style="display:flex;align-items:center;gap:8px;">
           <span style="font-size:15px;color:#6b7280;">ทีม</span>
           <div style="width:120px;border-bottom:2px solid #374151;"></div>
@@ -142,7 +191,6 @@ function exportCardsDirectToPDF(cards: string[][], gameName: string) {
 
 type Phase = 'home' | 'preview' | 'playing'
 
-// Generate N truly-random cards (new seeds each time)
 function generateRandomCards(keywords: string[], count: number): string[][] {
   return Array.from({ length: count }, (_, i) =>
     generateBingoCard(keywords, `${Date.now()}-${i}-${Math.random()}`)
@@ -161,12 +209,74 @@ export default function BingoGame({ game }: { game: Game }) {
   const [calledKeywords, setCalledKeywords] = useState<string[]>([])
   const [overlayKeyword, setOverlayKeyword] = useState<string | null>(null)
   const [shuffleWord, setShuffleWord] = useState<string | null>(null)
+
+  const [countdownSeconds, setCountdownSeconds] = useState(30)
+  const [countdown, setCountdown] = useState<number | null>(null)
+  const [timeUp, setTimeUp] = useState(false)
+  const [flash, setFlash] = useState(false)
+  const [demoMode, setDemoMode] = useState(false)
+
   const audioCtxRef = useRef<AudioContext | null>(null)
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const flashRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const timeUpStopRef = useRef<(() => void) | null>(null)
 
   const getAudioCtx = () => {
     if (!audioCtxRef.current) audioCtxRef.current = new AudioContext()
     return audioCtxRef.current
   }
+
+  // Countdown timer — starts when overlay appears, cleans up when it disappears
+  useEffect(() => {
+    const activeSecs = demoMode ? 10 : countdownSeconds
+    if (overlayKeyword && activeSecs > 0) {
+      setCountdown(activeSecs)
+      const ctx = getAudioCtx()
+      countdownRef.current = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev === null) return null
+          const next = prev - 1
+          playCountdownTick(ctx, next)
+          if (next <= 0) {
+            clearInterval(countdownRef.current!)
+            return 0
+          }
+          return next
+        })
+      }, 1000)
+    } else {
+      if (countdownRef.current) clearInterval(countdownRef.current)
+      setCountdown(null)
+      setTimeUp(false)
+      setFlash(false)
+    }
+    return () => {
+      if (countdownRef.current) clearInterval(countdownRef.current)
+    }
+  }, [overlayKeyword, demoMode]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // When countdown hits 0: start siren + flash; stop when timeUp clears
+  useEffect(() => {
+    if (timeUp) {
+      const ctx = getAudioCtx()
+      timeUpStopRef.current = startTimeUpLoop(ctx)
+      let f = false
+      flashRef.current = setInterval(() => { f = !f; setFlash(f) }, 300)
+    } else {
+      if (timeUpStopRef.current) { timeUpStopRef.current(); timeUpStopRef.current = null }
+      if (flashRef.current) { clearInterval(flashRef.current); flashRef.current = null }
+      setFlash(false)
+    }
+    return () => {
+      if (timeUpStopRef.current) { timeUpStopRef.current(); timeUpStopRef.current = null }
+      if (flashRef.current) { clearInterval(flashRef.current); flashRef.current = null }
+    }
+  }, [timeUp]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Trigger timeUp when countdown reaches 0
+  useEffect(() => {
+    if (countdown === 0) setTimeUp(true)
+  }, [countdown])
 
   const openPreview = () => {
     setCards(generateRandomCards(keywords, cardCount))
@@ -179,8 +289,24 @@ export default function BingoGame({ game }: { game: Game }) {
     setPhase('playing')
   }
 
+  const startDemo = () => {
+    const pool = keywords.length > 0 ? keywords : ['ตัวอย่าง Keyword']
+    const pick = pool[Math.floor(Math.random() * pool.length)]
+    setDemoMode(true)
+    setCalledKeywords([])
+    setPhase('playing')
+    // slight delay so playing phase renders before overlay appears
+    setTimeout(() => setOverlayKeyword(pick), 50)
+  }
+
   const drawKeyword = useCallback(() => {
     if (overlayKeyword) {
+      if (demoMode) {
+        setOverlayKeyword(null)
+        setDemoMode(false)
+        setPhase('home')
+        return
+      }
       setCalledKeywords((prev) => [...prev, overlayKeyword])
       setOverlayKeyword(null)
       return
@@ -222,16 +348,13 @@ export default function BingoGame({ game }: { game: Game }) {
       <div className={`h-screen flex flex-col overflow-hidden ${bgClass}`} style={bgStyle}>
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 flex flex-col h-full">
-          {/* Top bar */}
           <div className="flex items-center justify-between px-6 py-4">
             <Link href="/" className="text-white/70 hover:text-white text-sm">← กลับ</Link>
             <h1 className="text-white font-bold text-xl">{game.icon} {game.name}</h1>
             <span className="w-16" />
           </div>
 
-          {/* Center content */}
           <div className="flex-1 flex flex-col items-center justify-center gap-8 px-8">
-            {/* Card count input */}
             <div className="flex items-center gap-3 bg-white/10 border border-white/20 rounded-2xl px-6 py-3">
               <span className="text-white text-lg">จำนวนกระดาษ</span>
               <button onClick={() => setCardCount(c => Math.max(1, c - 1))}
@@ -242,16 +365,16 @@ export default function BingoGame({ game }: { game: Game }) {
               <span className="text-white/60 text-base">แผ่น</span>
             </div>
 
-            {/* Big buttons */}
             <div className="flex flex-col gap-4 w-full max-w-sm">
-              <button
-                onClick={openPreview}
+              <button onClick={openPreview}
                 className="w-full py-5 bg-white/15 hover:bg-white/25 border-2 border-white/30 text-white font-bold text-2xl rounded-2xl transition-all"
               >🃏 แสดงตัวอย่างกระดาษ</button>
-              <button
-                onClick={startGame}
+              <button onClick={startGame}
                 className="w-full py-5 bg-school-accent hover:bg-school-accent/80 text-white font-bold text-2xl rounded-2xl transition-all shadow-lg"
               >🎲 เริ่มเกม</button>
+              <button onClick={startDemo}
+                className="w-full py-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white/80 font-semibold text-lg rounded-2xl transition-all"
+              >⏱ ทดสอบ Countdown (10 วิ)</button>
             </div>
           </div>
         </div>
@@ -266,7 +389,6 @@ export default function BingoGame({ game }: { game: Game }) {
       <div className={`h-screen flex flex-col overflow-hidden ${bgClass}`} style={bgStyle}>
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative z-10 flex flex-col h-full p-4 gap-3">
-          {/* Header */}
           <div className="flex items-center gap-2">
             <button onClick={() => setPhase('home')} className="text-white/70 hover:text-white text-sm flex-shrink-0">← กลับ</button>
             <h1 className="text-white font-bold text-lg mx-auto">{game.icon} {game.name}</h1>
@@ -283,13 +405,10 @@ export default function BingoGame({ game }: { game: Game }) {
               className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm border border-white/20 transition-colors flex-shrink-0">→</button>
           </div>
 
-          {/* Card */}
           <div className="flex-1 flex items-center justify-center min-h-0">
             <div className="grid grid-cols-5 gap-1 w-full max-w-lg">
               {card.map((cell, idx) => (
-                <div key={idx} className={`aspect-square flex items-center justify-center rounded-lg border text-center p-1 ${
-                  cell === 'FREE' ? 'bg-yellow-200 border-yellow-400 font-bold text-yellow-800' : 'bg-white/90 border-white/50 text-gray-800'
-                }`}>
+                <div key={idx} className={`aspect-square flex items-center justify-center rounded-lg border text-center p-1 ${cell === 'FREE' ? 'bg-yellow-200 border-yellow-400 font-bold text-yellow-800' : 'bg-white/90 border-white/50 text-gray-800'}`}>
                   <span className="text-xs leading-tight">{cell}</span>
                 </div>
               ))}
@@ -308,6 +427,9 @@ export default function BingoGame({ game }: { game: Game }) {
   const remaining = keywords.filter((k) => !calledKeywords.includes(k))
   const allCalled = remaining.length === 0
 
+  const isUrgent = countdown !== null && countdown <= 5
+  const isWarning = countdown !== null && countdown <= 10 && countdown > 5
+
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-gray-50">
 
@@ -319,13 +441,58 @@ export default function BingoGame({ game }: { game: Game }) {
         </div>
       )}
 
-      {/* Keyword overlay — click to proceed */}
+      {/* Keyword overlay with countdown */}
       {overlayKeyword && (
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white cursor-pointer p-12"
-          onClick={drawKeyword}>
-          <div className="font-extrabold text-gray-900 text-center leading-tight flex-1 flex items-center"
-            style={{ fontSize: 'clamp(3rem, 10vw, 9rem)' }}>{overlayKeyword}</div>
-          <div className="text-gray-400 text-xl">แตะเพื่อถัดไป →</div>
+        <div
+          className={`absolute inset-0 z-50 flex flex-col items-center justify-center cursor-pointer p-12 transition-colors duration-150 ${
+            timeUp
+              ? flash ? 'bg-red-600' : 'bg-red-500'
+              : isUrgent ? 'bg-red-50' : isWarning ? 'bg-orange-50' : 'bg-white'
+          }`}
+          onClick={drawKeyword}
+        >
+          {/* หมดเวลา banner */}
+          {timeUp && (
+            <div className={`text-white font-black tracking-widest mb-4 transition-opacity ${flash ? 'opacity-100' : 'opacity-80'}`}
+              style={{ fontSize: 'clamp(2rem, 6vw, 5rem)' }}>
+              ⏰ หมดเวลา!
+            </div>
+          )}
+
+          <div
+            className={`font-extrabold text-center leading-tight flex-1 flex items-center transition-colors duration-150 ${
+              timeUp ? 'text-white' : isUrgent ? 'text-red-600' : 'text-gray-900'
+            }`}
+            style={{ fontSize: 'clamp(3rem, 10vw, 9rem)' }}
+          >
+            {overlayKeyword}
+          </div>
+
+          {/* Countdown */}
+          {countdown !== null && countdownSeconds > 0 && !timeUp && (
+            <div className="flex flex-col items-center gap-2 mb-6">
+              <div className="w-80 h-3 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-1000 ${
+                    isUrgent ? 'bg-red-500' : isWarning ? 'bg-orange-400' : 'bg-green-400'
+                  }`}
+                  style={{ width: `${(countdown / countdownSeconds) * 100}%` }}
+                />
+              </div>
+              <div
+                className={`font-black tabular-nums transition-colors duration-300 ${
+                  isUrgent ? 'text-red-600' : isWarning ? 'text-orange-500' : 'text-gray-400'
+                }`}
+                style={{ fontSize: isUrgent ? '3.5rem' : '2.5rem' }}
+              >
+                {countdown}
+              </div>
+            </div>
+          )}
+
+          <div className={`text-xl ${timeUp ? 'text-white/70' : 'text-gray-400'}`}>
+            แตะเพื่อถัดไป →
+          </div>
         </div>
       )}
 
@@ -343,8 +510,8 @@ export default function BingoGame({ game }: { game: Game }) {
             {calledKeywords.length === 0
               ? <p className="text-gray-400 text-sm">ยังไม่มี keyword ที่เรียก</p>
               : calledKeywords.map((kw, i) => (
-                  <span key={i} className="bg-green-100 text-green-800 border border-green-300 px-4 py-1.5 rounded-full font-medium" style={{fontSize:'24px'}}>{kw}</span>
-                ))
+                <span key={i} className="bg-green-100 text-green-800 border border-green-300 px-4 py-1.5 rounded-full font-medium" style={{ fontSize: '24px' }}>{kw}</span>
+              ))
             }
           </div>
         </div>
@@ -354,12 +521,27 @@ export default function BingoGame({ game }: { game: Game }) {
           {allCalled ? (
             <div className="text-center py-4 text-2xl font-bold text-school-primary">🎉 เรียกครบทุก keyword แล้ว!</div>
           ) : (
-            <button
-              onClick={drawKeyword}
-              className="w-full py-4 bg-school-primary hover:bg-school-primary-dark text-white font-bold text-xl rounded-xl transition-colors shadow"
-            >
-              🎲 สุ่ม Keyword ถัดไป
-            </button>
+            <div className="flex gap-2 items-center">
+              <button
+                onClick={drawKeyword}
+                className="flex-1 py-4 bg-school-primary hover:bg-school-primary-dark text-white font-bold text-xl rounded-xl transition-colors shadow"
+              >
+                🎲 สุ่ม Keyword ถัดไป
+              </button>
+              {/* Countdown setting */}
+              <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl px-3 py-2 flex-shrink-0">
+                <span className="text-gray-500 text-sm">⏱</span>
+                <input
+                  type="number"
+                  min="0"
+                  max="300"
+                  value={countdownSeconds}
+                  onChange={(e) => setCountdownSeconds(parseInt(e.target.value) || 0)}
+                  className="w-14 text-center font-bold text-gray-700 focus:outline-none text-lg"
+                />
+                <span className="text-gray-400 text-sm">วิ</span>
+              </div>
+            </div>
           )}
           <div className="flex gap-2 items-center">
             <button
