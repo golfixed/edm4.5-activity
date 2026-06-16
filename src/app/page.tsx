@@ -18,7 +18,7 @@ export default function Home() {
     <div className="min-h-screen p-6">
       <header className="mb-8 text-center">
         <h1 className="text-4xl font-bold text-school-primary-dark mb-2">
-          🏫 EDM 4.5 Active Fun Games
+          Active Fun Games (EDM 4.5)
         </h1>
         {/* <p className="text-school-primary text-lg">ระบบบันทึกคะแนนกิจกรรมโรงเรียน</p> */}
       </header>
