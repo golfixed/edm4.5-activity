@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import { Team, Game, Score, GameState } from './types'
 
 const TEAM_COLORS = [
@@ -44,32 +45,37 @@ interface StoreActions {
 
 type Store = GameState & StoreActions
 
-export const useStore = create<Store>()((set, get) => ({
-  teams: defaultTeams,
-  games: defaultGames,
-  scores: [],
-  activeGameId: null,
-  rankBonuses: defaultRankBonuses,
+export const useStore = create<Store>()(
+  persist(
+    (set) => ({
+      teams: defaultTeams,
+      games: defaultGames,
+      scores: [],
+      activeGameId: null,
+      rankBonuses: defaultRankBonuses,
 
-  setTeams: (teams) => set({ teams }),
-  setGames: (games) => set({ games }),
-  addScore: (score) =>
-    set((state) => {
-      const existing = state.scores.findIndex(
-        (s) => s.teamId === score.teamId && s.gameId === score.gameId
-      )
-      if (existing >= 0) {
-        const updated = [...state.scores]
-        updated[existing] = score
-        return { scores: updated }
-      }
-      return { scores: [...state.scores, score] }
+      setTeams: (teams) => set({ teams }),
+      setGames: (games) => set({ games }),
+      addScore: (score) =>
+        set((state) => {
+          const existing = state.scores.findIndex(
+            (s) => s.teamId === score.teamId && s.gameId === score.gameId
+          )
+          if (existing >= 0) {
+            const updated = [...state.scores]
+            updated[existing] = score
+            return { scores: updated }
+          }
+          return { scores: [...state.scores, score] }
+        }),
+      setActiveGame: (id) => set({ activeGameId: id }),
+      resetScores: () => set({ scores: [] }),
+      setRankBonuses: (rankBonuses) => set({ rankBonuses }),
+      _hydrate: (partial) => set(partial),
     }),
-  setActiveGame: (id) => set({ activeGameId: id }),
-  resetScores: () => set({ scores: [] }),
-  setRankBonuses: (rankBonuses) => set({ rankBonuses }),
-  _hydrate: (partial) => set(partial),
-}))
+    { name: 'edm-activity' }
+  )
+)
 
 // Returns the rank position (1-based) of a team in a single game. Returns null if no scores recorded.
 export function getGameRank(state: GameState, gameId: string, teamId: string): number | null {

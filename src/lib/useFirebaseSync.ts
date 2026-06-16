@@ -4,19 +4,65 @@ import { useEffect, useRef } from 'react'
 import { ref, onValue, set as fbSet } from 'firebase/database'
 import { db, isFirebaseConfigured } from './firebase'
 import { useStore, defaultTeams, defaultGames, defaultRankBonuses } from './store'
-import { GameState } from './types'
+import { Game, GameState } from './types'
 
 const ROOT = 'edm-activity'
 const LS_KEY = 'edm-activity'
+const IMG_PREFIX = 'edm-img'
 
-/**
- * Firebase RTDB stores JS arrays as objects with numeric string keys.
- * This converts them back to proper arrays recursively.
- */
+// ── Image localStorage helpers ────────────────────────────────────────────────
+// Base64 image blobs are too large for Firebase RTDB (10MB write limit).
+// We store imageA/imageB in localStorage keyed by pair ID, and only sync
+// metadata (id, label, correctImage) to Firebase.
+
+function saveImagesToLocal(games: Game[]) {
+  if (typeof localStorage === 'undefined') return
+  games.forEach((game) => {
+    ;(game.imageSets ?? []).forEach((set) => {
+      set.pairs.forEach((pair) => {
+        if (pair.imageA) localStorage.setItem(`${IMG_PREFIX}-${pair.id}-A`, pair.imageA)
+        if (pair.imageB) localStorage.setItem(`${IMG_PREFIX}-${pair.id}-B`, pair.imageB)
+      })
+    })
+  })
+}
+
+function restoreImagesFromLocal(games: Game[]): Game[] {
+  if (typeof localStorage === 'undefined') return games
+  return games.map((game) => ({
+    ...game,
+    imageSets: (game.imageSets ?? []).map((set) => ({
+      ...set,
+      pairs: set.pairs.map((pair) => ({
+        ...pair,
+        imageA: localStorage.getItem(`${IMG_PREFIX}-${pair.id}-A`) ?? pair.imageA,
+        imageB: localStorage.getItem(`${IMG_PREFIX}-${pair.id}-B`) ?? pair.imageB,
+      })),
+    })),
+  }))
+}
+
+function stripImagesFromGames(games: Game[]): Game[] {
+  return games.map(({ backgroundImage: _bg, soundStart: _ss, soundTick: _st, soundTimeUp: _su, ...game }) => ({
+    ...game,
+    imageSets: (game.imageSets ?? []).map((set) => ({
+      ...set,
+      pairs: set.pairs.map((pair) => ({
+        id: pair.id,
+        label: pair.label,
+        correctImage: pair.correctImage,
+        imageA: '',
+        imageB: '',
+      })),
+    })),
+  }))
+}
+
+// ── Firebase array fix ────────────────────────────────────────────────────────
+
 function toArray(val: any): any[] {
   if (!val) return []
   if (Array.isArray(val)) return val
-  // Firebase object-as-array: { "0": x, "1": y, ... }
   if (typeof val === 'object') {
     const keys = Object.keys(val)
     const allNumeric = keys.every((k) => /^\d+$/.test(k))
@@ -29,10 +75,6 @@ function toArray(val: any): any[] {
   return []
 }
 
-/**
- * Deep-convert Firebase snapshot data — arrays at every level get fixed.
- * Also recursively fixes nested arrays like game.imageSets[].pairs[].
- */
 function fixFirebaseData(data: any) {
   const teams = toArray(data.teams)
   const scores = toArray(data.scores)
@@ -50,10 +92,13 @@ function fixFirebaseData(data: any) {
   return { teams, games, scores, rankBonuses }
 }
 
+// ── Public API ────────────────────────────────────────────────────────────────
+
 export function writeState(state: Omit<GameState, 'activeGameId'>) {
+  saveImagesToLocal(state.games)
   return fbSet(ref(db, ROOT), {
     teams: state.teams,
-    games: state.games,
+    games: stripImagesFromGames(state.games),
     scores: state.scores,
     rankBonuses: state.rankBonuses,
   })
@@ -92,9 +137,10 @@ export function useFirebaseSync() {
           scores:      ls?.scores      ?? [],
           rankBonuses: ls?.rankBonuses ?? defaultRankBonuses,
         })
-        writeState(fixed)
+        const withImages = { ...fixed, games: restoreImagesFromLocal(fixed.games) }
+        writeState(withImages)
         skipNextWrite.current = true
-        store._hydrate(fixed)
+        store._hydrate(withImages)
         isHydrated.current = true
         return
       }
@@ -107,9 +153,10 @@ export function useFirebaseSync() {
         scores:      raw.scores      ?? [],
         rankBonuses: raw.rankBonuses ?? defaultRankBonuses,
       })
+      const withImages = { ...fixed, games: restoreImagesFromLocal(fixed.games) }
 
       skipNextWrite.current = true
-      store._hydrate(fixed)
+      store._hydrate(withImages)
       isHydrated.current = true
     })
 

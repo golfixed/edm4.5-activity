@@ -3,8 +3,6 @@
 import { useState, useRef } from 'react'
 import { useStore, TEAM_COLORS_LIST } from '@/lib/store'
 import { Team, Game, Score, ImagePair, ImageSet } from '@/lib/types'
-import { writeState } from '@/lib/useFirebaseSync'
-import { isFirebaseConfigured } from '@/lib/firebase'
 import Link from 'next/link'
 
 type Tab = 'teams' | 'games' | 'scores' | 'settings'
@@ -653,8 +651,9 @@ function ScoresTab() {
 function SettingsTab() {
   const store = useStore()
   const { rankBonuses, setRankBonuses } = store
-  const bonuses = rankBonuses ?? [50, 45, 40, 35]
-  const [syncStatus, setSyncStatus] = useState<'idle' | 'loading' | 'ok' | 'err'>('idle')
+  const bonuses = rankBonuses ?? [10, 8, 7, 6, 5]
+  const [importStatus, setImportStatus] = useState<'idle' | 'ok' | 'err'>('idle')
+  const importRef = useRef<HTMLInputElement>(null)
 
   const updateBonus = (idx: number, val: number) => {
     const next = [...bonuses]
@@ -668,46 +667,75 @@ function SettingsTab() {
     setRankBonuses(bonuses.filter((_, i) => i !== idx))
   }
 
-  const handleForceSync = async () => {
-    if (!isFirebaseConfigured) { setSyncStatus('err'); return }
-    setSyncStatus('loading')
-    try {
-      await writeState({ teams: store.teams, games: store.games, scores: store.scores, rankBonuses: store.rankBonuses })
-      setSyncStatus('ok')
-      setTimeout(() => setSyncStatus('idle'), 3000)
-    } catch {
-      setSyncStatus('err')
-      setTimeout(() => setSyncStatus('idle'), 3000)
+  const handleExport = () => {
+    const data = {
+      teams: store.teams,
+      games: store.games,
+      scores: store.scores,
+      rankBonuses: store.rankBonuses,
     }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `edm-activity-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target?.result as string)
+        if (!data.teams || !data.games) throw new Error('invalid')
+        store._hydrate({
+          teams: data.teams,
+          games: data.games,
+          scores: data.scores ?? [],
+          rankBonuses: data.rankBonuses ?? [10, 8, 7, 6, 5],
+        })
+        setImportStatus('ok')
+        setTimeout(() => setImportStatus('idle'), 3000)
+      } catch {
+        setImportStatus('err')
+        setTimeout(() => setImportStatus('idle'), 3000)
+      }
+    }
+    reader.readAsText(file)
+    e.target.value = ''
   }
 
   return (
     <div className="space-y-6 max-w-md">
 
-      {/* Firebase sync */}
+      {/* Import / Export */}
       <div className="bg-white rounded-2xl shadow p-6">
-        <h2 className="text-xl font-bold text-school-primary mb-1">ซิงค์ข้อมูลกับ Firebase</h2>
+        <h2 className="text-xl font-bold text-school-primary mb-1">นำเข้า / ส่งออกข้อมูล</h2>
         <p className="text-gray-500 text-sm mb-4">
-          อัปโหลดข้อมูลปัจจุบันทั้งหมดขึ้น Firebase ทับข้อมูลเดิม — ใช้เมื่อต้องการให้ local dev ตรงกับ production
+          ข้อมูลทั้งหมดเก็บใน localStorage ของเบราว์เซอร์นี้ — Export เพื่อสำรองหรือย้ายไปเครื่องอื่น
         </p>
-        <button
-          onClick={handleForceSync}
-          disabled={syncStatus === 'loading'}
-          className={`w-full py-2.5 rounded-xl font-semibold transition-all text-sm ${
-            syncStatus === 'ok'  ? 'bg-green-500 text-white' :
-            syncStatus === 'err' ? 'bg-red-500 text-white' :
-            syncStatus === 'loading' ? 'bg-gray-300 text-gray-500 cursor-wait' :
-            'bg-school-primary text-white hover:bg-school-primary-dark'
-          }`}
-        >
-          {syncStatus === 'loading' ? '⏳ กำลังอัปโหลด…' :
-           syncStatus === 'ok'      ? '✓ อัปโหลดสำเร็จ' :
-           syncStatus === 'err'     ? '✗ เกิดข้อผิดพลาด' :
-           '☁️ อัปโหลดข้อมูลปัจจุบันขึ้น Firebase'}
-        </button>
-        {!isFirebaseConfigured && (
-          <p className="text-red-400 text-xs mt-2">⚠️ ยังไม่ได้ตั้งค่า Firebase environment variables</p>
-        )}
+        <div className="flex gap-3">
+          <button
+            onClick={handleExport}
+            className="flex-1 py-2.5 rounded-xl font-semibold text-sm bg-school-primary text-white hover:bg-school-primary-dark transition-colors"
+          >
+            ⬇️ Export JSON
+          </button>
+          <button
+            onClick={() => importRef.current?.click()}
+            className={`flex-1 py-2.5 rounded-xl font-semibold text-sm transition-colors ${
+              importStatus === 'ok'  ? 'bg-green-500 text-white' :
+              importStatus === 'err' ? 'bg-red-500 text-white' :
+              'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            {importStatus === 'ok' ? '✓ นำเข้าสำเร็จ' : importStatus === 'err' ? '✗ ไฟล์ไม่ถูกต้อง' : '⬆️ Import JSON'}
+          </button>
+          <input ref={importRef} type="file" accept=".json,application/json" className="hidden" onChange={handleImport} />
+        </div>
       </div>
 
       {/* Rank bonuses */}
