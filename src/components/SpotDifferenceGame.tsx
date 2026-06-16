@@ -299,8 +299,6 @@ export default function SpotDifferenceGame({ game }: Props) {
             const isCorrect = correct === side
             return (
               <div key={side} className="flex-1 flex flex-col min-w-0 min-h-0">
-                <div className="text-center text-school-accent font-bold text-lg mb-2 flex-shrink-0">ภาพ {side}</div>
-
                 <div className={`relative bg-black/30 rounded-xl overflow-hidden flex-1 min-h-0 transition-all duration-300 ${
                   revealed && correct !== undefined
                     ? isCorrect
