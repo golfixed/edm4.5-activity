@@ -364,7 +364,7 @@ function ImageSetsEditor({
   updateGame: (id: string, partial: Partial<Game>) => void
 }) {
   const sets = game.imageSets ?? []
-  const [expandedSetId, setExpandedSetId] = useState<string | null>(sets[0]?.id ?? null)
+  const [expandedSetIds, setExpandedSetIds] = useState<Set<string>>(() => new Set(sets.map(s => s.id)))
   const [newSetName, setNewSetName] = useState('')
 
   const saveSets = (next: ImageSet[]) => updateGame(game.id, { imageSets: next })
@@ -377,7 +377,7 @@ function ImageSetsEditor({
 
   const deleteSet = (setId: string) => {
     saveSets(sets.filter((s) => s.id !== setId))
-    if (expandedSetId === setId) setExpandedSetId(null)
+    setExpandedSetIds(prev => { const next = new Set(prev); next.delete(setId); return next })
   }
 
   const renameSet = (setId: string, name: string) => {
@@ -408,16 +408,16 @@ function ImageSetsEditor({
               />
               <span className="text-xs text-gray-400">{set.pairs.length} โจทย์</span>
               <button
-                onClick={() => setExpandedSetId(expandedSetId === set.id ? null : set.id)}
+                onClick={() => setExpandedSetIds(prev => { const next = new Set(prev); next.has(set.id) ? next.delete(set.id) : next.add(set.id); return next })}
                 className="px-2 py-1 bg-school-bg text-school-primary rounded text-xs hover:bg-school-accent/30 transition-colors"
               >
-                {expandedSetId === set.id ? '▲ ซ่อน' : '▼ จัดการ'}
+                {expandedSetIds.has(set.id) ? '▲ ซ่อน' : '▼ จัดการ'}
               </button>
               <button onClick={() => deleteSet(set.id)} className="text-red-400 hover:text-red-600 text-xs">ลบ</button>
             </div>
 
             {/* Pairs editor (expanded) */}
-            {expandedSetId === set.id && (
+            {expandedSetIds.has(set.id) && (
               <div className="border-t border-gray-100 p-3">
                 <PairsEditor
                   pairs={set.pairs}
