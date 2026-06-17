@@ -20,6 +20,7 @@ export default function SpotDifferenceGame({ game }: Props) {
   const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([])
   const [selectedSetId, setSelectedSetId] = useState<string | null>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [customTimer, setCustomTimer] = useState(timerSeconds)
   const [timeLeft, setTimeLeft] = useState(timerSeconds)
   const [revealed, setRevealed] = useState(false)
   const [finalScores, setFinalScores] = useState<Record<string, number>>({})
@@ -29,7 +30,7 @@ export default function SpotDifferenceGame({ game }: Props) {
   const pairs = selectedSet?.pairs ?? []
   const currentPair = pairs[currentIndex]
   const isLast = currentIndex === pairs.length - 1
-  const pct = timerSeconds > 0 ? timeLeft / timerSeconds : 0
+  const pct = customTimer > 0 ? timeLeft / customTimer : 0
   const timerColor = pct > 0.5 ? 'bg-green-400' : pct > 0.2 ? 'bg-yellow-400' : 'bg-red-500'
 
   const tickAudioRef = useRef<HTMLAudioElement | null>(null)
@@ -110,19 +111,19 @@ export default function SpotDifferenceGame({ game }: Props) {
 
   useEffect(() => {
     if (phase === 'playing') {
-      setCurrentIndex(0); setTimeLeft(timerSeconds); setRevealed(false)
+      setCurrentIndex(0); setTimeLeft(customTimer); setRevealed(false)
       playSound(game.soundStart); startTickLoop()
     } else { stopTick() }
   }, [phase])
 
   useEffect(() => {
     if (phase !== 'playing') return
-    stopTick(); setTimeLeft(timerSeconds); setRevealed(false); startTickLoop()
+    stopTick(); setTimeLeft(customTimer); setRevealed(false); startTickLoop()
   }, [currentIndex])
 
   const toggleTeam = (id: string) =>
     setSelectedTeamIds((prev) =>
-      prev.includes(id) ? prev.filter((t) => t !== id) : prev.length < 4 ? [...prev, id] : prev
+      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
     )
 
   const canStart = selectedTeamIds.length > 0 && (sets.length === 0 || selectedSetId !== null)
@@ -146,7 +147,12 @@ export default function SpotDifferenceGame({ game }: Props) {
     return (
       <div className="min-h-screen bg-school-primary-dark flex flex-col">
         <div className="flex items-center px-6 py-3 bg-school-primary shadow gap-4">
-          <Link href="/" className="text-white hover:text-school-accent text-sm">← กลับ</Link>
+          <Link href="/" className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            กลับ
+          </Link>
           <h1 className="text-white text-xl font-bold">{game.name}</h1>
         </div>
 
@@ -156,11 +162,11 @@ export default function SpotDifferenceGame({ game }: Props) {
             {/* Team selection */}
             <div>
               <h2 className="text-white text-xl font-bold mb-1">เลือกทีมที่เล่น</h2>
-              <p className="text-school-accent text-sm mb-4">สูงสุด 4 ทีม ({selectedTeamIds.length}/4)</p>
+              <p className="text-school-accent text-sm mb-4">เลือกแล้ว {selectedTeamIds.length} ทีม</p>
               <div className="grid grid-cols-3 gap-2">
                 {teams.map((team) => {
                   const selected = selectedTeamIds.includes(team.id)
-                  const disabled = !selected && selectedTeamIds.length >= 4
+                  const disabled = false
                   return (
                     <button
                       key={team.id}
@@ -212,13 +218,19 @@ export default function SpotDifferenceGame({ game }: Props) {
               </div>
             )}
 
-            {/* Timer info */}
-            <div className="flex items-center gap-2 bg-white/10 rounded-xl px-4 py-2">
+            {/* Timer setting */}
+            <div className="flex items-center gap-3 bg-white/10 rounded-xl px-4 py-2">
               <span className="text-school-accent text-sm">⏱</span>
-              <span className="text-white/70 text-sm">
-                เวลาต่อข้อ: <span className="text-white font-bold">{timerSeconds} วินาที</span>
-              </span>
-              <span className="text-white/40 text-xs ml-1">(แก้ได้ใน Admin)</span>
+              <span className="text-white/70 text-sm">เวลาต่อข้อ:</span>
+              <input
+                type="number"
+                min={5}
+                max={300}
+                value={customTimer}
+                onChange={(e) => setCustomTimer(Math.max(1, Number(e.target.value)))}
+                className="w-16 text-center bg-white/20 text-white font-bold rounded-lg px-2 py-1 text-sm border border-white/30 focus:outline-none focus:border-white/60"
+              />
+              <span className="text-white/70 text-sm">วินาที</span>
             </div>
 
             <button
@@ -236,6 +248,7 @@ export default function SpotDifferenceGame({ game }: Props) {
             </button>
           </div>
         </div>
+
       </div>
     )
   }
@@ -382,7 +395,10 @@ export default function SpotDifferenceGame({ game }: Props) {
   return (
     <div className="min-h-screen bg-school-primary-dark flex flex-col">
       <div className="flex items-center px-6 py-3 bg-school-primary shadow gap-4">
-        <button onClick={() => setPhase(pairs.length > 0 ? 'playing' : 'setup')} className="text-white hover:text-school-accent text-sm">← กลับ</button>
+        <button onClick={() => setPhase(pairs.length > 0 ? 'playing' : 'setup')} className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+            กลับ
+          </button>
         <h1 className="text-white text-xl font-bold">บันทึกคะแนน — {game.name}</h1>
       </div>
       <div className="flex-1 flex items-center justify-center p-8">

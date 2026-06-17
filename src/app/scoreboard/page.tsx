@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStore, getTotalScore, getRankedTeams, getGameRank, getGameRankPoints, defaultRankBonuses } from '@/lib/store'
 import Link from 'next/link'
@@ -8,6 +8,7 @@ import Link from 'next/link'
 export default function ScoreboardPage() {
   const router = useRouter()
   const state = useStore()
+  const [view, setView] = useState<'podium' | 'list'>('podium')
   const ranked = getRankedTeams(state)
   const games = state.games
 
@@ -32,12 +33,29 @@ export default function ScoreboardPage() {
         <h1 className="text-5xl font-extrabold tracking-tight text-white">
           🏆 ตารางคะแนน
         </h1>
-        <Link
-          href="/"
-          className="px-5 py-2 bg-white/20 rounded-xl text-base font-semibold text-white hover:bg-white/30 transition-colors"
-        >
-          ← กลับหน้าหลัก
-        </Link>
+        <div className="flex items-center gap-3">
+          <div className="flex rounded-xl overflow-hidden border border-white/30">
+            <button
+              onClick={() => setView('podium')}
+              className={`px-4 py-2 text-sm font-semibold transition-colors ${view === 'podium' ? 'bg-white text-school-primary' : 'bg-white/10 text-white hover:bg-white/20'}`}
+            >
+              🏆 Podium
+            </button>
+            <button
+              onClick={() => setView('list')}
+              className={`px-4 py-2 text-sm font-semibold transition-colors ${view === 'list' ? 'bg-white text-school-primary' : 'bg-white/10 text-white hover:bg-white/20'}`}
+            >
+              📋 List
+            </button>
+          </div>
+          <Link
+            href="/"
+            className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+            กลับ
+          </Link>
+        </div>
       </div>
 
       {/* Column headers */}
@@ -60,78 +78,149 @@ export default function ScoreboardPage() {
         </div>
       </div>
 
-      {/* Rows */}
-      <div className="flex-1 px-10 pb-8 space-y-3 overflow-auto">
-        {ranked.map((team, idx) => {
+      {/* Podium top 3 */}
+      {view === 'podium' && ranked.length >= 1 && (
+        <div className="px-10 pt-4 pb-2 flex items-end justify-center gap-6">
+          {/* 2nd place */}
+          {ranked[1] && (() => {
+            const team = ranked[1]
+            const total = getTotalScore(state, team.id)
+            return (
+              <div className="flex flex-col items-center gap-2 flex-1 max-w-xs">
+                <span className="text-4xl">🥈</span>
+                <div className="flex items-center gap-2">
+                  <span className={`w-4 h-4 rounded-full flex-shrink-0 ${team.color}`} />
+                  <span className="font-extrabold text-gray-900 text-2xl">{team.name}</span>
+                </div>
+                {team.captain && <span className="text-gray-400 text-sm">({team.captain})</span>}
+                <div className="flex gap-3 flex-wrap justify-center">
+                  {games.map((g) => {
+                    const rank = getGameRank(state, g.id, team.id)
+                    const rp = getGameRankPoints(state, g.id, team.id)
+                    const weighted = Math.round(rp * (g.weight ?? 100) / 100)
+                    return (
+                      <span key={g.id} className="text-sm text-gray-500">
+                        {g.name}: <span className="font-bold text-gray-800">{rank !== null ? `${weighted} pt.` : '—'}</span>
+                      </span>
+                    )
+                  })}
+                </div>
+                <div className="bg-slate-200 rounded-2xl w-full flex flex-col items-center py-5 shadow-md border border-slate-300" style={{ minHeight: '7rem' }}>
+                  <span className="font-black tabular-nums text-school-primary" style={{ fontSize: '2.8rem' }}>{total}</span>
+                  <span className="text-school-primary/60 text-base font-semibold">pt.</span>
+                </div>
+              </div>
+            )
+          })()}
+
+          {/* 1st place */}
+          {ranked[0] && (() => {
+            const team = ranked[0]
+            const total = getTotalScore(state, team.id)
+            return (
+              <div className="flex flex-col items-center gap-2 flex-1 max-w-xs">
+                <span className="text-5xl">👑</span>
+                <div className="flex items-center gap-2">
+                  <span className={`w-5 h-5 rounded-full flex-shrink-0 ${team.color}`} />
+                  <span className="font-extrabold text-gray-900 text-3xl">{team.name}</span>
+                </div>
+                {team.captain && <span className="text-gray-400 text-sm">({team.captain})</span>}
+                <div className="flex gap-3 flex-wrap justify-center">
+                  {games.map((g) => {
+                    const rank = getGameRank(state, g.id, team.id)
+                    const rp = getGameRankPoints(state, g.id, team.id)
+                    const weighted = Math.round(rp * (g.weight ?? 100) / 100)
+                    return (
+                      <span key={g.id} className="text-sm text-gray-500">
+                        {g.name}: <span className="font-bold text-gray-800">{rank !== null ? `${weighted} pt.` : '—'}</span>
+                      </span>
+                    )
+                  })}
+                </div>
+                <div className="bg-yellow-100 rounded-2xl w-full flex flex-col items-center py-7 shadow-lg border-2 border-yellow-400" style={{ minHeight: '9rem' }}>
+                  <span className="font-black tabular-nums text-school-primary" style={{ fontSize: '3.6rem' }}>{total}</span>
+                  <span className="text-school-primary/60 text-base font-semibold">pt.</span>
+                </div>
+              </div>
+            )
+          })()}
+
+          {/* 3rd place */}
+          {ranked[2] && (() => {
+            const team = ranked[2]
+            const total = getTotalScore(state, team.id)
+            return (
+              <div className="flex flex-col items-center gap-2 flex-1 max-w-xs">
+                <span className="text-4xl">🥉</span>
+                <div className="flex items-center gap-2">
+                  <span className={`w-4 h-4 rounded-full flex-shrink-0 ${team.color}`} />
+                  <span className="font-extrabold text-gray-900 text-2xl">{team.name}</span>
+                </div>
+                {team.captain && <span className="text-gray-400 text-sm">({team.captain})</span>}
+                <div className="flex gap-3 flex-wrap justify-center">
+                  {games.map((g) => {
+                    const rank = getGameRank(state, g.id, team.id)
+                    const rp = getGameRankPoints(state, g.id, team.id)
+                    const weighted = Math.round(rp * (g.weight ?? 100) / 100)
+                    return (
+                      <span key={g.id} className="text-sm text-gray-500">
+                        {g.name}: <span className="font-bold text-gray-800">{rank !== null ? `${weighted} pt.` : '—'}</span>
+                      </span>
+                    )
+                  })}
+                </div>
+                <div className="bg-amber-100 rounded-2xl w-full flex flex-col items-center py-5 shadow-md border border-amber-300" style={{ minHeight: '7rem' }}>
+                  <span className="font-black tabular-nums text-school-primary" style={{ fontSize: '2.8rem' }}>{total}</span>
+                  <span className="text-school-primary/60 text-base font-semibold">pt.</span>
+                </div>
+              </div>
+            )
+          })()}
+        </div>
+      )}
+
+      {/* Rows rank 4+ (podium) or all (list) */}
+      <div className="px-10 pb-8 space-y-2 overflow-auto">
+        {(view === 'list' ? ranked : ranked.slice(3)).map((team, i) => {
+          const idx = view === 'list' ? i : i + 3
           const total = getTotalScore(state, team.id)
           const { icon, cls, row } = rankDisplay(idx + 1)
-          const isTop3 = idx < 3
           return (
             <div
               key={team.id}
-              className={`rounded-2xl px-6 flex items-center gap-4 shadow-sm ${row} ${isTop3 ? 'py-5' : 'py-3'}`}
+              className={`rounded-2xl px-6 py-3 flex items-center gap-4 shadow-sm ${row}`}
             >
-              {/* Rank */}
-              <span
-                className={`font-extrabold text-center flex-shrink-0 w-16 ${cls}`}
-                style={{ fontSize: isTop3 ? '2.5rem' : '1.6rem' }}
-              >
+              <span className={`font-extrabold text-center flex-shrink-0 w-16 ${cls}`} style={{ fontSize: '1.6rem' }}>
                 {icon}
               </span>
-
-              {/* Color dot */}
-              <span className={`rounded-full flex-shrink-0 ${team.color} ${isTop3 ? 'w-6 h-6' : 'w-4 h-4'}`} />
-
-              {/* Team name + captain */}
+              <span className={`rounded-full flex-shrink-0 w-4 h-4 ${team.color}`} />
               <span className="flex-1 flex items-baseline gap-3 min-w-0">
-                <span className="font-extrabold text-gray-900" style={{ fontSize: isTop3 ? 'clamp(1.6rem,3vw,2.4rem)' : 'clamp(1.2rem,2vw,1.6rem)' }}>
+                <span className="font-extrabold text-gray-900" style={{ fontSize: 'clamp(1.2rem,2vw,1.6rem)' }}>
                   {team.name}
                 </span>
                 {team.captain && (
-                  <span className="text-gray-400 font-normal" style={{ fontSize: isTop3 ? '1.1rem' : '0.9rem' }}>
-                    ({team.captain})
-                  </span>
+                  <span className="text-gray-400 font-normal" style={{ fontSize: '0.9rem' }}>({team.captain})</span>
                 )}
               </span>
-
-              {/* Per-game: raw score (weighted rank score) */}
               {games.map((g) => {
                 const rank = getGameRank(state, g.id, team.id)
-                const raw = state.scores.find((sc) => sc.teamId === team.id && sc.gameId === g.id)?.points
                 const rp = getGameRankPoints(state, g.id, team.id)
                 const weighted = Math.round(rp * (g.weight ?? 100) / 100)
                 return (
                   <div key={g.id} className="w-36 text-center">
                     {rank !== null ? (
                       <span>
-                        <span
-                          className="font-bold tabular-nums text-gray-800"
-                          style={{ fontSize: isTop3 ? '1.8rem' : '1.4rem' }}
-                        >
-                          {raw ?? 0}
-                        </span>
-                        <span
-                          className="text-gray-400 tabular-nums ml-1"
-                          style={{ fontSize: isTop3 ? '1.1rem' : '0.9rem' }}
-                        >
-                          ({weighted} pt.)
-                        </span>
+                        <span className="font-bold tabular-nums text-gray-900" style={{ fontSize: '1.4rem' }}>{weighted}</span>
+                        <span className="text-gray-500 tabular-nums ml-1" style={{ fontSize: '0.9rem' }}>pt.</span>
                       </span>
                     ) : (
-                      <span className="text-gray-300" style={{ fontSize: isTop3 ? '1.8rem' : '1.4rem' }}>—</span>
+                      <span className="text-gray-300" style={{ fontSize: '1.4rem' }}>—</span>
                     )}
                   </div>
                 )
               })}
-
-              {/* Total Score Rank */}
               <div className="w-32 text-center border-l border-gray-200 pl-4">
-                <span
-                  className="font-black tabular-nums text-school-primary"
-                  style={{ fontSize: isTop3 ? 'clamp(2rem,4vw,3rem)' : 'clamp(1.4rem,2.5vw,2rem)' }}
-                >
-                  {total}
-                </span>
+                <span className="font-black tabular-nums text-school-primary" style={{ fontSize: 'clamp(1.4rem,2.5vw,2rem)' }}>{total}</span>
                 <span className="text-school-primary/50 text-sm ml-1">pt.</span>
               </div>
             </div>

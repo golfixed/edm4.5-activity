@@ -349,7 +349,10 @@ export default function BingoGame({ game }: { game: Game }) {
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 flex flex-col h-full">
           <div className="flex items-center justify-between px-6 py-4">
-            <Link href="/" className="text-white/70 hover:text-white text-sm">← กลับ</Link>
+            <Link href="/" className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+              กลับ
+            </Link>
             <h1 className="text-white font-bold text-xl">{game.icon} {game.name}</h1>
             <span className="w-16" />
           </div>
@@ -390,7 +393,10 @@ export default function BingoGame({ game }: { game: Game }) {
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative z-10 flex flex-col h-full p-4 gap-3">
           <div className="flex items-center gap-2">
-            <button onClick={() => setPhase('home')} className="text-white/70 hover:text-white text-sm flex-shrink-0">← กลับ</button>
+            <button onClick={() => setPhase('home')} className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+              กลับ
+            </button>
             <h1 className="text-white font-bold text-lg mx-auto">{game.icon} {game.name}</h1>
             <button
               onClick={() => exportCardsDirectToPDF(cards, game.name)}
@@ -499,7 +505,10 @@ export default function BingoGame({ game }: { game: Game }) {
       <div className="flex flex-col h-full p-4 gap-3 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between flex-shrink-0">
-          <button onClick={() => setPhase('home')} className="text-gray-500 hover:text-gray-800 text-sm">← กลับ</button>
+          <button onClick={() => setPhase('home')} className="flex items-center gap-1 px-3 py-1.5 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors text-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+              กลับ
+            </button>
           <h1 className="text-gray-800 font-bold text-lg">{game.icon} {game.name}</h1>
           <span className="text-gray-500 text-sm">เรียกไปแล้ว {calledKeywords.length} / {keywords.length}</span>
         </div>

@@ -14,8 +14,9 @@ export default function AdminPage() {
     <div className="min-h-screen p-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center gap-4 mb-6">
-          <Link href="/" className="text-school-primary hover:underline text-sm">
-            ← กลับหน้าหลัก
+          <Link href="/" className="flex items-center gap-1 px-3 py-1.5 border border-school-primary/40 rounded-lg text-school-primary hover:bg-school-primary/10 transition-colors text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+            กลับ
           </Link>
           <h1 className="text-3xl font-bold text-school-primary-dark">
             ⚙️ Admin Panel
@@ -27,11 +28,10 @@ export default function AdminPage() {
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`px-5 py-2 rounded-lg font-semibold transition-colors ${
-                tab === t
-                  ? 'bg-school-primary text-white'
-                  : 'bg-white text-school-primary border border-school-primary hover:bg-school-bg'
-              }`}
+              className={`px-5 py-2 rounded-lg font-semibold transition-colors ${tab === t
+                ? 'bg-school-primary text-white'
+                : 'bg-white text-school-primary border border-school-primary hover:bg-school-bg'
+                }`}
             >
               {t === 'teams' ? 'ทีม' : t === 'games' ? 'เกม' : t === 'settings' ? 'ตั้งค่า' : 'คะแนน'}
             </button>
@@ -225,7 +225,7 @@ function GamesTab() {
                     type="number"
                     min="5"
                     max="300"
-                    value={game.timerSeconds ?? 30}
+                    value={game.timerSeconds ?? 10}
                     onChange={(e) => updateGame(game.id, { timerSeconds: parseInt(e.target.value) || 30 })}
                     className="w-20 border border-gray-200 rounded px-2 py-1 text-center focus:outline-none focus:border-school-primary"
                   />
@@ -695,7 +695,7 @@ function SettingsTab() {
           teams: data.teams,
           games: data.games,
           scores: data.scores ?? [],
-          rankBonuses: data.rankBonuses ?? [10, 8, 7, 6, 5],
+          rankBonuses: data.rankBonuses ?? [10, 8, 7, 6, 4],
         })
         setImportStatus('ok')
         setTimeout(() => setImportStatus('idle'), 3000)
@@ -726,59 +726,68 @@ function SettingsTab() {
           </button>
           <button
             onClick={() => importRef.current?.click()}
-            className={`flex-1 py-2.5 rounded-xl font-semibold text-sm transition-colors ${
-              importStatus === 'ok'  ? 'bg-green-500 text-white' :
+            className={`flex-1 py-2.5 rounded-xl font-semibold text-sm transition-colors ${importStatus === 'ok' ? 'bg-green-500 text-white' :
               importStatus === 'err' ? 'bg-red-500 text-white' :
-              'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+                'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
           >
             {importStatus === 'ok' ? '✓ นำเข้าสำเร็จ' : importStatus === 'err' ? '✗ ไฟล์ไม่ถูกต้อง' : '⬆️ Import JSON'}
           </button>
           <input ref={importRef} type="file" accept=".json,application/json" className="hidden" onChange={handleImport} />
+          <button
+            onClick={() => {
+              if (!confirm('รีเซ็ตข้อมูลทั้งหมดกลับค่าเริ่มต้น?')) return
+              localStorage.removeItem('edm-activity')
+              window.location.reload()
+            }}
+            className="flex-1 py-2.5 rounded-xl font-semibold text-sm bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+          >
+            🗑️ Reset
+          </button>
         </div>
       </div>
 
       {/* Rank bonuses */}
       <div className="bg-white rounded-2xl shadow p-6">
-      <h2 className="text-xl font-bold text-school-primary mb-1">ตั้งค่าคะแนน Rank</h2>
-      <p className="text-gray-500 text-sm mb-6">
-        คะแนนที่ได้ต่อ rank ในแต่ละเกม — รวมทุกเกมเป็นคะแนนรวม — แถวสุดท้ายใช้กับอันดับที่เหลือทั้งหมด
-      </p>
+        <h2 className="text-xl font-bold text-school-primary mb-1">ตั้งค่าคะแนน Rank</h2>
+        <p className="text-gray-500 text-sm mb-6">
+          คะแนนที่ได้ต่อ rank ในแต่ละเกม — รวมทุกเกมเป็นคะแนนรวม — แถวสุดท้ายใช้กับอันดับที่เหลือทั้งหมด
+        </p>
 
-      <div className="space-y-2 mb-4">
-        {bonuses.map((val, idx) => {
-          const isLast = idx === bonuses.length - 1
-          const label = isLast && bonuses.length > 1
-            ? `อันดับ ${idx + 1} ขึ้นไป`
-            : `อันดับที่ ${idx + 1}`
-          return (
-            <div key={idx} className="flex items-center gap-3">
-              <span className="w-36 text-sm text-gray-600 flex-shrink-0">{label}</span>
-              <input
-                type="number"
-                min="0"
-                value={val}
-                onChange={(e) => updateBonus(idx, parseInt(e.target.value) || 0)}
-                className="w-24 border border-gray-200 rounded-lg px-3 py-1.5 text-center font-bold text-amber-600 focus:outline-none focus:border-amber-400"
-              />
-              <span className="text-gray-400 text-sm">คะแนน</span>
-              {bonuses.length > 1 && (
-                <button onClick={() => removeRow(idx)} className="text-red-400 hover:text-red-600 text-sm ml-auto">
-                  ลบ
-                </button>
-              )}
-            </div>
-          )
-        })}
-      </div>
+        <div className="space-y-2 mb-4">
+          {bonuses.map((val, idx) => {
+            const isLast = idx === bonuses.length - 1
+            const label = isLast && bonuses.length > 1
+              ? `อันดับ ${idx + 1} ขึ้นไป`
+              : `อันดับที่ ${idx + 1}`
+            return (
+              <div key={idx} className="flex items-center gap-3">
+                <span className="w-36 text-sm text-gray-600 flex-shrink-0">{label}</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={val}
+                  onChange={(e) => updateBonus(idx, parseInt(e.target.value) || 0)}
+                  className="w-24 border border-gray-200 rounded-lg px-3 py-1.5 text-center font-bold text-amber-600 focus:outline-none focus:border-amber-400"
+                />
+                <span className="text-gray-400 text-sm">คะแนน</span>
+                {bonuses.length > 1 && (
+                  <button onClick={() => removeRow(idx)} className="text-red-400 hover:text-red-600 text-sm ml-auto">
+                    ลบ
+                  </button>
+                )}
+              </div>
+            )
+          })}
+        </div>
 
-      <button
-        onClick={addRow}
-        disabled={bonuses.length >= 12}
-        className="px-4 py-2 border-2 border-dashed border-school-primary/40 text-school-primary rounded-lg hover:border-school-primary text-sm w-full disabled:opacity-30 disabled:cursor-not-allowed"
-      >
-        {bonuses.length >= 12 ? `ครบ ${bonuses.length} อันดับแล้ว` : '+ เพิ่มอันดับ'}
-      </button>
+        <button
+          onClick={addRow}
+          disabled={bonuses.length >= 12}
+          className="px-4 py-2 border-2 border-dashed border-school-primary/40 text-school-primary rounded-lg hover:border-school-primary text-sm w-full disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          {bonuses.length >= 12 ? `ครบ ${bonuses.length} อันดับแล้ว` : '+ เพิ่มอันดับ'}
+        </button>
       </div>
 
     </div>

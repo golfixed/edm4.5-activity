@@ -16,28 +16,31 @@ export default function Home() {
 
   return (
     <div className="min-h-screen p-6">
-      <header className="mb-8 text-center">
-        <h1 className="text-4xl font-bold text-school-primary-dark mb-2">
-          Active Fun Games (EDM 4.5)
-        </h1>
-        {/* <p className="text-school-primary text-lg">ระบบบันทึกคะแนนกิจกรรมโรงเรียน</p> */}
+      <header className="mb-8">
+        <div className="flex items-center justify-center gap-3">
+          <h1 className="text-4xl font-bold text-school-primary-dark">
+            Active Fun Games (EDM 4.5)
+          </h1>
+          <div className="flex gap-2">
+            <Link
+              href="/admin"
+              title="เข้าสู่การแข่งขัน (Admin)"
+              className="w-10 h-10 flex items-center justify-center bg-school-primary text-white rounded-xl shadow hover:bg-school-primary-dark transition-colors text-lg"
+            >
+              ⚙️
+            </Link>
+            <Link
+              href="/scoreboard"
+              title="หน้าจอคะแนน (Projector)"
+              className="w-10 h-10 flex items-center justify-center bg-school-primary-light text-white rounded-xl shadow hover:bg-school-primary transition-colors text-lg"
+            >
+              📊
+            </Link>
+          </div>
+        </div>
       </header>
 
       <div className="max-w-5xl mx-auto space-y-6">
-        <div className="flex flex-wrap gap-3 justify-center">
-          <Link
-            href="/admin"
-            className="px-6 py-3 bg-school-primary text-white rounded-xl font-semibold shadow hover:bg-school-primary-dark transition-colors"
-          >
-            ⚙️ เข้าสู่การแข่งขัน (Admin)
-          </Link>
-          <Link
-            href="/scoreboard"
-            className="px-6 py-3 bg-school-primary-light text-white rounded-xl font-semibold shadow hover:bg-school-primary transition-colors"
-          >
-            📊 หน้าจอคะแนน (Projector)
-          </Link>
-        </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {games.map((g) => {
