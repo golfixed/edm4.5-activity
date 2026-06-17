@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { useStore, TEAM_COLORS_LIST } from '@/lib/store'
-import { Team, Game, Score, ImagePair, ImageSet } from '@/lib/types'
+import { Team, Game, Score, ImagePair, ImageSet, AuctionItem } from '@/lib/types'
 import Link from 'next/link'
 
 type Tab = 'teams' | 'games' | 'scores' | 'settings'
@@ -201,16 +201,19 @@ function GamesTab() {
             </div>
 
             {game.type === 'physical' && (
-              <div className="flex items-center gap-3">
-                <label className="text-sm text-gray-600">ภาพพื้นหลัง:</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleBgUpload(game.id, f) }}
-                  className="text-sm"
-                />
-                {game.backgroundImage && <span className="text-green-600 text-sm">✓ อัปโหลดแล้ว</span>}
-              </div>
+              <>
+                <div className="flex items-center gap-3">
+                  <label className="text-sm text-gray-600">ภาพพื้นหลัง:</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleBgUpload(game.id, f) }}
+                    className="text-sm"
+                  />
+                  {game.backgroundImage && <span className="text-green-600 text-sm">✓ อัปโหลดแล้ว</span>}
+                </div>
+                <AuctionItemsEditor game={game} updateGame={updateGame} />
+              </>
             )}
 
             {game.type === 'human-bingo' && (
@@ -538,6 +541,81 @@ function PairsEditor({
             เพิ่ม
           </button>
         </div>
+      </div>
+    </div>
+  )
+}
+
+function AuctionItemsEditor({
+  game,
+  updateGame,
+}: {
+  game: Game
+  updateGame: (id: string, patch: Partial<Game>) => void
+}) {
+  const items: AuctionItem[] = game.auctionItems ?? []
+
+  const addItem = () => {
+    const newItem: AuctionItem = { id: Date.now().toString(), name: `อุปกรณ์ ${items.length + 1}` }
+    updateGame(game.id, { auctionItems: [...items, newItem] })
+  }
+
+  const updateItem = (itemId: string, patch: Partial<AuctionItem>) => {
+    updateGame(game.id, { auctionItems: items.map((it) => it.id === itemId ? { ...it, ...patch } : it) })
+  }
+
+  const removeItem = (itemId: string) => {
+    updateGame(game.id, { auctionItems: items.filter((it) => it.id !== itemId) })
+  }
+
+  const handleVideoUpload = (itemId: string, file: File) => {
+    const reader = new FileReader()
+    reader.onload = (e) => updateItem(itemId, { videoBase64: e.target?.result as string })
+    reader.readAsDataURL(file)
+  }
+
+
+  return (
+    <div className="mt-4 border-t border-gray-100 pt-4">
+      <div className="flex items-center justify-between mb-3">
+        <h4 className="text-sm font-bold text-school-primary">🎁 อุปกรณ์ประมูล ({items.length}/8)</h4>
+        {items.length < 8 && (
+          <button
+            onClick={addItem}
+            className="px-3 py-1 bg-school-primary text-white text-xs rounded-lg hover:bg-school-primary-dark transition-colors"
+          >
+            + เพิ่มอุปกรณ์
+          </button>
+        )}
+      </div>
+      {items.length === 0 && (
+        <p className="text-gray-400 text-sm">ยังไม่มีอุปกรณ์ — กด "+ เพิ่มอุปกรณ์" เพื่อเริ่ม</p>
+      )}
+      <div className="space-y-3">
+        {items.map((item, idx) => (
+          <div key={item.id} className="bg-gray-50 rounded-xl p-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-gray-400 text-sm font-bold w-5">{idx + 1}.</span>
+              <input
+                value={item.name}
+                onChange={(e) => updateItem(item.id, { name: e.target.value })}
+                placeholder="ชื่ออุปกรณ์ (เฉลย)"
+                className="flex-1 border border-gray-200 rounded px-2 py-1 text-sm focus:outline-none focus:border-school-primary"
+              />
+              <button onClick={() => removeItem(item.id)} className="text-red-500 hover:text-red-700 text-xs">ลบ</button>
+            </div>
+            <div className="flex items-center gap-3 pl-7">
+              <label className="text-xs text-gray-500">วิดีโอ:</label>
+              <input
+                type="file"
+                accept="video/*"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleVideoUpload(item.id, f) }}
+                className="text-xs"
+              />
+              {item.videoBase64 && <span className="text-green-600 text-xs">✓ อัปโหลดแล้ว</span>}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )

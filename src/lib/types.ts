@@ -19,6 +19,12 @@ export interface ImageSet {
   pairs: ImagePair[]
 }
 
+export interface AuctionItem {
+  id: string
+  name: string
+  videoBase64?: string // base64 video; overlay covers it before reveal
+}
+
 export interface Game {
   id: string
   name: string
@@ -32,6 +38,7 @@ export interface Game {
   soundStart?: string
   soundTick?: string
   soundTimeUp?: string
+  auctionItems?: AuctionItem[]
 }
 
 export interface Score {

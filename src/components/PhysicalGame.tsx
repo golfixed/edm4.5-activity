@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useStore } from '@/lib/store'
 import { Game } from '@/lib/types'
 import Link from 'next/link'
+import AuctionPhase from './AuctionPhase'
 
 interface Props {
   game: Game
@@ -13,6 +14,7 @@ export default function PhysicalGame({ game }: Props) {
   const { teams, scores, addScore } = useStore()
   const [selectedTeamId, setSelectedTeamId] = useState<string>(teams[0]?.id ?? '')
   const [points, setPoints] = useState(1)
+  const [showAuction, setShowAuction] = useState(false)
 
   const gameScores = scores.filter((s) => s.gameId === game.id)
 
@@ -29,6 +31,12 @@ export default function PhysicalGame({ game }: Props) {
     const existing = gameScores.find((s) => s.teamId === selectedTeamId)
     const current = existing?.points ?? 0
     addScore({ teamId: selectedTeamId, gameId: game.id, points: Math.max(0, current - p) })
+  }
+
+  const auctionItems = game.auctionItems ?? []
+
+  if (showAuction && auctionItems.length > 0) {
+    return <AuctionPhase items={auctionItems} gameName={game.name} onClose={() => setShowAuction(false)} />
   }
 
   const bg = game.backgroundImage
@@ -52,12 +60,19 @@ export default function PhysicalGame({ game }: Props) {
           <h1 className="text-2xl font-extrabold text-white" style={{ textShadow: '0 2px 12px rgba(0,0,0,0.7)' }}>
             {game.name}
           </h1>
-          <span className="w-12" />
+          {auctionItems.length > 0 && (
+            <button
+              onClick={() => setShowAuction(true)}
+              className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm"
+            >
+              🎁 ประมูล
+            </button>
+          )}
         </div>
 
         {/* Team grid — original order, click to select */}
         <div className="flex-1 min-h-0 px-4 pb-2 grid gap-2"
-          style={{ gridTemplateColumns: `repeat(${Math.min(teams.length, 6)}, 1fr)` }}
+          style={{ gridTemplateColumns: `repeat(${teams.length <= 8 ? 4 : Math.min(teams.length, 6)}, 1fr)` }}
         >
           {teams.map((team) => {
             const pts = gameScores.find((s) => s.teamId === team.id)?.points ?? 0
