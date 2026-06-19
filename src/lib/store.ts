@@ -1,6 +1,13 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
+import { get, set as idbSet, del } from 'idb-keyval'
 import { Team, Game, Score, GameState } from './types'
+
+const idbStorage = createJSONStorage(() => ({
+  getItem: (name: string) => get(name).then((v) => v ?? null),
+  setItem: (name: string, value: string) => idbSet(name, value),
+  removeItem: (name: string) => del(name),
+}))
 
 const TEAM_COLORS = [
   'bg-red-500',
@@ -73,7 +80,7 @@ export const useStore = create<Store>()(
       setRankBonuses: (rankBonuses) => set({ rankBonuses }),
       _hydrate: (partial) => set(partial),
     }),
-    { name: 'edm-activity' }
+    { name: 'edm-activity', storage: idbStorage }
   )
 )
 

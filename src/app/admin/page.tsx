@@ -578,8 +578,8 @@ function AuctionItemsEditor({
   return (
     <div className="mt-4 border-t border-gray-100 pt-4">
       <div className="flex items-center justify-between mb-3">
-        <h4 className="text-sm font-bold text-school-primary">🎁 อุปกรณ์ประมูล ({items.length}/8)</h4>
-        {items.length < 8 && (
+        <h4 className="text-sm font-bold text-school-primary">🎁 อุปกรณ์ประมูล ({items.length})</h4>
+        {(
           <button
             onClick={addItem}
             className="px-3 py-1 bg-school-primary text-white text-xs rounded-lg hover:bg-school-primary-dark transition-colors"
@@ -731,6 +731,7 @@ function SettingsTab() {
   const { rankBonuses, setRankBonuses } = store
   const bonuses = rankBonuses ?? [10, 8, 7, 6, 5]
   const [importStatus, setImportStatus] = useState<'idle' | 'ok' | 'err'>('idle')
+  const [importError, setImportError] = useState<string | null>(null)
   const importRef = useRef<HTMLInputElement>(null)
 
   const updateBonus = (idx: number, val: number) => {
@@ -768,7 +769,7 @@ function SettingsTab() {
     reader.onload = (ev) => {
       try {
         const data = JSON.parse(ev.target?.result as string)
-        if (!data.teams || !data.games) throw new Error('invalid')
+        if (!data.teams || !data.games) throw new Error('ไฟล์ไม่มี teams หรือ games')
         store._hydrate({
           teams: data.teams,
           games: data.games,
@@ -777,8 +778,9 @@ function SettingsTab() {
         })
         setImportStatus('ok')
         setTimeout(() => setImportStatus('idle'), 3000)
-      } catch {
+      } catch (err) {
         setImportStatus('err')
+        setImportError(err instanceof Error ? err.message : String(err))
         setTimeout(() => setImportStatus('idle'), 3000)
       }
     }
@@ -788,6 +790,22 @@ function SettingsTab() {
 
   return (
     <div className="space-y-6 max-w-md">
+
+      {/* Import error modal */}
+      {importError && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full">
+            <h3 className="text-lg font-bold text-red-600 mb-2">นำเข้าไม่สำเร็จ</h3>
+            <pre className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3 overflow-auto max-h-40 whitespace-pre-wrap break-all">{importError}</pre>
+            <button
+              onClick={() => setImportError(null)}
+              className="mt-4 w-full py-2 bg-school-primary text-white rounded-xl font-semibold hover:bg-school-primary-dark transition-colors"
+            >
+              ปิด
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Import / Export */}
       <div className="bg-white rounded-2xl shadow p-6">
