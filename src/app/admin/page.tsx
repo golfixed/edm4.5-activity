@@ -554,6 +554,7 @@ function AuctionItemsEditor({
   updateGame: (id: string, patch: Partial<Game>) => void
 }) {
   const items: AuctionItem[] = game.auctionItems ?? []
+  const [previewSrc, setPreviewSrc] = useState<string | null>(null)
 
   const addItem = () => {
     const newItem: AuctionItem = { id: Date.now().toString(), name: `อุปกรณ์ ${items.length + 1}` }
@@ -612,11 +613,34 @@ function AuctionItemsEditor({
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) handleVideoUpload(item.id, f) }}
                 className="text-xs"
               />
-              {item.videoBase64 && <span className="text-green-600 text-xs">✓ อัปโหลดแล้ว</span>}
+              {item.videoBase64 && (
+                <>
+                  <span className="text-green-600 text-xs">✓ อัปโหลดแล้ว</span>
+                  <button
+                    onClick={() => setPreviewSrc(item.videoBase64!)}
+                    className="text-xs px-2 py-0.5 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
+                  >
+                    ▶ Preview
+                  </button>
+                </>
+              )}
             </div>
           </div>
         ))}
       </div>
+
+      {/* Video preview modal */}
+      {previewSrc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setPreviewSrc(null)}>
+          <div className="bg-black rounded-2xl overflow-hidden max-w-sm w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-4 py-2 bg-gray-900">
+              <span className="text-white text-sm font-semibold">Preview วิดีโอ</span>
+              <button onClick={() => setPreviewSrc(null)} className="text-white/60 hover:text-white text-lg leading-none">✕</button>
+            </div>
+            <video src={previewSrc} controls autoPlay className="w-full max-h-64 object-contain bg-black" />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
