@@ -21,7 +21,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="th">
-      <body className={`${sarabun.className} min-h-screen bg-gradient-to-br from-school-bg to-white`}>
+      <body className={`${sarabun.className} min-h-screen`}>
         <FirebaseProvider>
           {children}
         </FirebaseProvider>

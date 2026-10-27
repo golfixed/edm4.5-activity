@@ -33,8 +33,6 @@ export const defaultTeams: Team[] = Array.from({ length: 8 }, (_, i) => ({
 export const defaultGames: Game[] = [
   { id: '1', name: 'เกมทายโลโก้', icon: '🔍', type: 'spot-difference', timerSeconds: 10 },
   { id: '2', name: 'Human Bingo', icon: '🎯', type: 'human-bingo', bingoKeywords: ['เคยไปญี่ปุ่น','ใช้ Mechanical Keyboard','มีแมว','เล่นเกม','เคย deploy พัง','ดื่มกาแฟทุกวัน','มี package มาส่งออฟฟิศ','ใช้ dark mode','ดู anime','นอนหลังเที่ยงคืน','เคยตอบ LGTM','มี tab เกิน 20','เล่นฟิตเนส','เคยประชุม mute ไม่เป็น','ชอบขับรถ','เคยลาเพราะนอนต่อ','มี Steam account','ใช้ ChatGPT ทำงาน','ชอบกินชาบู','เคยทำ OT ถึงดึก','มี keyboard เกิน 1 ตัว','ใช้ iPad','ฟัง podcast','เคยลืมเปิดกล้อง'] },
-  { id: '3', name: 'เกม 3', icon: '⚽', type: 'physical' },
-  { id: '4', name: 'เกม 4', icon: '🎯', type: 'physical' },
 ]
 
 export const defaultRankBonuses = [10, 8, 7, 6, 5]
@@ -43,9 +41,13 @@ interface StoreActions {
   setTeams: (teams: Team[]) => void
   setGames: (games: Game[]) => void
   addScore: (score: Score) => void
+  setScores: (scores: Score[]) => void
   setActiveGame: (id: string | null) => void
   resetScores: () => void
   setRankBonuses: (bonuses: number[]) => void
+  setAppTitle: (title: string) => void
+  setDockGameIds: (ids: string[]) => void
+  setGameOrder: (ids: string[]) => void
   // internal: bulk-replace state from Firebase snapshot
   _hydrate: (partial: Partial<GameState>) => void
 }
@@ -60,9 +62,13 @@ export const useStore = create<Store>()(
       scores: [],
       activeGameId: null,
       rankBonuses: defaultRankBonuses,
+      appTitle: 'Active Fun Games (EDM 4.5)',
+      dockGameIds: [],
+      gameOrder: [],
 
       setTeams: (teams) => set({ teams }),
       setGames: (games) => set({ games }),
+      setScores: (scores) => set({ scores }),
       addScore: (score) =>
         set((state) => {
           const existing = state.scores.findIndex(
@@ -78,6 +84,9 @@ export const useStore = create<Store>()(
       setActiveGame: (id) => set({ activeGameId: id }),
       resetScores: () => set({ scores: [] }),
       setRankBonuses: (rankBonuses) => set({ rankBonuses }),
+      setAppTitle: (appTitle) => set({ appTitle }),
+      setDockGameIds: (dockGameIds) => set({ dockGameIds }),
+      setGameOrder: (gameOrder) => set({ gameOrder }),
       _hydrate: (partial) => set(partial),
     }),
     { name: 'edm-activity', storage: idbStorage }

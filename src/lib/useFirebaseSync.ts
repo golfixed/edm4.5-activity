@@ -89,7 +89,7 @@ function fixFirebaseData(data: any) {
     return { ...g, imageSets }
   })
 
-  return { teams, games, scores, rankBonuses }
+  return { teams, games, scores, rankBonuses, appTitle: data.appTitle ?? 'Active Fun Games (EDM 4.5)', dockGameIds: data.dockGameIds ?? [], gameOrder: data.gameOrder ?? [] }
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
@@ -136,6 +136,7 @@ export function useFirebaseSync() {
           games:       ls?.games       ?? defaultGames,
           scores:      ls?.scores      ?? [],
           rankBonuses: ls?.rankBonuses ?? defaultRankBonuses,
+          appTitle:    ls?.appTitle    ?? 'Active Fun Games (EDM 4.5)', dockGameIds: ls?.dockGameIds ?? [], gameOrder: ls?.gameOrder ?? [],
         })
         const withImages = { ...fixed, games: restoreImagesFromLocal(fixed.games) }
         writeState(withImages)
@@ -152,6 +153,7 @@ export function useFirebaseSync() {
         games:       raw.games       ?? defaultGames,
         scores:      raw.scores      ?? [],
         rankBonuses: raw.rankBonuses ?? defaultRankBonuses,
+        appTitle:    raw.appTitle    ?? 'Active Fun Games (EDM 4.5)', dockGameIds: raw.dockGameIds ?? [], gameOrder: raw.gameOrder ?? [],
       })
       const withImages = { ...fixed, games: restoreImagesFromLocal(fixed.games) }
 
@@ -174,6 +176,7 @@ export function useFirebaseSync() {
       games:       store.games,
       scores:      store.scores,
       rankBonuses: store.rankBonuses,
+      appTitle:    store.appTitle, dockGameIds: store.dockGameIds, gameOrder: store.gameOrder,
     })
-  }, [store.teams, store.games, store.scores, store.rankBonuses]) // eslint-disable-line
+  }, [store.teams, store.games, store.scores, store.rankBonuses, store.appTitle, store.dockGameIds, store.gameOrder]) // eslint-disable-line
 }

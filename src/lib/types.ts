@@ -35,6 +35,8 @@ export interface Game {
   imageSets?: ImageSet[]
   timerSeconds?: number
   weight?: number // % score weight for rank calculation, default 100
+  colorIdx?: number // index into ICON_COLORS palette
+  iconColor?: { from: string; to: string } // custom gradient overrides colorIdx
   soundStart?: string
   soundTick?: string
   soundTimeUp?: string
@@ -53,4 +55,7 @@ export interface GameState {
   scores: Score[]
   activeGameId: string | null
   rankBonuses: number[] // index 0 = rank1, 1 = rank2, ... last value = default for remaining
+  appTitle: string
+  dockGameIds: string[]
+  gameOrder: string[]
 }
