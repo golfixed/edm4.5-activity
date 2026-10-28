@@ -87,7 +87,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
   }, [timeLeft, phase])
 
   useEffect(() => {
-    if (revealed && phase === 'playing') { stopTick(); playSound(game.soundTimeUp) }
+    if (revealed && phase === 'playing') { stopTick(); playSound(game.soundTimeUp ?? undefined) }
   }, [revealed])
 
   // Pre-game 3-2-1 countdown
@@ -114,7 +114,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
   useEffect(() => {
     if (phase === 'playing') {
       setCurrentIndex(0); setTimeLeft(customTimer); setRevealed(false)
-      playSound(game.soundStart); startTickLoop()
+      playSound(game.soundStart ?? undefined); startTickLoop()
     } else { stopTick() }
   }, [phase])
 
