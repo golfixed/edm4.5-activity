@@ -1,13 +1,5 @@
 import { create } from 'zustand'
-import { persist, createJSONStorage } from 'zustand/middleware'
-import { get, set as idbSet, del } from 'idb-keyval'
 import { Team, Game, Score, GameState } from './types'
-
-const idbStorage = createJSONStorage(() => ({
-  getItem: (name: string) => get(name).then((v) => v ?? null),
-  setItem: (name: string, value: string) => idbSet(name, value),
-  removeItem: (name: string) => del(name),
-}))
 
 const TEAM_COLORS = [
   'bg-red-500',
@@ -37,6 +29,8 @@ export const defaultGames: Game[] = [
 
 export const defaultRankBonuses = [10, 8, 7, 6, 5]
 
+export type FirebaseStatus = 'connecting' | 'connected' | 'disconnected'
+
 interface StoreActions {
   setTeams: (teams: Team[]) => void
   setGames: (games: Game[]) => void
@@ -46,52 +40,59 @@ interface StoreActions {
   resetScores: () => void
   setRankBonuses: (bonuses: number[]) => void
   setAppTitle: (title: string) => void
+  setAppTitleSize: (size: number) => void
   setDockGameIds: (ids: string[]) => void
   setGameOrder: (ids: string[]) => void
+  setWallpaperColor: (color: string) => void
+  setFirebaseStatus: (status: FirebaseStatus) => void
+  setHydrated: (v: boolean) => void
   // internal: bulk-replace state from Firebase snapshot
   _hydrate: (partial: Partial<GameState>) => void
 }
 
-type Store = GameState & StoreActions
+type Store = GameState & { firebaseStatus: FirebaseStatus; isHydrated: boolean } & StoreActions
 
-export const useStore = create<Store>()(
-  persist(
-    (set) => ({
-      teams: defaultTeams,
-      games: defaultGames,
-      scores: [],
-      activeGameId: null,
-      rankBonuses: defaultRankBonuses,
-      appTitle: 'Active Fun Games (EDM 4.5)',
-      dockGameIds: [],
-      gameOrder: [],
+export const useStore = create<Store>()((set) => ({
+  teams: [],
+  games: [],
+  scores: [],
+  activeGameId: null,
+  rankBonuses: defaultRankBonuses,
+  appTitle: 'Active Fun Games (EDM 4.5)',
+  appTitleSize: 20,
+  dockGameIds: [],
+  gameOrder: [],
+  wallpaperColor: '#cacdd8',
+  firebaseStatus: 'connecting' as FirebaseStatus,
+  isHydrated: false,
 
-      setTeams: (teams) => set({ teams }),
-      setGames: (games) => set({ games }),
-      setScores: (scores) => set({ scores }),
-      addScore: (score) =>
-        set((state) => {
-          const existing = state.scores.findIndex(
-            (s) => s.teamId === score.teamId && s.gameId === score.gameId
-          )
-          if (existing >= 0) {
-            const updated = [...state.scores]
-            updated[existing] = score
-            return { scores: updated }
-          }
-          return { scores: [...state.scores, score] }
-        }),
-      setActiveGame: (id) => set({ activeGameId: id }),
-      resetScores: () => set({ scores: [] }),
-      setRankBonuses: (rankBonuses) => set({ rankBonuses }),
-      setAppTitle: (appTitle) => set({ appTitle }),
-      setDockGameIds: (dockGameIds) => set({ dockGameIds }),
-      setGameOrder: (gameOrder) => set({ gameOrder }),
-      _hydrate: (partial) => set(partial),
+  setTeams: (teams) => set({ teams }),
+  setGames: (games) => set({ games }),
+  setScores: (scores) => set({ scores }),
+  addScore: (score) =>
+    set((state) => {
+      const existing = state.scores.findIndex(
+        (s) => s.teamId === score.teamId && s.gameId === score.gameId
+      )
+      if (existing >= 0) {
+        const updated = [...state.scores]
+        updated[existing] = score
+        return { scores: updated }
+      }
+      return { scores: [...state.scores, score] }
     }),
-    { name: 'edm-activity', storage: idbStorage }
-  )
-)
+  setActiveGame: (id) => set({ activeGameId: id }),
+  resetScores: () => set({ scores: [] }),
+  setRankBonuses: (rankBonuses) => set({ rankBonuses }),
+  setAppTitle: (appTitle) => set({ appTitle }),
+  setAppTitleSize: (appTitleSize) => set({ appTitleSize }),
+  setDockGameIds: (dockGameIds) => set({ dockGameIds }),
+  setGameOrder: (gameOrder) => set({ gameOrder }),
+  setWallpaperColor: (wallpaperColor) => set({ wallpaperColor }),
+  setFirebaseStatus: (firebaseStatus) => set({ firebaseStatus }),
+  setHydrated: (isHydrated) => set({ isHydrated }),
+  _hydrate: (partial) => set(partial),
+}))
 
 // Returns the rank position (1-based) of a team in a single game. Returns null if no scores recorded.
 export function getGameRank(state: GameState, gameId: string, teamId: string): number | null {
@@ -105,9 +106,6 @@ export function getGameRank(state: GameState, gameId: string, teamId: string): n
 }
 
 // Returns rank points earned by a team in a single game.
-// Rank is determined by comparing raw scores; teams with no entry are treated as 0.
-// Ties share the same rank (e.g. two 1st-place ties both get rank-1 points).
-// Returns 0 if the game has no scores recorded yet.
 export function getGameRankPoints(state: GameState, gameId: string, teamId: string): number {
   const rankPoints = state.rankBonuses?.length ? state.rankBonuses : defaultRankBonuses
   const lastPoints = rankPoints[rankPoints.length - 1] ?? 0

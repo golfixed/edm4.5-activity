@@ -9,13 +9,15 @@ export const ICON_COLORS = [
   { from: '#14b8a6', to: '#0284c7' },
 ]
 
+export const UNSET_ICON_COLOR = { from: '#d1d5db', to: '#9ca3af' }
+
 export function resolveIconColor(
   iconColor?: { from: string; to: string } | null,
-  colorIdx?: number,
-  fallbackIdx = 0,
+  colorIdx?: number | null,
 ): { from: string; to: string } {
   if (iconColor) return iconColor
-  return ICON_COLORS[(colorIdx ?? fallbackIdx) % ICON_COLORS.length]
+  if (colorIdx != null) return ICON_COLORS[colorIdx % ICON_COLORS.length]
+  return UNSET_ICON_COLOR
 }
 
 /** Darken a hex color by `amount` (0–1) to auto-generate a `to` gradient stop. */

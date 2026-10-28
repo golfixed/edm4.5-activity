@@ -197,7 +197,7 @@ function generateRandomCards(keywords: string[], count: number): string[][] {
   )
 }
 
-export default function BingoGame({ game }: { game: Game }) {
+export default function BingoGame({ game, onBack }: { game: Game; onBack?: (e: React.MouseEvent) => void }) {
   const { teams } = useStore()
   const keywords = game.bingoKeywords ?? []
 
@@ -349,10 +349,10 @@ export default function BingoGame({ game }: { game: Game }) {
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 flex flex-col h-full">
           <div className="flex items-center justify-between px-6 py-4">
-            <Link href="/" className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm">
+            <button onClick={onBack} className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
               กลับ
-            </Link>
+            </button>
             <h1 className="text-white font-bold text-xl">{game.icon} {game.name}</h1>
             <span className="w-16" />
           </div>

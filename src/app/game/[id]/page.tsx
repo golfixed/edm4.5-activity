@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { useStore } from '@/lib/store'
 import SpotDifferenceGame from '@/components/SpotDifferenceGame'
 import PhysicalGame from '@/components/PhysicalGame'
@@ -10,8 +11,19 @@ import Link from 'next/link'
 
 export default function GamePage({ params }: { params: { id: string } }) {
   const { games } = useStore()
+  const router = useRouter()
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [closing, setClosing] = useState(false) // prevents double-tap
   const game = games.find((g) => g.id === params.id)
+
+  const handleBack = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    if (closing) return
+    setClosing(true)
+    // Signal home page to play reverse animation; navigate immediately so home is the backdrop
+    try { sessionStorage.setItem('returnFromGame', game?.id ?? '') } catch {}
+    router.push('/')
+  }, [closing, router, game])
 
   if (!game) {
     return (
@@ -28,9 +40,10 @@ export default function GamePage({ params }: { params: { id: string } }) {
 
   return (
     <>
-      {game.type === 'spot-difference' && <SpotDifferenceGame game={game} />}
-      {game.type === 'human-bingo' && <BingoGame game={game} />}
-      {game.type !== 'spot-difference' && game.type !== 'human-bingo' && <PhysicalGame game={game} />}
+
+      {game.type === 'spot-difference' && <SpotDifferenceGame game={game} onBack={handleBack} />}
+      {game.type === 'human-bingo' && <BingoGame game={game} onBack={handleBack} />}
+      {game.type !== 'spot-difference' && game.type !== 'human-bingo' && <PhysicalGame game={game} onBack={handleBack} />}
 
       {/* Floating settings button */}
       <button

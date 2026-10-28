@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { useStore } from '@/lib/store'
 import { Game, ImagePair, ImageSet, AuctionItem } from '@/lib/types'
 import { ICON_COLORS, resolveIconColor, darkenHex } from '@/lib/iconColors'
+import { compressImage } from '@/lib/compressImage'
 
 interface Props {
   game: Game
@@ -18,9 +19,7 @@ export default function GameSettings({ game, onClose }: Props) {
   }
 
   const handleBgUpload = (file: File) => {
-    const reader = new FileReader()
-    reader.onload = e => updateGame({ backgroundImage: e.target?.result as string })
-    reader.readAsDataURL(file)
+    compressImage(file, 1280, 0.75).then(b64 => updateGame({ backgroundImage: b64 }))
   }
 
   return (
@@ -46,7 +45,7 @@ export default function GameSettings({ game, onClose }: Props) {
         <div style={{ padding: '20px 20px 0', display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{
             width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-            background: `linear-gradient(145deg, ${resolveIconColor(game.iconColor, game.colorIdx ?? 0).from}cc, ${resolveIconColor(game.iconColor, game.colorIdx ?? 0).to}dd)`,
+            background: `linear-gradient(145deg, ${resolveIconColor(game.iconColor, game.colorIdx ?? null).from}cc, ${resolveIconColor(game.iconColor, game.colorIdx ?? null).to}dd)`,
             display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem',
           }}>
             {game.icon ?? '🎮'}
@@ -98,7 +97,7 @@ export default function GameSettings({ game, onClose }: Props) {
                   return (
                     <button
                       key={i}
-                      onClick={() => updateGame({ colorIdx: i, iconColor: undefined })}
+                      onClick={() => updateGame({ colorIdx: i, iconColor: null })}
                       style={{
                         width: 36, height: 36, borderRadius: 10, border: 'none', cursor: 'pointer',
                         background: `linear-gradient(145deg, ${c.from}, ${c.to})`,
@@ -209,7 +208,7 @@ function CustomColorSwatch({ game, updateGame }: { game: Game; updateGame: (p: P
   const currentHex = isCustom ? game.iconColor!.from : '#a855f7'
 
   const handleChange = (hex: string) => {
-    updateGame({ iconColor: { from: hex, to: darkenHex(hex) }, colorIdx: undefined })
+    updateGame({ iconColor: { from: hex, to: darkenHex(hex) }, colorIdx: null })
   }
 
   return (
@@ -267,7 +266,7 @@ function SoundUploader({ game, updateGame }: { game: Game; updateGame: (p: Parti
             {game[key] ? 'เปลี่ยน' : 'เลือก'}
             <input type="file" accept="audio/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) readAudio(f, key) }} />
           </label>
-          {game[key] && <button onClick={() => updateGame({ [key]: undefined })} style={{ color: '#f87171', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13 }}>✕</button>}
+          {game[key] && <button onClick={() => updateGame({ [key]: null })} style={{ color: '#f87171', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13 }}>✕</button>}
         </div>
       ))}
     </div>
@@ -366,9 +365,7 @@ function PairsEditor({ pairs, onChange }: { pairs: ImagePair[]; onChange: (p: Im
   const [pendingCorrect, setPendingCorrect] = useState<'A' | 'B'>('A')
 
   const readFile = (file: File, setter: (v: string) => void) => {
-    const reader = new FileReader()
-    reader.onload = e => setter(e.target?.result as string)
-    reader.readAsDataURL(file)
+    compressImage(file, 900, 0.72).then(setter)
   }
 
   const addPair = () => {

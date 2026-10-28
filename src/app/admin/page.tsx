@@ -1,9 +1,28 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { useStore, TEAM_COLORS_LIST } from '@/lib/store'
+import { useStore, TEAM_COLORS_LIST, defaultTeams, defaultGames, defaultRankBonuses } from '@/lib/store'
+import { writeState } from '@/lib/useFirebaseSync'
 import { Team, Game, Score } from '@/lib/types'
 import Link from 'next/link'
+
+function adjustHex(hex: string, amount: number): string {
+  const n = parseInt(hex.replace('#', ''), 16)
+  const r = Math.min(255, Math.max(0, (n >> 16) + amount))
+  const g = Math.min(255, Math.max(0, ((n >> 8) & 0xff) + amount))
+  const b = Math.min(255, Math.max(0, (n & 0xff) + amount))
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`
+}
+
+function wallpaperBg(color: string): string {
+  const base = `linear-gradient(160deg, ${adjustHex(color, 10)} 0%, ${color} 50%, ${adjustHex(color, 6)} 100%)`
+  return [
+    'radial-gradient(ellipse 55% 45% at 18% 14%, rgba(255,255,255,0.38) 0%, transparent 100%)',
+    'radial-gradient(ellipse 40% 50% at 82% 78%, rgba(255,255,255,0.22) 0%, transparent 100%)',
+    'radial-gradient(ellipse 60% 30% at 55% 95%, rgba(255,255,255,0.14) 0%, transparent 100%)',
+    base,
+  ].join(', ')
+}
 
 type Tab = 'teams' | 'games' | 'scores' | 'settings'
 
@@ -314,11 +333,36 @@ function ScoresTab() {
 
 function SettingsTab() {
   const store = useStore()
-  const { rankBonuses, setRankBonuses, appTitle, setAppTitle } = store
+  const { rankBonuses, setRankBonuses, appTitle, setAppTitle, wallpaperColor, setWallpaperColor } = store
   const bonuses = rankBonuses ?? [10, 8, 7, 6, 5]
   const [importStatus, setImportStatus] = useState<'idle' | 'ok' | 'err'>('idle')
   const [importError, setImportError] = useState<string | null>(null)
+  const [syncModal, setSyncModal] = useState<'idle' | 'confirm' | 'loading' | 'ok' | 'err'>('idle')
+  const [syncError, setSyncError] = useState<string | null>(null)
+  const [pendingColor, setPendingColor] = useState<string | null>(null)
   const importRef = useRef<HTMLInputElement>(null)
+
+  const handlePushToFirebase = async () => {
+    setSyncModal('loading')
+    setSyncError(null)
+    try {
+      await writeState({
+        teams: store.teams,
+        games: store.games,
+        scores: store.scores,
+        rankBonuses: store.rankBonuses,
+        appTitle: store.appTitle,
+        appTitleSize: store.appTitleSize,
+        dockGameIds: store.dockGameIds,
+        gameOrder: store.gameOrder,
+        wallpaperColor: store.wallpaperColor,
+      })
+      setSyncModal('ok')
+    } catch (err) {
+      setSyncError(err instanceof Error ? err.message : String(err))
+      setSyncModal('err')
+    }
+  }
 
   const updateBonus = (idx: number, val: number) => {
     const next = [...bonuses]
@@ -377,6 +421,28 @@ function SettingsTab() {
   return (
     <div className="space-y-6 max-w-md">
 
+      {/* Starter data */}
+      <div className="bg-white rounded-2xl shadow p-6">
+        <h2 className="text-xl font-bold text-school-primary mb-1">ข้อมูลตั้งต้น</h2>
+        <p className="text-gray-500 text-sm mb-4">ล้างข้อมูลทั้งหมดและโหลดข้อมูลตัวอย่างเพื่อเริ่มต้นใหม่</p>
+        <button
+          onClick={() => {
+            if (!confirm('โหลดข้อมูลตั้งต้น? ข้อมูลปัจจุบันทั้งหมดจะถูกแทนที่')) return
+            store.setTeams(defaultTeams)
+            store.setGames(defaultGames)
+            store.setScores([])
+            store.setRankBonuses(defaultRankBonuses)
+            store.setAppTitle('Active Fun Games (EDM 4.5)')
+            store.setDockGameIds([])
+            store.setGameOrder([])
+            store.setWallpaperColor('#cacdd8')
+          }}
+          className="px-4 py-2 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 text-sm font-medium hover:border-school-primary hover:text-school-primary transition-all"
+        >
+          โหลดข้อมูลตั้งต้น
+        </button>
+      </div>
+
       {/* App title */}
       <div className="bg-white rounded-2xl shadow p-6">
         <h2 className="text-xl font-bold text-school-primary mb-4">ชื่อแอป</h2>
@@ -386,6 +452,61 @@ function SettingsTab() {
           className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-school-primary"
           placeholder="Active Fun Games (EDM 4.5)"
         />
+      </div>
+
+      {/* Wallpaper color */}
+      <div className="bg-white rounded-2xl shadow p-6">
+        <h2 className="text-xl font-bold text-school-primary mb-1">สีพื้นหลังหน้าหลัก</h2>
+        <p className="text-gray-500 text-sm mb-4">เลือกสีพื้นหลัง หรือกำหนดเองด้วย color picker</p>
+        <div className="flex flex-wrap gap-2 mb-3">
+          {[
+            { label: 'Cool Grey',    hex: '#cacdd8' },
+            { label: 'Slate',        hex: '#b8bdc8' },
+            { label: 'Warm Sand',    hex: '#d8d2c8' },
+            { label: 'Sage',         hex: '#bfccc0' },
+            { label: 'Dusk Blue',    hex: '#b8c4d4' },
+            { label: 'Mauve',        hex: '#cdc0cc' },
+            { label: 'Stone',        hex: '#c4bfb8' },
+            { label: 'Charcoal',     hex: '#a8aab4' },
+          ].map(({ label, hex }) => (
+            <button
+              key={hex}
+              title={label}
+              onClick={() => setWallpaperColor(hex)}
+              style={{ background: hex }}
+              className={`w-9 h-9 rounded-xl border-2 transition-all ${wallpaperColor === hex ? 'border-school-primary scale-110 shadow-md' : 'border-transparent hover:scale-105'}`}
+            />
+          ))}
+          {/* Custom picker */}
+          <label className="relative w-9 h-9 rounded-xl border-2 border-dashed border-gray-300 hover:border-gray-400 flex items-center justify-center cursor-pointer overflow-hidden transition-all"
+            title="Custom colour"
+            style={{ background: pendingColor ?? (![
+              '#cacdd8','#b8bdc8','#d8d2c8','#bfccc0','#b8c4d4','#cdc0cc','#c4bfb8','#a8aab4'
+            ].includes(wallpaperColor) ? wallpaperColor : 'transparent') }}>
+            <span className="text-base select-none" style={{ opacity: (pendingColor || ![
+              '#cacdd8','#b8bdc8','#d8d2c8','#bfccc0','#b8c4d4','#cdc0cc','#c4bfb8','#a8aab4'
+            ].includes(wallpaperColor)) ? 0 : 1 }}>🎨</span>
+            <input
+              type="color"
+              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+              value={pendingColor ?? wallpaperColor}
+              onChange={(e) => setPendingColor(e.target.value)}
+              onInput={(e) => setPendingColor((e.target as HTMLInputElement).value)}
+            />
+          </label>
+          {pendingColor && (
+            <button
+              onClick={() => { setWallpaperColor(pendingColor); setPendingColor(null) }}
+              className="h-9 px-3 rounded-xl bg-school-primary text-white text-sm font-semibold hover:opacity-90 transition-all"
+            >
+              ตั้งค่า
+            </button>
+          )}
+        </div>
+        {/* Preview */}
+        <div className="rounded-xl h-10 w-full transition-all" style={{
+          background: wallpaperBg(pendingColor ?? wallpaperColor)
+        }} />
       </div>
 
       {/* Import error modal */}
@@ -400,6 +521,91 @@ function SettingsTab() {
             >
               ปิด
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Push to Firebase modal */}
+      {syncModal !== 'idle' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full text-center">
+
+            {syncModal === 'confirm' && (
+              <>
+                <div className="text-4xl mb-3">☁️</div>
+                <h3 className="text-lg font-bold text-gray-800 mb-2">Push to Firebase</h3>
+                <p className="text-sm text-gray-500 mb-6">
+                  เขียนข้อมูลปัจจุบันทั้งหมดทับ Firebase ทันที — ข้อมูลเดิมใน Firebase จะถูกแทนที่
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setSyncModal('idle')}
+                    className="flex-1 py-2.5 rounded-xl font-semibold text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                  >
+                    ยกเลิก
+                  </button>
+                  <button
+                    onClick={handlePushToFirebase}
+                    className="flex-1 py-2.5 rounded-xl font-semibold text-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                  >
+                    ยืนยัน Push
+                  </button>
+                </div>
+              </>
+            )}
+
+            {syncModal === 'loading' && (
+              <>
+                <div className="flex justify-center mb-4">
+                  <svg className="animate-spin h-10 w-10 text-blue-500" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                  </svg>
+                </div>
+                <p className="text-sm font-semibold text-gray-600">กำลัง Push ข้อมูลไปยัง Firebase…</p>
+              </>
+            )}
+
+            {syncModal === 'ok' && (
+              <>
+                <div className="text-5xl mb-3">✅</div>
+                <h3 className="text-lg font-bold text-green-600 mb-2">Push สำเร็จ!</h3>
+                <p className="text-sm text-gray-500 mb-6">ข้อมูลถูกเขียนไปยัง Firebase เรียบร้อยแล้ว</p>
+                <button
+                  onClick={() => setSyncModal('idle')}
+                  className="w-full py-2.5 rounded-xl font-semibold text-sm bg-green-500 text-white hover:bg-green-600 transition-colors"
+                >
+                  ปิด
+                </button>
+              </>
+            )}
+
+            {syncModal === 'err' && (
+              <>
+                <div className="text-5xl mb-3">❌</div>
+                <h3 className="text-lg font-bold text-red-600 mb-2">Push ไม่สำเร็จ</h3>
+                {syncError && (
+                  <pre className="text-xs text-gray-600 bg-gray-50 rounded-lg p-3 mb-4 overflow-auto max-h-32 text-left whitespace-pre-wrap break-all">
+                    {syncError}
+                  </pre>
+                )}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setSyncModal('idle')}
+                    className="flex-1 py-2.5 rounded-xl font-semibold text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                  >
+                    ปิด
+                  </button>
+                  <button
+                    onClick={handlePushToFirebase}
+                    className="flex-1 py-2.5 rounded-xl font-semibold text-sm bg-red-500 text-white hover:bg-red-600 transition-colors"
+                  >
+                    ลองใหม่
+                  </button>
+                </div>
+              </>
+            )}
+
           </div>
         </div>
       )}
@@ -428,14 +634,10 @@ function SettingsTab() {
           </button>
           <input ref={importRef} type="file" accept=".json,application/json" className="hidden" onChange={handleImport} />
           <button
-            onClick={() => {
-              if (!confirm('รีเซ็ตข้อมูลทั้งหมดกลับค่าเริ่มต้น?')) return
-              localStorage.removeItem('edm-activity')
-              window.location.reload()
-            }}
-            className="flex-1 py-2.5 rounded-xl font-semibold text-sm bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+            onClick={() => setSyncModal('confirm')}
+            className="flex-1 py-2.5 rounded-xl font-semibold text-sm bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
           >
-            🗑️ Reset
+            ☁️ Push to Firebase
           </button>
         </div>
       </div>
