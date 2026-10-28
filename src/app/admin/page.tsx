@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { useStore, TEAM_COLORS_LIST, defaultTeams, defaultGames, defaultRankBonuses } from '@/lib/store'
 import { writeState } from '@/lib/useFirebaseSync'
 import { Team, Game, Score } from '@/lib/types'
@@ -27,6 +28,15 @@ function wallpaperBg(color: string): string {
 type Tab = 'teams' | 'games' | 'scores' | 'settings'
 
 export default function AdminPage() {
+  const router = useRouter()
+  const [closing, setClosing] = useState(false)
+  const handleBack = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    if (closing) return
+    setClosing(true)
+    try { sessionStorage.setItem('returnFromGame', '__util_admin') } catch {}
+    router.push('/')
+  }, [closing, router])
   const [tab, setTab] = useState<Tab>('scores')
 
   return (
@@ -40,14 +50,14 @@ export default function AdminPage() {
       <div className="relative z-10 max-w-6xl mx-auto p-6">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
-          <Link
-            href="/"
+          <button
+            onClick={handleBack}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-white/80 hover:text-white transition-colors text-sm font-medium"
             style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.15)' }}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
             กลับ
-          </Link>
+          </button>
           <h1 className="text-2xl font-bold text-white">⚙️ Admin Panel</h1>
         </div>
 

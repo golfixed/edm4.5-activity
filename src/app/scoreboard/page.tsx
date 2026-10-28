@@ -7,6 +7,14 @@ import Link from 'next/link'
 
 export default function ScoreboardPage() {
   const router = useRouter()
+  const [closing, setClosing] = useState(false)
+  const handleBack = (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (closing) return
+    setClosing(true)
+    try { sessionStorage.setItem('returnFromGame', '__util_scoreboard') } catch {}
+    router.push('/')
+  }
   const state = useStore()
   const [view, setView] = useState<'podium' | 'list'>('podium')
   const ranked = getRankedTeams(state)
@@ -48,13 +56,13 @@ export default function ScoreboardPage() {
               📋 List
             </button>
           </div>
-          <Link
-            href="/"
+          <button
+            onClick={handleBack}
             className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
             กลับ
-          </Link>
+          </button>
         </div>
       </div>
 

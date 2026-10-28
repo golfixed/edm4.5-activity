@@ -371,15 +371,19 @@ export default function Home() {
     try {
       const returnId = sessionStorage.getItem('returnFromGame')
       const originRaw = sessionStorage.getItem('launchOrigin')
+      const colorRaw = sessionStorage.getItem('launchColor')
       if (returnId && originRaw) {
         const origin = JSON.parse(originRaw)
         const g = games.find(x => x.id === returnId)
-        if (g && origin) {
-          setReturnAnim({ origin, game: g })
+        const color = colorRaw ? JSON.parse(colorRaw) : null
+        const animGame = g ?? (color ? { id: returnId, name: '', iconColor: color, colorIdx: null } as any : null)
+        if (animGame && origin) {
+          setReturnAnim({ origin, game: animGame })
           setTimeout(() => setReturnAnim(null), 420)
         }
         sessionStorage.removeItem('returnFromGame')
         sessionStorage.removeItem('launchOrigin')
+        sessionStorage.removeItem('launchColor')
       }
     } catch {}
   }, [games])
@@ -409,6 +413,7 @@ export default function Home() {
 
   const [editMode, setEditMode] = useState(false)
   const [deleteConfirmGame, setDeleteConfirmGame] = useState<Game | null>(null)
+  const [createGameModal, setCreateGameModal] = useState(false)
   const [currentPage, setCurrentPage] = useState(0)
   const pageDragRef = useRef<{ startX: number } | null>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -779,25 +784,38 @@ export default function Home() {
                       onDelete={setDeleteConfirmGame}
                     />
                   ))}
-                  {dockGames.length === 0 && (
-                    <div style={{
+                  <button
+                    onClick={() => setCreateGameModal(true)}
+                    style={{
                       width: 56, height: 56, borderRadius: 12,
                       border: `2px dashed ${editMode ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.15)'}`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      transition: 'border-color 0.2s',
-                    }}>
-                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M10 3v14M3 10h14" stroke="rgba(0,0,0,0.2)" strokeWidth="2" strokeLinecap="round"/>
-                      </svg>
-                    </div>
-                  )}
+                      transition: 'border-color 0.2s, opacity 0.2s',
+                      background: 'transparent', cursor: 'pointer', flexShrink: 0,
+                    }}
+                    title="Add game"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M10 3v14M3 10h14" stroke="rgba(0,0,0,0.2)" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  </button>
                 </DroppableDockZone>
               </SortableContext>
 
               <div style={{ width: 1, height: 40, background: 'rgba(0,0,0,0.15)', borderRadius: 1, flexShrink: 0 }} />
 
-              <DockUtilIcon href="/admin" emoji="⚙️" color={{ from: '#6b7280', to: '#374151' }} />
-              <DockUtilIcon href="/scoreboard" emoji="📊" color={{ from: '#3b82f6', to: '#1d4ed8' }} />
+              <DockUtilIcon href="/admin" emoji="⚙️" color={{ from: '#6b7280', to: '#374151' }} onLaunch={rect => {
+                setLaunchOrigin(rect); setLaunchingId('__util_admin')
+                sessionStorage.setItem('launchOrigin', JSON.stringify(rect))
+                sessionStorage.setItem('launchColor', JSON.stringify({ from: '#6b7280', to: '#374151' }))
+                setTimeout(() => router.push('/admin'), 400)
+              }} />
+              <DockUtilIcon href="/scoreboard" emoji="🏆" color={{ from: '#c0392b', to: '#7b241c' }} onLaunch={rect => {
+                setLaunchOrigin(rect); setLaunchingId('__util_scoreboard')
+                sessionStorage.setItem('launchOrigin', JSON.stringify(rect))
+                sessionStorage.setItem('launchColor', JSON.stringify({ from: '#c0392b', to: '#7b241c' }))
+                setTimeout(() => router.push('/scoreboard'), 400)
+              }} />
             </div>
           </div>
         </div>
@@ -826,7 +844,10 @@ export default function Home() {
         {/* Launch overlay */}
         {launchingId && launchOrigin && (() => {
           const launchGame = orderedGames.find(g => g.id === launchingId)
-          const c = resolveIconColor(launchGame?.iconColor, launchGame?.colorIdx ?? null)
+          let c = resolveIconColor(launchGame?.iconColor, launchGame?.colorIdx ?? null)
+          if (!launchGame) {
+            try { const stored = sessionStorage.getItem('launchColor'); if (stored) c = JSON.parse(stored) } catch {}
+          }
           const { x, y, w, h } = launchOrigin
           const vw = typeof window !== 'undefined' ? window.innerWidth : 1440
           const vh = typeof window !== 'undefined' ? window.innerHeight : 900
@@ -847,35 +868,131 @@ export default function Home() {
 
         {/* Delete confirm modal */}
         {deleteConfirmGame && (
-          <div
-            style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)' }}
-            onClick={() => setDeleteConfirmGame(null)}
-          >
+          <>
+            <style>{`@keyframes modalIn { 0% { transform:scale(0.82); opacity:0; } 60% { transform:scale(1.04); opacity:1; } 100% { transform:scale(1); opacity:1; } }`}</style>
             <div
-              onClick={e => e.stopPropagation()}
-              style={{ background: 'rgba(30,30,32,0.96)', borderRadius: 20, padding: '28px 32px', minWidth: 280, textAlign: 'center', boxShadow: '0 8px 40px rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)' }}
+              style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.25)', backdropFilter: 'blur(24px) saturate(1.8)' }}
+              onClick={() => setDeleteConfirmGame(null)}
             >
-              <div style={{ fontSize: 40, marginBottom: 12 }}>{deleteConfirmGame.icon ?? '🎮'}</div>
-              <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: 17, fontWeight: 600, marginBottom: 6 }}>Delete "{deleteConfirmGame.name}"?</div>
-              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 14, marginBottom: 24 }}>This will permanently remove the game and all its data.</div>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button
-                  onClick={() => setDeleteConfirmGame(null)}
-                  style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.8)', fontSize: 15, fontWeight: 500, cursor: 'pointer' }}
-                >Cancel</button>
-                <button
-                  onClick={() => {
-                    const id = deleteConfirmGame.id
-                    setGames(games.filter(g => g.id !== id))
-                    setGameOrder(gameOrder.filter(i => i !== id))
-                    setDockGameIds(dockGameIds.filter(i => i !== id))
-                    setDeleteConfirmGame(null)
-                  }}
-                  style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: 'none', background: '#ff3b30', color: 'white', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}
-                >Delete</button>
+              {/* iOS-style alert card */}
+              <div
+                onClick={e => e.stopPropagation()}
+                style={{
+                  minWidth: 300, maxWidth: 340, borderRadius: 16, overflow: 'hidden',
+                  boxShadow: '0 24px 80px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.15)',
+                  animation: 'modalIn 0.32s cubic-bezier(0.34,1.56,0.64,1) forwards',
+                  background: 'rgba(242,242,247,0.95)', backdropFilter: 'blur(40px) saturate(2)',
+                }}
+              >
+                {/* Content */}
+                <div style={{ padding: '24px 20px 20px', textAlign: 'center' }}>
+                  <div style={{ fontSize: 44, marginBottom: 10, lineHeight: 1 }}>{deleteConfirmGame.icon ?? '🎮'}</div>
+                  <div style={{ color: 'rgba(0,0,0,0.88)', fontSize: 17, fontWeight: 700, marginBottom: 5, letterSpacing: '-0.2px' }}>Delete "{deleteConfirmGame.name}"?</div>
+                  <div style={{ color: 'rgba(0,0,0,0.5)', fontSize: 13.5, lineHeight: 1.45 }}>This will permanently remove the game and all its data.</div>
+                </div>
+                {/* Buttons row */}
+                <div style={{ display: 'flex', gap: 10, padding: '0 16px 16px' }}>
+                  <button
+                    onClick={() => setDeleteConfirmGame(null)}
+                    style={{
+                      flex: 1, padding: '14px 0', borderRadius: 50, border: 'none',
+                      background: 'white', color: '#007aff', fontSize: 17, fontWeight: 500,
+                      cursor: 'pointer', letterSpacing: '-0.1px',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
+                    }}
+                  >Cancel</button>
+                  <button
+                    onClick={() => {
+                      const id = deleteConfirmGame.id
+                      setGames(games.filter(g => g.id !== id))
+                      setGameOrder(gameOrder.filter(i => i !== id))
+                      setDockGameIds(dockGameIds.filter(i => i !== id))
+                      setDeleteConfirmGame(null)
+                    }}
+                    style={{
+                      flex: 1, padding: '14px 0', borderRadius: 50, border: 'none',
+                      background: '#ff3b30', color: 'white', fontSize: 17, fontWeight: 600,
+                      cursor: 'pointer', letterSpacing: '-0.1px',
+                      boxShadow: '0 4px 16px rgba(255,59,48,0.4)',
+                    }}
+                  >Delete</button>
+                </div>
               </div>
             </div>
-          </div>
+          </>
+        )}
+
+        {/* Create Game Modal */}
+        {createGameModal && (
+          <>
+            <style>{`@keyframes modalIn2 { 0% { transform:scale(0.82); opacity:0; } 60% { transform:scale(1.04); opacity:1; } 100% { transform:scale(1); opacity:1; } }`}</style>
+            <div
+              style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(24px) saturate(1.8)' }}
+              onClick={() => setCreateGameModal(false)}
+            >
+              <div
+                onClick={e => e.stopPropagation()}
+                style={{
+                  minWidth: 320, maxWidth: 380, borderRadius: 20, overflow: 'hidden',
+                  boxShadow: '0 24px 80px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.15)',
+                  animation: 'modalIn2 0.32s cubic-bezier(0.34,1.56,0.64,1) forwards',
+                  background: 'rgba(242,242,247,0.96)', backdropFilter: 'blur(40px) saturate(2)',
+                }}
+              >
+                {/* Header */}
+                <div style={{ padding: '24px 20px 16px', textAlign: 'center' }}>
+                  <div style={{ fontSize: 28, marginBottom: 8 }}>🎮</div>
+                  <div style={{ color: 'rgba(0,0,0,0.88)', fontSize: 17, fontWeight: 700, letterSpacing: '-0.2px' }}>New Game</div>
+                  <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 13, marginTop: 4 }}>Choose a game type to add</div>
+                </div>
+
+                {/* Game type options */}
+                <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {[
+                    { type: 'physical' as const, emoji: '🏃', label: 'Physical Activity', desc: 'Teams compete in a physical game scored by host' },
+                    { type: 'spot-difference' as const, emoji: '🔍', label: 'Spot the Difference', desc: 'Players find differences between two images' },
+                    { type: 'human-bingo' as const, emoji: '🎯', label: 'Human Bingo', desc: 'Players find people matching bingo card traits' },
+                  ].map(({ type, emoji, label, desc }) => (
+                    <button
+                      key={type}
+                      onClick={() => {
+                        const newId = String(Date.now())
+                        const newGame = { id: newId, name: `เกม ${games.length + 1}`, type }
+                        setGames([...games, newGame])
+                        setGameOrder([...gameOrder, newId])
+                        setCreateGameModal(false)
+                      }}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px',
+                        borderRadius: 14, border: 'none', background: 'white', cursor: 'pointer',
+                        textAlign: 'left', boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+                        transition: 'background 0.15s',
+                      }}
+                    >
+                      <div style={{ fontSize: 32, lineHeight: 1, flexShrink: 0 }}>{emoji}</div>
+                      <div>
+                        <div style={{ color: 'rgba(0,0,0,0.88)', fontSize: 15, fontWeight: 600 }}>{label}</div>
+                        <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12.5, marginTop: 2, lineHeight: 1.35 }}>{desc}</div>
+                      </div>
+                      <svg style={{ marginLeft: 'auto', flexShrink: 0 }} width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="rgba(0,0,0,0.2)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Cancel */}
+                <div style={{ padding: '16px' }}>
+                  <button
+                    onClick={() => setCreateGameModal(false)}
+                    style={{
+                      width: '100%', padding: '14px 0', borderRadius: 50, border: 'none',
+                      background: 'white', color: '#007aff', fontSize: 17, fontWeight: 500,
+                      cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
+                    }}
+                  >Cancel</button>
+                </div>
+              </div>
+            </div>
+          </>
         )}
 
         <DragOverlay>
@@ -890,9 +1007,17 @@ export default function Home() {
   )
 }
 
-function DockUtilIcon({ href, emoji, color }: { href: string; emoji: string; color: { from: string; to: string } }) {
+function DockUtilIcon({ href, emoji, color, onLaunch }: { href: string; emoji: string; color: { from: string; to: string }; onLaunch: (rect: { x: number; y: number; w: number; h: number }) => void }) {
+  const iconRef = useRef<HTMLDivElement>(null)
   return (
-    <Link href={href} style={{ flexShrink: 0 }}>
+    <div
+      ref={iconRef}
+      style={{ flexShrink: 0, cursor: 'pointer' }}
+      onClick={() => {
+        const r = iconRef.current?.getBoundingClientRect()
+        if (r) onLaunch({ x: r.left, y: r.top, w: r.width, h: r.height })
+      }}
+    >
       <div style={{
         width: 56, height: 56, borderRadius: 16,
         background: `linear-gradient(145deg, ${color.from}cc, ${color.to}dd)`,
@@ -903,6 +1028,6 @@ function DockUtilIcon({ href, emoji, color }: { href: string; emoji: string; col
         <div style={{ position: 'absolute', inset: 0, borderRadius: 16, background: 'linear-gradient(160deg, rgba(255,255,255,0.25) 0%, transparent 50%)' }} />
         <span style={{ position: 'relative', zIndex: 1 }}>{emoji}</span>
       </div>
-    </Link>
+    </div>
   )
 }
