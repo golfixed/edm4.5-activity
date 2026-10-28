@@ -27,7 +27,7 @@ export default function GameSettings({ game, onClose }: Props) {
       {/* Backdrop */}
       <div
         className="fixed inset-0 z-40"
-        style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}
+        style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)' }}
         onClick={onClose}
       />
 
@@ -36,27 +36,27 @@ export default function GameSettings({ game, onClose }: Props) {
         className="fixed right-0 top-0 bottom-0 z-50 overflow-y-auto"
         style={{
           width: 'min(420px, 100vw)',
-          background: 'linear-gradient(160deg, #1a1230 0%, #0f172a 100%)',
-          borderLeft: '1px solid rgba(255,255,255,0.12)',
-          boxShadow: '-8px 0 40px rgba(0,0,0,0.5)',
+          background: '#f5f5f7',
+          borderLeft: '1px solid rgba(0,0,0,0.1)',
+          boxShadow: '-8px 0 40px rgba(0,0,0,0.18)',
         }}
       >
         {/* Header */}
         <div style={{ padding: '20px 20px 0', display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{
             width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-            background: `linear-gradient(145deg, ${resolveIconColor(game.iconColor, game.colorIdx ?? null).from}cc, ${resolveIconColor(game.iconColor, game.colorIdx ?? null).to}dd)`,
+            background: `linear-gradient(145deg, ${resolveIconColor(game.iconColor, game.colorIdx ?? null).from}, ${resolveIconColor(game.iconColor, game.colorIdx ?? null).to})`,
             display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem',
           }}>
             {game.icon ?? '🎮'}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, margin: 0 }}>Game Settings</p>
-            <p style={{ color: 'white', fontWeight: 700, fontSize: 16, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{game.name}</p>
+            <p style={{ color: 'rgba(0,0,0,0.4)', fontSize: 12, margin: 0 }}>Game Settings</p>
+            <p style={{ color: 'rgba(0,0,0,0.88)', fontWeight: 700, fontSize: 16, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{game.name}</p>
           </div>
           <button
             onClick={onClose}
-            style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 8, color: 'white', cursor: 'pointer', padding: '6px 10px', fontSize: 16 }}
+            style={{ background: 'rgba(0,0,0,0.07)', border: 'none', borderRadius: 8, color: 'rgba(0,0,0,0.6)', cursor: 'pointer', padding: '6px 10px', fontSize: 16 }}
           >
             ✕
           </button>
@@ -72,8 +72,8 @@ export default function GameSettings({ game, onClose }: Props) {
                 maxLength={2}
                 style={{
                   width: 52, height: 52, borderRadius: 12, fontSize: '1.6rem', textAlign: 'center',
-                  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
-                  color: 'white', flexShrink: 0,
+                  background: 'white', border: '1px solid rgba(0,0,0,0.12)',
+                  color: 'rgba(0,0,0,0.88)', flexShrink: 0,
                 }}
               />
               <input
@@ -82,15 +82,15 @@ export default function GameSettings({ game, onClose }: Props) {
                 placeholder="ชื่อเกม"
                 style={{
                   flex: 1, height: 52, borderRadius: 12, padding: '0 14px', fontSize: 15,
-                  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
-                  color: 'white',
+                  background: 'white', border: '1px solid rgba(0,0,0,0.12)',
+                  color: 'rgba(0,0,0,0.88)',
                 }}
               />
             </div>
 
             {/* Color palette */}
             <div>
-              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, marginBottom: 8 }}>สีไอคอน</p>
+              <p style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12, marginBottom: 8 }}>สีไอคอน</p>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                 {ICON_COLORS.map((c, i) => {
                   const isSelected = !game.iconColor && (game.colorIdx ?? 0) === i
@@ -101,15 +101,13 @@ export default function GameSettings({ game, onClose }: Props) {
                       style={{
                         width: 36, height: 36, borderRadius: 10, border: 'none', cursor: 'pointer',
                         background: `linear-gradient(145deg, ${c.from}, ${c.to})`,
-                        boxShadow: isSelected ? `0 0 0 3px white, 0 0 0 5px ${c.from}` : `0 2px 8px ${c.from}44`,
+                        boxShadow: isSelected ? `0 0 0 3px #f5f5f7, 0 0 0 5px ${c.from}` : `0 2px 8px ${c.from}44`,
                         transform: isSelected ? 'scale(1.15)' : 'scale(1)',
                         transition: 'all 0.15s',
                       }}
                     />
                   )
                 })}
-
-                {/* Custom color picker swatch */}
                 <CustomColorSwatch game={game} updateGame={updateGame} />
               </div>
             </div>
@@ -126,7 +124,7 @@ export default function GameSettings({ game, onClose }: Props) {
                     onChange={e => updateGame({ timerSeconds: parseInt(e.target.value) || 10 })}
                     style={inputStyle}
                   />
-                  <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14 }}>วินาที / ข้อ</span>
+                  <span style={{ color: 'rgba(0,0,0,0.5)', fontSize: 14 }}>วินาที / ข้อ</span>
                 </div>
               </Section>
               <Section title="🔊 เสียงเกม">
@@ -144,10 +142,13 @@ export default function GameSettings({ game, onClose }: Props) {
               <Section title="🖼 ภาพพื้นหลัง">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <label style={fileButtonStyle}>
-                    เลือกภาพ
+                    {game.backgroundImage ? 'เปลี่ยนภาพ' : 'เลือกภาพ'}
                     <input type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) handleBgUpload(f) }} />
                   </label>
-                  {game.backgroundImage && <span style={{ color: '#4ade80', fontSize: 13 }}>✓ อัปโหลดแล้ว</span>}
+                  {game.backgroundImage && <span style={{ color: '#16a34a', fontSize: 13 }}>✓ อัปโหลดแล้ว</span>}
+                  {game.backgroundImage && (
+                    <button onClick={() => updateGame({ backgroundImage: undefined })} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 13, padding: '4px 8px', borderRadius: 8 }}>✕ ลบ</button>
+                  )}
                 </div>
               </Section>
               <Section title="🎁 อุปกรณ์ประมูล">
@@ -162,10 +163,13 @@ export default function GameSettings({ game, onClose }: Props) {
               <Section title="🖼 ภาพพื้นหลัง">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <label style={fileButtonStyle}>
-                    เลือกภาพ
+                    {game.backgroundImage ? 'เปลี่ยนภาพ' : 'เลือกภาพ'}
                     <input type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) handleBgUpload(f) }} />
                   </label>
-                  {game.backgroundImage && <span style={{ color: '#4ade80', fontSize: 13 }}>✓ อัปโหลดแล้ว</span>}
+                  {game.backgroundImage && <span style={{ color: '#16a34a', fontSize: 13 }}>✓ อัปโหลดแล้ว</span>}
+                  {game.backgroundImage && (
+                    <button onClick={() => updateGame({ backgroundImage: undefined })} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 13, padding: '4px 8px', borderRadius: 8 }}>✕ ลบ</button>
+                  )}
                 </div>
               </Section>
               <Section title="📝 Keywords">
@@ -184,7 +188,7 @@ export default function GameSettings({ game, onClose }: Props) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 10 }}>{title}</p>
+      <p style={{ color: 'rgba(0,0,0,0.4)', fontSize: 12, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 10 }}>{title}</p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>{children}</div>
     </div>
   )
@@ -192,19 +196,18 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 const inputStyle: React.CSSProperties = {
   width: 80, padding: '8px 12px', borderRadius: 10, fontSize: 15, textAlign: 'center',
-  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: 'white',
+  background: 'white', border: '1px solid rgba(0,0,0,0.12)', color: 'rgba(0,0,0,0.88)',
 }
 
 const fileButtonStyle: React.CSSProperties = {
   padding: '7px 14px', borderRadius: 10, fontSize: 13, cursor: 'pointer',
-  background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: 'white',
+  background: 'white', border: '1px solid rgba(0,0,0,0.15)', color: 'rgba(0,0,0,0.7)',
 }
 
 /* ── Custom color swatch ───────────────────────────────────────────── */
 function CustomColorSwatch({ game, updateGame }: { game: Game; updateGame: (p: Partial<Game>) => void }) {
   const colorInputRef = useRef<HTMLInputElement>(null)
   const isCustom = !!game.iconColor
-
   const currentHex = isCustom ? game.iconColor!.from : '#a855f7'
 
   const handleChange = (hex: string) => {
@@ -221,7 +224,7 @@ function CustomColorSwatch({ game, updateGame }: { game: Game; updateGame: (p: P
           background: isCustom
             ? `linear-gradient(145deg, ${game.iconColor!.from}, ${game.iconColor!.to})`
             : 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)',
-          boxShadow: isCustom ? `0 0 0 3px white, 0 0 0 5px ${game.iconColor!.from}` : '0 2px 8px rgba(0,0,0,0.3)',
+          boxShadow: isCustom ? `0 0 0 3px #f5f5f7, 0 0 0 5px ${game.iconColor!.from}` : '0 2px 8px rgba(0,0,0,0.2)',
           transform: isCustom ? 'scale(1.15)' : 'scale(1)',
           transition: 'all 0.15s',
           overflow: 'hidden',
@@ -258,15 +261,15 @@ function SoundUploader({ game, updateGame }: { game: Game; updateGame: (p: Parti
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       {soundFields.map(({ key, label }) => (
-        <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 10, background: game[key] ? 'rgba(74,222,128,0.08)' : 'rgba(255,255,255,0.05)', border: `1px solid ${game[key] ? 'rgba(74,222,128,0.2)' : 'rgba(255,255,255,0.1)'}` }}>
-          <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13, flex: 1 }}>{label}</span>
-          {game[key] && <span style={{ color: '#4ade80', fontSize: 11 }}>✓</span>}
+        <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 10, background: game[key] ? 'rgba(22,163,74,0.06)' : 'white', border: `1px solid ${game[key] ? 'rgba(22,163,74,0.25)' : 'rgba(0,0,0,0.1)'}` }}>
+          <span style={{ color: 'rgba(0,0,0,0.7)', fontSize: 13, flex: 1 }}>{label}</span>
+          {game[key] && <span style={{ color: '#16a34a', fontSize: 11 }}>✓</span>}
           {game[key] && <button onClick={() => new Audio(game[key] as string).play()} style={{ ...fileButtonStyle, padding: '4px 10px', fontSize: 11 }}>▶</button>}
           <label style={{ ...fileButtonStyle, padding: '4px 10px', fontSize: 11 }}>
             {game[key] ? 'เปลี่ยน' : 'เลือก'}
             <input type="file" accept="audio/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) readAudio(f, key) }} />
           </label>
-          {game[key] && <button onClick={() => updateGame({ [key]: null })} style={{ color: '#f87171', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13 }}>✕</button>}
+          {game[key] && <button onClick={() => updateGame({ [key]: null })} style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13 }}>✕</button>}
         </div>
       ))}
     </div>
@@ -279,8 +282,8 @@ function BingoKeywordsEditor({ game, updateGame }: { game: Game; updateGame: (p:
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>1 บรรทัด / คำ</span>
-        <span style={{ fontSize: 12, color: keywords.length >= 24 ? '#4ade80' : '#fb923c' }}>{keywords.length} / 24</span>
+        <span style={{ color: 'rgba(0,0,0,0.4)', fontSize: 12 }}>1 บรรทัด / คำ</span>
+        <span style={{ fontSize: 12, color: keywords.length >= 24 ? '#16a34a' : '#ea580c' }}>{keywords.length} / 24</span>
       </div>
       <textarea
         value={keywords.join('\n')}
@@ -289,8 +292,8 @@ function BingoKeywordsEditor({ game, updateGame }: { game: Game; updateGame: (p:
         placeholder="เคยไปญี่ปุ่น&#10;ใช้ Mechanical Keyboard&#10;มีแมว&#10;..."
         style={{
           width: '100%', borderRadius: 10, padding: '10px 12px', fontSize: 13, fontFamily: 'monospace',
-          background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
-          color: 'white', resize: 'vertical', boxSizing: 'border-box',
+          background: 'white', border: '1px solid rgba(0,0,0,0.12)',
+          color: 'rgba(0,0,0,0.88)', resize: 'vertical', boxSizing: 'border-box',
         }}
       />
     </div>
@@ -317,25 +320,25 @@ function ImageSetsEditor({ game, updateGame }: { game: Game; updateGame: (p: Par
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       {sets.map((set, si) => (
-        <div key={set.id} style={{ borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)' }}>
+        <div key={set.id} style={{ borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.1)', background: 'white' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px' }}>
-            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>{si + 1}.</span>
+            <span style={{ color: 'rgba(0,0,0,0.3)', fontSize: 12 }}>{si + 1}.</span>
             <input
               value={set.name}
               onChange={e => saveSets(sets.map(s => s.id === set.id ? { ...s, name: e.target.value } : s))}
-              style={{ flex: 1, background: 'none', border: 'none', color: 'white', fontSize: 14, fontWeight: 600 }}
+              style={{ flex: 1, background: 'none', border: 'none', color: 'rgba(0,0,0,0.88)', fontSize: 14, fontWeight: 600 }}
             />
-            <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11 }}>{set.pairs.length} โจทย์</span>
+            <span style={{ color: 'rgba(0,0,0,0.3)', fontSize: 11 }}>{set.pairs.length} โจทย์</span>
             <button
               onClick={() => setExpandedSetIds(prev => { const n = new Set(prev); n.has(set.id) ? n.delete(set.id) : n.add(set.id); return n })}
               style={{ ...fileButtonStyle, padding: '3px 8px', fontSize: 11 }}
             >
               {expandedSetIds.has(set.id) ? '▲' : '▼'}
             </button>
-            <button onClick={() => deleteSet(set.id)} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 13 }}>✕</button>
+            <button onClick={() => deleteSet(set.id)} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 13 }}>✕</button>
           </div>
           {expandedSetIds.has(set.id) && (
-            <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', padding: '8px 12px' }}>
+            <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', padding: '8px 12px', background: '#fafafa' }}>
               <PairsEditor
                 pairs={set.pairs}
                 onChange={pairs => saveSets(sets.map(s => s.id === set.id ? { ...s, pairs } : s))}
@@ -350,9 +353,9 @@ function ImageSetsEditor({ game, updateGame }: { game: Game; updateGame: (p: Par
           onChange={e => setNewSetName(e.target.value)}
           placeholder={`ชื่อชุด ${sets.length + 1}`}
           onKeyDown={e => e.key === 'Enter' && addSet()}
-          style={{ flex: 1, padding: '8px 12px', borderRadius: 10, fontSize: 13, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'white' }}
+          style={{ flex: 1, padding: '8px 12px', borderRadius: 10, fontSize: 13, background: 'white', border: '1px solid rgba(0,0,0,0.12)', color: 'rgba(0,0,0,0.88)' }}
         />
-        <button onClick={addSet} style={{ padding: '8px 16px', borderRadius: 10, fontSize: 13, background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', color: 'white', cursor: 'pointer' }}>+ เพิ่ม</button>
+        <button onClick={addSet} style={{ padding: '8px 16px', borderRadius: 10, fontSize: 13, background: 'white', border: '1px solid rgba(0,0,0,0.15)', color: 'rgba(0,0,0,0.7)', cursor: 'pointer' }}>+ เพิ่ม</button>
       </div>
     </div>
   )
@@ -377,35 +380,35 @@ function PairsEditor({ pairs, onChange }: { pairs: ImagePair[]; onChange: (p: Im
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       {pairs.map((pair, i) => (
-        <div key={pair.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.04)' }}>
-          <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, width: 16 }}>{i + 1}.</span>
+        <div key={pair.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 8px', borderRadius: 8, background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.06)' }}>
+          <span style={{ color: 'rgba(0,0,0,0.3)', fontSize: 11, width: 16 }}>{i + 1}.</span>
           <div style={{ position: 'relative' }}>
             <img src={pair.imageA} alt="A" style={{ width: 40, height: 28, objectFit: 'cover', borderRadius: 4 }} />
             {pair.correctImage === 'A' && <span style={{ position: 'absolute', top: -4, right: -4, background: '#22c55e', color: 'white', borderRadius: '50%', width: 12, height: 12, fontSize: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✓</span>}
           </div>
-          <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10 }}>vs</span>
+          <span style={{ color: 'rgba(0,0,0,0.25)', fontSize: 10 }}>vs</span>
           <div style={{ position: 'relative' }}>
             <img src={pair.imageB} alt="B" style={{ width: 40, height: 28, objectFit: 'cover', borderRadius: 4 }} />
             {pair.correctImage === 'B' && <span style={{ position: 'absolute', top: -4, right: -4, background: '#22c55e', color: 'white', borderRadius: '50%', width: 12, height: 12, fontSize: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✓</span>}
           </div>
-          <span style={{ flex: 1, color: 'rgba(255,255,255,0.6)', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pair.label}</span>
+          <span style={{ flex: 1, color: 'rgba(0,0,0,0.6)', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pair.label}</span>
           {(['A', 'B'] as const).map(side => (
             <button key={side} onClick={() => onChange(pairs.map(p => p.id === pair.id ? { ...p, correctImage: side } : p))}
-              style={{ padding: '2px 7px', borderRadius: 5, fontSize: 11, fontWeight: 700, cursor: 'pointer', border: 'none', background: pair.correctImage === side ? '#22c55e' : 'rgba(255,255,255,0.1)', color: pair.correctImage === side ? 'white' : 'rgba(255,255,255,0.5)' }}>
+              style={{ padding: '2px 7px', borderRadius: 5, fontSize: 11, fontWeight: 700, cursor: 'pointer', border: 'none', background: pair.correctImage === side ? '#22c55e' : 'rgba(0,0,0,0.07)', color: pair.correctImage === side ? 'white' : 'rgba(0,0,0,0.45)' }}>
               {side}
             </button>
           ))}
-          <button onClick={() => onChange(pairs.filter(p => p.id !== pair.id))} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 12 }}>✕</button>
+          <button onClick={() => onChange(pairs.filter(p => p.id !== pair.id))} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 12 }}>✕</button>
         </div>
       ))}
 
       {/* Add pair form */}
-      <div style={{ border: '1px dashed rgba(255,255,255,0.15)', borderRadius: 8, padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, margin: 0 }}>+ เพิ่มโจทย์</p>
+      <div style={{ border: '1px dashed rgba(0,0,0,0.15)', borderRadius: 8, padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <p style={{ color: 'rgba(0,0,0,0.4)', fontSize: 11, margin: 0 }}>+ เพิ่มโจทย์</p>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           {[{ label: 'ภาพ A', state: pendingA, setter: setPendingA }, { label: 'ภาพ B', state: pendingB, setter: setPendingB }].map(({ label, state, setter }) => (
             <div key={label}>
-              <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, marginBottom: 4 }}>{label}</p>
+              <p style={{ color: 'rgba(0,0,0,0.35)', fontSize: 11, marginBottom: 4 }}>{label}</p>
               <label style={fileButtonStyle}>เลือก<input type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) readFile(f, setter) }} /></label>
               {state && <img src={state} style={{ marginTop: 4, height: 36, objectFit: 'contain', borderRadius: 4, display: 'block' }} />}
             </div>
@@ -413,16 +416,16 @@ function PairsEditor({ pairs, onChange }: { pairs: ImagePair[]; onChange: (p: Im
         </div>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           <input value={pendingLabel} onChange={e => setPendingLabel(e.target.value)} placeholder="ชื่อข้อ"
-            style={{ flex: 1, padding: '6px 10px', borderRadius: 8, fontSize: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'white' }} />
-          <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>เฉลย:</span>
+            style={{ flex: 1, padding: '6px 10px', borderRadius: 8, fontSize: 12, background: 'white', border: '1px solid rgba(0,0,0,0.12)', color: 'rgba(0,0,0,0.88)' }} />
+          <span style={{ color: 'rgba(0,0,0,0.4)', fontSize: 11 }}>เฉลย:</span>
           {(['A', 'B'] as const).map(side => (
             <button key={side} onClick={() => setPendingCorrect(side)}
-              style={{ padding: '5px 10px', borderRadius: 7, fontSize: 12, fontWeight: 700, cursor: 'pointer', border: 'none', background: pendingCorrect === side ? '#22c55e' : 'rgba(255,255,255,0.1)', color: pendingCorrect === side ? 'white' : 'rgba(255,255,255,0.5)' }}>
+              style={{ padding: '5px 10px', borderRadius: 7, fontSize: 12, fontWeight: 700, cursor: 'pointer', border: 'none', background: pendingCorrect === side ? '#22c55e' : 'rgba(0,0,0,0.07)', color: pendingCorrect === side ? 'white' : 'rgba(0,0,0,0.45)' }}>
               {side}
             </button>
           ))}
           <button onClick={addPair} disabled={!pendingA || !pendingB}
-            style={{ padding: '5px 12px', borderRadius: 8, fontSize: 12, cursor: 'pointer', border: 'none', background: pendingA && pendingB ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)', color: pendingA && pendingB ? 'white' : 'rgba(255,255,255,0.25)' }}>
+            style={{ padding: '5px 12px', borderRadius: 8, fontSize: 12, cursor: 'pointer', border: 'none', background: pendingA && pendingB ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.04)', color: pendingA && pendingB ? 'rgba(0,0,0,0.8)' : 'rgba(0,0,0,0.25)' }}>
             เพิ่ม
           </button>
         </div>
@@ -448,16 +451,16 @@ function AuctionItemsEditor({ game, updateGame }: { game: Game; updateGame: (p: 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       {items.map((item, idx) => (
-        <div key={item.id} style={{ padding: '10px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div key={item.id} style={{ padding: '10px 12px', borderRadius: 10, background: 'white', border: '1px solid rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, width: 20 }}>{idx + 1}.</span>
+            <span style={{ color: 'rgba(0,0,0,0.35)', fontSize: 13, fontWeight: 700, width: 20 }}>{idx + 1}.</span>
             <input
               value={item.name}
               onChange={e => updateItem(item.id, { name: e.target.value })}
               placeholder="ชื่ออุปกรณ์"
-              style={{ flex: 1, padding: '6px 10px', borderRadius: 8, fontSize: 13, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'white' }}
+              style={{ flex: 1, padding: '6px 10px', borderRadius: 8, fontSize: 13, background: '#fafafa', border: '1px solid rgba(0,0,0,0.1)', color: 'rgba(0,0,0,0.88)' }}
             />
-            <button onClick={() => updateGame({ auctionItems: items.filter(it => it.id !== item.id) })} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 14 }}>✕</button>
+            <button onClick={() => updateGame({ auctionItems: items.filter(it => it.id !== item.id) })} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 14 }}>✕</button>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingLeft: 28 }}>
             <label style={{ ...fileButtonStyle, fontSize: 11, padding: '4px 10px' }}>
@@ -466,7 +469,7 @@ function AuctionItemsEditor({ game, updateGame }: { game: Game; updateGame: (p: 
             </label>
             {item.videoBase64 && (
               <>
-                <span style={{ color: '#4ade80', fontSize: 11 }}>✓</span>
+                <span style={{ color: '#16a34a', fontSize: 11 }}>✓</span>
                 <button onClick={() => setPreviewSrc(item.videoBase64!)} style={{ ...fileButtonStyle, fontSize: 11, padding: '4px 10px' }}>▶ Preview</button>
               </>
             )}
@@ -475,17 +478,17 @@ function AuctionItemsEditor({ game, updateGame }: { game: Game; updateGame: (p: 
       ))}
       <button
         onClick={() => updateGame({ auctionItems: [...items, { id: Date.now().toString(), name: `อุปกรณ์ ${items.length + 1}` }] })}
-        style={{ padding: '9px', borderRadius: 10, fontSize: 13, cursor: 'pointer', background: 'rgba(255,255,255,0.06)', border: '1px dashed rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.6)' }}
+        style={{ padding: '9px', borderRadius: 10, fontSize: 13, cursor: 'pointer', background: 'white', border: '1px dashed rgba(0,0,0,0.18)', color: 'rgba(0,0,0,0.5)' }}
       >
         + เพิ่มอุปกรณ์
       </button>
 
       {previewSrc && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.8)' }} onClick={() => setPreviewSrc(null)}>
-          <div style={{ background: '#111', borderRadius: 16, overflow: 'hidden', maxWidth: 360, width: '100%' }} onClick={e => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: '#1a1a1a' }}>
-              <span style={{ color: 'white', fontSize: 14, fontWeight: 600 }}>Preview วิดีโอ</span>
-              <button onClick={() => setPreviewSrc(null)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontSize: 18 }}>✕</button>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.7)' }} onClick={() => setPreviewSrc(null)}>
+          <div style={{ background: 'white', borderRadius: 16, overflow: 'hidden', maxWidth: 360, width: '100%' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
+              <span style={{ color: 'rgba(0,0,0,0.88)', fontSize: 14, fontWeight: 600 }}>Preview วิดีโอ</span>
+              <button onClick={() => setPreviewSrc(null)} style={{ background: 'none', border: 'none', color: 'rgba(0,0,0,0.45)', cursor: 'pointer', fontSize: 18 }}>✕</button>
             </div>
             <video src={previewSrc} controls autoPlay style={{ width: '100%', maxHeight: 240, background: 'black' }} />
           </div>

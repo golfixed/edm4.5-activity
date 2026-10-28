@@ -804,17 +804,23 @@ export default function Home() {
 
               <div style={{ width: 1, height: 40, background: 'rgba(0,0,0,0.15)', borderRadius: 1, flexShrink: 0 }} />
 
-              <DockUtilIcon href="/admin" emoji="⚙️" color={{ from: '#6b7280', to: '#374151' }} onLaunch={rect => {
-                setLaunchOrigin(rect); setLaunchingId('__util_admin')
+              <DockUtilIcon href="/manager" emoji="📋" color={{ from: '#0369a1', to: '#1e3a5f' }} onLaunch={rect => {
+                setLaunchOrigin(rect); setLaunchingId('__util_manager')
                 sessionStorage.setItem('launchOrigin', JSON.stringify(rect))
-                sessionStorage.setItem('launchColor', JSON.stringify({ from: '#6b7280', to: '#374151' }))
-                setTimeout(() => router.push('/admin'), 400)
+                sessionStorage.setItem('launchColor', JSON.stringify({ from: '#0369a1', to: '#1e3a5f' }))
+                setTimeout(() => router.push('/manager'), 400)
               }} />
               <DockUtilIcon href="/scoreboard" emoji="🏆" color={{ from: '#c0392b', to: '#7b241c' }} onLaunch={rect => {
                 setLaunchOrigin(rect); setLaunchingId('__util_scoreboard')
                 sessionStorage.setItem('launchOrigin', JSON.stringify(rect))
                 sessionStorage.setItem('launchColor', JSON.stringify({ from: '#c0392b', to: '#7b241c' }))
                 setTimeout(() => router.push('/scoreboard'), 400)
+              }} />
+              <DockUtilIcon href="/admin" emoji="⚙️" color={{ from: '#6b7280', to: '#374151' }} onLaunch={rect => {
+                setLaunchOrigin(rect); setLaunchingId('__util_admin')
+                sessionStorage.setItem('launchOrigin', JSON.stringify(rect))
+                sessionStorage.setItem('launchColor', JSON.stringify({ from: '#6b7280', to: '#374151' }))
+                setTimeout(() => router.push('/admin'), 400)
               }} />
             </div>
           </div>

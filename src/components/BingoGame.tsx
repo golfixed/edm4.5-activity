@@ -197,7 +197,7 @@ function generateRandomCards(keywords: string[], count: number): string[][] {
   )
 }
 
-export default function BingoGame({ game, onBack }: { game: Game; onBack?: (e: React.MouseEvent) => void }) {
+export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game; onBack?: (e: React.MouseEvent) => void; onOpenSettings?: () => void }) {
   const { teams } = useStore()
   const keywords = game.bingoKeywords ?? []
 
@@ -354,7 +354,9 @@ export default function BingoGame({ game, onBack }: { game: Game; onBack?: (e: R
               กลับ
             </button>
             <h1 className="text-white font-bold text-xl">{game.icon} {game.name}</h1>
-            <span className="w-16" />
+            <button onClick={onOpenSettings} className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm" title="ตั้งค่าเกม">
+              ⚙️ ตั้งค่า
+            </button>
           </div>
 
           <div className="flex-1 flex flex-col items-center justify-center gap-8 px-8">

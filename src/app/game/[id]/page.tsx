@@ -40,26 +40,9 @@ export default function GamePage({ params }: { params: { id: string } }) {
 
   return (
     <>
-
-      {game.type === 'spot-difference' && <SpotDifferenceGame game={game} onBack={handleBack} />}
-      {game.type === 'human-bingo' && <BingoGame game={game} onBack={handleBack} />}
-      {game.type !== 'spot-difference' && game.type !== 'human-bingo' && <PhysicalGame game={game} onBack={handleBack} />}
-
-      {/* Floating settings button */}
-      <button
-        onClick={() => setSettingsOpen(true)}
-        style={{
-          position: 'fixed', bottom: 24, right: 24, zIndex: 30,
-          width: 48, height: 48, borderRadius: '50%', border: 'none', cursor: 'pointer',
-          background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(12px)',
-          color: 'white', fontSize: 20,
-          boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}
-        title="ตั้งค่าเกม"
-      >
-        ⚙️
-      </button>
+      {game.type === 'spot-difference' && <SpotDifferenceGame game={game} onBack={handleBack} onOpenSettings={() => setSettingsOpen(true)} />}
+      {game.type === 'human-bingo' && <BingoGame game={game} onBack={handleBack} onOpenSettings={() => setSettingsOpen(true)} />}
+      {game.type !== 'spot-difference' && game.type !== 'human-bingo' && <PhysicalGame game={game} onBack={handleBack} onOpenSettings={() => setSettingsOpen(true)} />}
 
       {settingsOpen && <GameSettings game={game} onClose={() => setSettingsOpen(false)} />}
     </>

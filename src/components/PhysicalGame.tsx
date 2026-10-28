@@ -9,9 +9,10 @@ import AuctionPhase from './AuctionPhase'
 interface Props {
   game: Game
   onBack?: (e: React.MouseEvent) => void
+  onOpenSettings?: () => void
 }
 
-export default function PhysicalGame({ game, onBack }: Props) {
+export default function PhysicalGame({ game, onBack, onOpenSettings }: Props) {
   const { teams, scores, addScore } = useStore()
   const [selectedTeamId, setSelectedTeamId] = useState<string>(teams[0]?.id ?? '')
   const [points, setPoints] = useState(1)
@@ -55,20 +56,25 @@ export default function PhysicalGame({ game, onBack }: Props) {
         {/* Top bar */}
         <div className="flex items-center justify-between px-6 py-3 flex-shrink-0">
           <button onClick={onBack} className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
-              กลับ
-            </button>
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+            กลับ
+          </button>
           <h1 className="text-2xl font-extrabold text-white" style={{ textShadow: '0 2px 12px rgba(0,0,0,0.7)' }}>
             {game.name}
           </h1>
-          {auctionItems.length > 0 && (
-            <button
-              onClick={() => setShowAuction(true)}
-              className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm"
-            >
-              🎁 ประมูล
+          <div className="flex items-center gap-2">
+            {auctionItems.length > 0 && (
+              <button
+                onClick={() => setShowAuction(true)}
+                className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm"
+              >
+                🎁 ประมูล
+              </button>
+            )}
+            <button onClick={onOpenSettings} className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm" title="ตั้งค่าเกม">
+              ⚙️ ตั้งค่า
             </button>
-          )}
+          </div>
         </div>
 
         {/* Team grid — original order, click to select */}

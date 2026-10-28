@@ -8,11 +8,12 @@ import Link from 'next/link'
 interface Props {
   game: Game
   onBack?: (e: React.MouseEvent) => void
+  onOpenSettings?: () => void
 }
 
 type Phase = 'setup' | 'countdown' | 'playing' | 'scoring'
 
-export default function SpotDifferenceGame({ game, onBack }: Props) {
+export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Props) {
   const { teams, addScore } = useStore()
   const sets = game.imageSets ?? []
   const timerSeconds = game.timerSeconds ?? 30
@@ -147,7 +148,7 @@ export default function SpotDifferenceGame({ game, onBack }: Props) {
   if (phase === 'setup') {
     return (
       <div className="min-h-screen bg-school-primary-dark flex flex-col">
-        <div className="flex items-center px-6 py-3 bg-school-primary shadow gap-4">
+        <div className="flex items-center justify-between px-6 py-3 bg-school-primary shadow">
           <button onClick={onBack} className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -155,6 +156,9 @@ export default function SpotDifferenceGame({ game, onBack }: Props) {
             กลับ
           </button>
           <h1 className="text-white text-xl font-bold">{game.name}</h1>
+          <button onClick={onOpenSettings} className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm" title="ตั้งค่าเกม">
+            ⚙️ ตั้งค่า
+          </button>
         </div>
 
         <div className="flex-1 flex items-center justify-center p-6">
@@ -298,8 +302,13 @@ export default function SpotDifferenceGame({ game, onBack }: Props) {
               ข้อที่ {currentIndex + 1} / {pairs.length}
             </span>
           </div>
-          <div className={`text-4xl font-bold tabular-nums ${pct > 0.5 ? 'text-green-400' : pct > 0.2 ? 'text-yellow-400' : 'text-red-400'} ${timeLeft <= 5 && !revealed ? 'animate-pulse' : ''}`}>
-            {revealed ? '⏰' : timeLeft}
+          <div className="flex items-center gap-3">
+            <div className={`text-4xl font-bold tabular-nums ${pct > 0.5 ? 'text-green-400' : pct > 0.2 ? 'text-yellow-400' : 'text-red-400'} ${timeLeft <= 5 && !revealed ? 'animate-pulse' : ''}`}>
+              {revealed ? '⏰' : timeLeft}
+            </div>
+            <button onClick={onOpenSettings} className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm" title="ตั้งค่าเกม">
+              ⚙️ ตั้งค่า
+            </button>
           </div>
         </div>
 
@@ -395,12 +404,15 @@ export default function SpotDifferenceGame({ game, onBack }: Props) {
   // ---- SCORING ----
   return (
     <div className="min-h-screen bg-school-primary-dark flex flex-col">
-      <div className="flex items-center px-6 py-3 bg-school-primary shadow gap-4">
+      <div className="flex items-center justify-between px-6 py-3 bg-school-primary shadow">
         <button onClick={() => setPhase(pairs.length > 0 ? 'playing' : 'setup')} className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
-            กลับ
-          </button>
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+          กลับ
+        </button>
         <h1 className="text-white text-xl font-bold">บันทึกคะแนน — {game.name}</h1>
+        <button onClick={onOpenSettings} className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm" title="ตั้งค่าเกม">
+          ⚙️ ตั้งค่า
+        </button>
       </div>
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="bg-white/10 rounded-2xl p-8 w-full max-w-md">
