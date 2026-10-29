@@ -62,54 +62,53 @@ function hexLuminance(hex: string): number {
   return 0.2126 * toLinear(n >> 16) + 0.7152 * toLinear((n >> 8) & 0xff) + 0.0722 * toLinear(n & 0xff)
 }
 
-function SignalIcon({ status, wallpaperColor }: { status: FirebaseStatus; wallpaperColor: string }) {
+function SignalIcon({ status }: { status: FirebaseStatus }) {
   const time = useThaiTime()
   const [hovered, setHovered] = useState(false)
 
-  const lum = hexLuminance(wallpaperColor)
-  const isDark = lum < 0.35
-  const fg = isDark ? 'rgba(255,255,255,0.80)' : 'rgba(0,0,0,0.55)'
-  const bg = isDark ? (hovered ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.12)') : (hovered ? 'rgba(0,0,0,0.09)' : 'rgba(0,0,0,0.06)')
-  const inactive = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.15)'
-
+  const inactive = 'rgba(0,0,0,0.25)'
   const bars = [
     { h: 4, active: true },
     { h: 8, active: status !== 'disconnected' },
     { h: 12, active: status === 'connected' },
   ]
-  const signalColor = status === 'connected' ? '#22c55e' : status === 'connecting' ? '#f59e0b' : '#ef4444'
+  const signalColor = status === 'connected' ? '#15803d' : status === 'connecting' ? '#b45309' : '#b91c1c'
+
   const statusText = status === 'connected' ? 'Connected' : status === 'connecting' ? 'Connecting…' : 'Disconnected'
 
   return (
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{
-        position: 'absolute', right: 20, top: '50%', transform: 'translateY(-50%)',
-        display: 'flex', alignItems: 'center', gap: 8, padding: '4px 10px',
-        borderRadius: 8, background: bg, cursor: 'default', transition: 'background 0.2s',
-      }}
+      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7, cursor: 'default', flexShrink: 0 }}
     >
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2.5 }}>
-        {bars.map((b, i) => (
-          <div
-            key={i}
-            style={{
-              width: 4, height: b.h, borderRadius: 2,
-              background: b.active ? signalColor : inactive,
-              transition: 'background 0.4s',
-              opacity: status === 'connecting' && b.active ? undefined : 1,
-              animation: status === 'connecting' && b.active ? `pulse-bar ${0.8 + i * 0.15}s ease-in-out infinite alternate` : 'none',
-            }}
-          />
-        ))}
-      </div>
-      {hovered && (
-        <span style={{ fontSize: 12, fontWeight: 600, color: signalColor, transition: 'color 0.2s' }}>
+      {/* Bars + status text on the same row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2.5 }}>
+          {bars.map((b, i) => (
+            <div
+              key={i}
+              style={{
+                width: 4, height: b.h, borderRadius: 2,
+                background: hovered && b.active ? signalColor : inactive,
+                transition: 'background 0.3s',
+                animation: status === 'connecting' && b.active ? `pulse-bar ${0.8 + i * 0.15}s ease-in-out infinite alternate` : 'none',
+              }}
+            />
+          ))}
+        </div>
+        <span style={{
+          fontSize: 11, fontWeight: 600, color: signalColor,
+          letterSpacing: '0.01em', lineHeight: 1, whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          maxWidth: hovered ? 90 : 0,
+          opacity: hovered ? 1 : 0,
+          transition: 'max-width 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease',
+        }}>
           {statusText}
         </span>
-      )}
-      <span style={{ fontSize: 13, fontWeight: 500, letterSpacing: '0.02em', fontVariantNumeric: 'tabular-nums', color: fg, transition: 'color 0.3s' }}>
+      </div>
+      <span style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.02em', fontVariantNumeric: 'tabular-nums', color: 'rgba(0,0,0,0.5)', lineHeight: 1 }}>
         {time}
       </span>
       <style>{`@keyframes pulse-bar { from { opacity:0.35 } to { opacity:1 } }`}</style>
@@ -586,7 +585,6 @@ export default function Home() {
 
         {/* Header */}
         <header className="relative z-10 flex items-center justify-center px-8 pt-10 pb-4" style={{ minHeight: 64 }}>
-          {!editMode && <SignalIcon status={firebaseStatus} wallpaperColor={wallpaperColor} />}
           {editMode ? (
             <button
               onClick={() => setEditMode(false)}
@@ -768,7 +766,7 @@ export default function Home() {
 
         {/* Dock */}
         <div className="fixed bottom-8 left-0 right-0 z-20 flex justify-center pointer-events-none">
-          <div className="pointer-events-auto relative overflow-hidden" style={{ borderRadius: '2rem', boxShadow: '0 4px 24px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.08)' }}>
+          <div className="pointer-events-auto relative overflow-hidden" style={{ borderRadius: '2rem', boxShadow: '0 4px 24px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.08)', transition: 'width 0.3s cubic-bezier(0.4,0,0.2,1)' }}>
             <div style={{ position: 'absolute', inset: 0, zIndex: 0, backdropFilter: 'blur(20px)', filter: 'url(#glass-distortion)', borderRadius: '2rem', overflow: 'hidden' }} />
             <div style={{ position: 'absolute', inset: 0, zIndex: 1, background: 'rgba(255,255,255,0.55)', borderRadius: '2rem' }} />
             <div style={{ position: 'absolute', inset: 0, zIndex: 2, borderRadius: '2rem', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(0,0,0,0.06)', border: '1px solid rgba(255,255,255,0.6)' }} />
@@ -822,6 +820,9 @@ export default function Home() {
                 sessionStorage.setItem('launchColor', JSON.stringify({ from: '#6b7280', to: '#374151' }))
                 setTimeout(() => router.push('/admin'), 400)
               }} />
+
+              {!editMode && <div style={{ width: 1, height: 40, background: 'rgba(0,0,0,0.15)', borderRadius: 1, flexShrink: 0 }} />}
+              {!editMode && <SignalIcon status={firebaseStatus} />}
             </div>
           </div>
         </div>
