@@ -737,19 +737,29 @@ export default function ImageTwisterPage() {
                     </button>
                   </div>
 
-                  {aiLoading && (
-                    <div className="flex items-center gap-2 text-xs text-indigo-500">
-                      <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid #e5e7eb', borderTopColor: '#4f46e5', animation: 'spin 0.8s linear infinite', flexShrink: 0 }} />
-                      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-                      AI กำลังแก้ไขรูปและเพิ่มความคมชัด…
+                  {/* Status chip — visible without scrolling */}
+                  {(aiLoading || aiError || aiResult) && (
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '12px 16px', borderRadius: 12, fontWeight: 700, fontSize: 14,
+                      ...(aiLoading
+                        ? { background: '#eef2ff', border: '2px solid #818cf8', color: '#4338ca' }
+                        : aiError
+                          ? { background: '#fff1f2', border: '2px solid #fca5a5', color: '#dc2626' }
+                          : { background: '#f0fdf4', border: '2px solid #86efac', color: '#16a34a' }),
+                    }}>
+                      {aiLoading && (
+                        <>
+                          <div style={{ width: 18, height: 18, borderRadius: '50%', border: '2.5px solid #c7d2fe', borderTopColor: '#4f46e5', animation: 'spin 0.8s linear infinite', flexShrink: 0 }} />
+                          <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+                          กำลังสร้าง… โปรดรอสักครู่
+                        </>
+                      )}
+                      {!aiLoading && aiError && <>❌ ล้มเหลว — {aiError}</>}
+                      {!aiLoading && !aiError && aiResult && <>✅ สร้างสำเร็จ! เลื่อนลงเพื่อดูผลลัพธ์</>}
                     </div>
                   )}
-                  {aiError && (
-                    <div style={{ padding: '10px 14px', background: '#fff1f2', borderRadius: 8, border: '1px solid #fecdd3' }}>
-                      <p className="text-xs font-semibold text-red-600">เกิดข้อผิดพลาด: {aiError}</p>
-                    </div>
-                  )}
-                  <p className="text-xs text-gray-400">ระบายพื้นที่ก่อน · using <span className="font-semibold text-gray-500">{aiModel}</span></p>
+                  <p className="text-xs text-gray-400">✏️ ระบายสีบนรูปก่อน แล้วค่อยกดสร้าง</p>
                 </div>
               )}
             </div>
