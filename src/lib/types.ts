@@ -29,7 +29,7 @@ export interface Game {
   id: string
   name: string
   icon?: string
-  type: 'spot-difference' | 'physical' | 'human-bingo'
+  type: 'spot-difference' | 'physical' | 'human-bingo' | 'system-app'
   backgroundImage?: string // base64 or URL
   bingoKeywords?: string[]
   imageSets?: ImageSet[]

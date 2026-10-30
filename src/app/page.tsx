@@ -216,7 +216,7 @@ function SortableGridItem({
     >
       <div ref={iconRef} style={{ position: 'relative' }}>
         <GameIcon game={game} size="lg" />
-        {editMode && (
+        {editMode && game.type !== 'system-app' && (
           <button
             onPointerDown={e => e.stopPropagation()}
             onClick={e => { e.stopPropagation(); onDelete(game) }}
@@ -361,9 +361,13 @@ function DroppableGridZone({ children, isOver }: { children: React.ReactNode; is
   )
 }
 
+const SYS_TWISTER: Game = { id: '__sys_twister', name: 'Image Twister', icon: '🪄', type: 'system-app', iconColor: { from: '#7c3aed', to: '#3b0764' } }
+
 export default function Home() {
   const router = useRouter()
   const { games, setGames, appTitle, setAppTitle, appTitleSize, setAppTitleSize, dockGameIds, gameOrder, setDockGameIds, setGameOrder, firebaseStatus, wallpaperColor, isHydrated } = useStore()
+  // Inject permanent system apps that live outside the store
+  const allGames = games.some(g => g.id === '__sys_twister') ? games : [SYS_TWISTER, ...games]
   const [returnAnim, setReturnAnim] = useState<{ origin: { x: number; y: number; w: number; h: number }; game: Game } | null>(null)
 
   useEffect(() => {
@@ -393,12 +397,12 @@ export default function Home() {
   const titleInputRef = useRef<HTMLInputElement>(null)
 
   const orderedGames = (() => {
-    const map = Object.fromEntries(games.map(g => [g.id, g]))
-    const order = gameOrder.length ? gameOrder : games.map(g => g.id)
+    const map = Object.fromEntries(allGames.map(g => [g.id, g]))
+    const order = gameOrder.length ? gameOrder : allGames.map(g => g.id)
     const ordered = order.map(id => map[id]).filter(Boolean) as Game[]
-    // Append any new games not yet in gameOrder
+    // Append any games not yet in gameOrder
     const seen = new Set(order)
-    games.forEach(g => { if (!seen.has(g.id)) ordered.push(g) })
+    allGames.forEach(g => { if (!seen.has(g.id)) ordered.push(g) })
     return ordered
   })()
 
@@ -443,6 +447,11 @@ export default function Home() {
     setLaunchOrigin(rect)
     setLaunchingId(gameId)
     sessionStorage.setItem('launchOrigin', JSON.stringify(rect))
+    if (gameId === '__sys_twister') {
+      sessionStorage.setItem('launchColor', JSON.stringify({ from: '#7c3aed', to: '#3b0764' }))
+      setTimeout(() => router.push('/image-twister'), 400)
+      return
+    }
     setTimeout(() => router.push(`/game/${gameId}`), 400)
   }
 
