@@ -285,6 +285,10 @@ export default function ImageTwisterPage() {
   const [differences, setDifferences] = useState<Difference[]>([])
   const [showAnswers, setShowAnswers] = useState(false)
   const [generating, setGenerating] = useState(false)
+  const [autoSubMode, setAutoSubMode] = useState<'random' | 'manual'>('random')
+  const [selRect, setSelRect] = useState<Region | null>(null)
+  const [manualEffect, setManualEffect] = useState<EffectType>('flip-h')
+  const selStartRef = useRef<{ x: number; y: number } | null>(null)
 
   // AI mode state
   const [aiPrompt, setAiPrompt] = useState('')
@@ -306,6 +310,7 @@ export default function ImageTwisterPage() {
   const origCanvasRef = useRef<HTMLCanvasElement>(null)
   const twistCanvasRef = useRef<HTMLCanvasElement>(null)
   const maskCanvasRef = useRef<HTMLCanvasElement>(null)   // AI paint layer
+  const selectCanvasRef = useRef<HTMLCanvasElement>(null) // Auto manual selection
   const aiResultCanvasRef = useRef<HTMLCanvasElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -356,6 +361,12 @@ export default function ImageTwisterPage() {
       maskCanvasRef.current.width = w; maskCanvasRef.current.height = h
       maskCanvasRef.current.getContext('2d')!.clearRect(0, 0, w, h)
     }
+    // Reset selection canvas
+    if (selectCanvasRef.current) {
+      selectCanvasRef.current.width = w; selectCanvasRef.current.height = h
+      selectCanvasRef.current.getContext('2d')!.clearRect(0, 0, w, h)
+    }
+    setSelRect(null)
   }, [image])
 
   // Draw AI result onto result canvas when b64 changes
@@ -404,6 +415,54 @@ export default function ImageTwisterPage() {
     }, 60)
   }, [image, difficulty])
 
+  // ── Auto manual area selection ────────────────────────────────────────────────
+  const getSelectPos = (e: PointerEvent<HTMLCanvasElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const scaleX = (origCanvasRef.current?.width ?? 1) / rect.width
+    const scaleY = (origCanvasRef.current?.height ?? 1) / rect.height
+    return { x: Math.round((e.clientX - rect.left) * scaleX), y: Math.round((e.clientY - rect.top) * scaleY) }
+  }
+
+  const drawSelOverlay = (x1: number, y1: number, x2: number, y2: number) => {
+    if (!selectCanvasRef.current) return
+    const sc = selectCanvasRef.current
+    const ctx = sc.getContext('2d')!
+    ctx.clearRect(0, 0, sc.width, sc.height)
+    const x = Math.min(x1, x2), y = Math.min(y1, y2)
+    const w = Math.abs(x2 - x1), h = Math.abs(y2 - y1)
+    if (w < 2 || h < 2) return
+    ctx.fillStyle = 'rgba(79, 70, 229, 0.10)'
+    ctx.fillRect(x, y, w, h)
+    ctx.strokeStyle = '#4f46e5'
+    ctx.lineWidth = Math.max(2, sc.width / 300)
+    ctx.setLineDash([10, 5])
+    ctx.strokeRect(x, y, w, h)
+  }
+
+  const applyManual = useCallback(() => {
+    if (!selRect || !origCanvasRef.current || !twistCanvasRef.current) return
+    const orig = origCanvasRef.current, twist = twistCanvasRef.current
+    if (twist.width !== orig.width || twist.height !== orig.height || differences.length === 0) {
+      twist.width = orig.width; twist.height = orig.height
+      twist.getContext('2d')!.drawImage(orig, 0, 0)
+    }
+    const strength = 1.0
+    applyEffect(twist.getContext('2d')!, selRect, manualEffect, strength)
+    setDifferences(prev => [...prev, { region: selRect, effect: manualEffect, strength, label: prev.length + 1 }])
+    // Clear selection
+    selectCanvasRef.current?.getContext('2d')?.clearRect(0, 0, selectCanvasRef.current.width, selectCanvasRef.current.height)
+    setSelRect(null)
+  }, [selRect, manualEffect, differences])
+
+  const clearManual = useCallback(() => {
+    if (!origCanvasRef.current || !twistCanvasRef.current) return
+    const orig = origCanvasRef.current, twist = twistCanvasRef.current
+    twist.width = orig.width; twist.height = orig.height
+    twist.getContext('2d')!.drawImage(orig, 0, 0)
+    selectCanvasRef.current?.getContext('2d')?.clearRect(0, 0, selectCanvasRef.current.width, selectCanvasRef.current.height)
+    setSelRect(null); setDifferences([])
+  }, [])
+
   // ── AI mask painting ─────────────────────────────────────────────────────────
   const getCanvasPos = (e: PointerEvent<HTMLCanvasElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
@@ -434,6 +493,15 @@ export default function ImageTwisterPage() {
     const c = maskCanvasRef.current
     c.getContext('2d')!.clearRect(0, 0, c.width, c.height)
     setHasMask(false)
+  }
+
+  const fillMask = () => {
+    if (!maskCanvasRef.current || !origCanvasRef.current) return
+    const c = maskCanvasRef.current
+    const ctx = c.getContext('2d')!
+    ctx.fillStyle = 'rgba(239,68,68,0.45)'
+    ctx.fillRect(0, 0, c.width, c.height)
+    setHasMask(true)
   }
 
   // ── AI generate ──────────────────────────────────────────────────────────────
@@ -544,18 +612,34 @@ export default function ImageTwisterPage() {
               {mode === 'auto' && (
                 <>
                   <div className="w-px h-5 bg-gray-200 flex-shrink-0" />
-                  <span className="text-sm font-semibold text-gray-500 flex-shrink-0">ความยาก</span>
+                  {/* Sub-mode: random vs manual */}
                   <div className="flex rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
-                    {(['easy', 'medium', 'hard'] as Difficulty[]).map((d, i) => (
-                      <button key={d} onClick={() => setDifficulty(d)} className="px-3 py-1.5 text-sm font-semibold transition-colors"
-                        style={{ background: difficulty === d ? '#4f46e5' : 'white', color: difficulty === d ? 'white' : '#6b7280', borderLeft: i > 0 ? '1px solid #e5e7eb' : 'none' }}>
-                        {d === 'easy' ? '🟢 ง่าย' : d === 'medium' ? '🟡 กลาง' : '🔴 ยาก'}
-                      </button>
-                    ))}
+                    <button onClick={() => setAutoSubMode('random')} className="px-3 py-1.5 text-sm font-semibold transition-colors"
+                      style={{ background: autoSubMode === 'random' ? '#111827' : 'white', color: autoSubMode === 'random' ? 'white' : '#6b7280' }}>
+                      🎲 สุ่ม
+                    </button>
+                    <button onClick={() => setAutoSubMode('manual')} className="px-3 py-1.5 text-sm font-semibold transition-colors border-l border-gray-200"
+                      style={{ background: autoSubMode === 'manual' ? '#111827' : 'white', color: autoSubMode === 'manual' ? 'white' : '#6b7280' }}>
+                      ✏️ เลือกพื้นที่
+                    </button>
                   </div>
-                  <span className="text-xs text-gray-400">
-                    {difficulty === 'easy' ? '6 จุด · ใหญ่' : difficulty === 'medium' ? '4 จุด · กลาง' : '3 จุด · เล็ก/ละเอียด'}
-                  </span>
+                  {autoSubMode === 'random' && (
+                    <>
+                      <div className="w-px h-5 bg-gray-200 flex-shrink-0" />
+                      <span className="text-sm font-semibold text-gray-500 flex-shrink-0">ความยาก</span>
+                      <div className="flex rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
+                        {(['easy', 'medium', 'hard'] as Difficulty[]).map((d, i) => (
+                          <button key={d} onClick={() => setDifficulty(d)} className="px-3 py-1.5 text-sm font-semibold transition-colors"
+                            style={{ background: difficulty === d ? '#4f46e5' : 'white', color: difficulty === d ? 'white' : '#6b7280', borderLeft: i > 0 ? '1px solid #e5e7eb' : 'none' }}>
+                            {d === 'easy' ? '🟢 ง่าย' : d === 'medium' ? '🟡 กลาง' : '🔴 ยาก'}
+                          </button>
+                        ))}
+                      </div>
+                      <span className="text-xs text-gray-400">
+                        {difficulty === 'easy' ? '6 จุด · ใหญ่' : difficulty === 'medium' ? '4 จุด · กลาง' : '3 จุด · เล็ก/ละเอียด'}
+                      </span>
+                    </>
+                  )}
                 </>
               )}
 
@@ -566,6 +650,9 @@ export default function ImageTwisterPage() {
                   <input type="range" min={8} max={80} value={brushSize} onChange={e => setBrushSize(+e.target.value)}
                     className="w-24 accent-indigo-600 flex-shrink-0" />
                   <span className="text-xs text-gray-400 flex-shrink-0">{brushSize}px</span>
+                  <button onClick={fillMask} className="px-3 py-1.5 rounded-lg text-xs font-semibold text-indigo-600 border border-indigo-100 hover:bg-indigo-50 transition-colors flex-shrink-0">
+                    เลือกทั้งหมด
+                  </button>
                   {hasMask && (
                     <button onClick={clearMask} className="px-3 py-1.5 rounded-lg text-xs font-semibold text-red-600 border border-red-100 hover:bg-red-50 transition-colors flex-shrink-0">
                       ล้างพื้นที่
@@ -576,7 +663,7 @@ export default function ImageTwisterPage() {
 
               <div style={{ flex: 1 }} />
 
-              {image && mode === 'auto' && (
+              {image && mode === 'auto' && autoSubMode === 'random' && (
                 <button onClick={generateAuto} disabled={generating}
                   className="px-5 py-2 rounded-xl text-sm font-bold text-white transition-colors flex-shrink-0"
                   style={{ background: generating ? '#a5b4fc' : '#4f46e5', cursor: generating ? 'not-allowed' : 'pointer' }}>
@@ -636,10 +723,46 @@ export default function ImageTwisterPage() {
                             onPointerCancel={() => setIsPainting(false)}
                           />
                         )}
+                        {mode === 'auto' && autoSubMode === 'manual' && (
+                          <canvas ref={selectCanvasRef}
+                            style={{
+                              position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                              borderRadius: 10, cursor: 'crosshair',
+                            }}
+                            onPointerDown={e => {
+                              e.currentTarget.setPointerCapture(e.pointerId)
+                              const p = getSelectPos(e)
+                              selStartRef.current = p
+                              setSelRect(null)
+                            }}
+                            onPointerMove={e => {
+                              if (!selStartRef.current) return
+                              const p = getSelectPos(e)
+                              drawSelOverlay(selStartRef.current.x, selStartRef.current.y, p.x, p.y)
+                            }}
+                            onPointerUp={e => {
+                              if (!selStartRef.current) return
+                              const p = getSelectPos(e)
+                              const x = Math.min(selStartRef.current.x, p.x)
+                              const y = Math.min(selStartRef.current.y, p.y)
+                              const w = Math.abs(p.x - selStartRef.current.x)
+                              const h = Math.abs(p.y - selStartRef.current.y)
+                              selStartRef.current = null
+                              if (w > 4 && h > 4) setSelRect({ x, y, w, h })
+                              else selectCanvasRef.current?.getContext('2d')?.clearRect(0, 0, selectCanvasRef.current.width, selectCanvasRef.current.height)
+                            }}
+                            onPointerCancel={() => { selStartRef.current = null }}
+                          />
+                        )}
                       </div>
                     </div>
                     {mode === 'ai' && (
                       <p className="text-xs text-gray-400 text-center">ระบายสีแดงบริเวณที่ต้องการให้ AI แก้ไข</p>
+                    )}
+                    {mode === 'auto' && autoSubMode === 'manual' && (
+                      <p className="text-xs text-gray-400 text-center">
+                        {selRect ? `✅ เลือกพื้นที่แล้ว — เลือก effect แล้วกด Apply` : '🖱️ ลากเพื่อเลือกพื้นที่ที่ต้องการดัดแปลง'}
+                      </p>
                     )}
                   </>
                 )}
@@ -658,6 +781,35 @@ export default function ImageTwisterPage() {
                       </button>
                     )}
                   </div>
+
+                  {/* Manual mode: effect picker + apply */}
+                  {autoSubMode === 'manual' && image && (
+                    <div className="flex flex-col gap-2">
+                      <label className="text-xs font-semibold text-gray-600">เลือก Effect</label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {(Object.entries(EFFECT_LABELS) as [EffectType, string][]).map(([eff, label]) => (
+                          <button key={eff} onClick={() => setManualEffect(eff)}
+                            className="px-2.5 py-1 rounded-lg text-xs font-semibold border transition-colors"
+                            style={{ borderColor: manualEffect === eff ? '#4f46e5' : '#e5e7eb', background: manualEffect === eff ? '#eef2ff' : 'white', color: manualEffect === eff ? '#4f46e5' : '#374151' }}>
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={applyManual} disabled={!selRect}
+                          className="flex-1 py-2 rounded-xl text-sm font-bold text-white transition-colors"
+                          style={{ background: selRect ? '#4f46e5' : '#a5b4fc', cursor: selRect ? 'pointer' : 'not-allowed' }}>
+                          ✅ Apply ({selRect ? `${selRect.w}×${selRect.h}px` : 'เลือกพื้นที่ก่อน'})
+                        </button>
+                        {differences.length > 0 && (
+                          <button onClick={clearManual}
+                            className="px-4 py-2 rounded-xl text-sm font-semibold text-red-600 border border-red-100 hover:bg-red-50 transition-colors">
+                            ล้าง
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   <div style={{ position: 'relative', width: '100%', minHeight: 220 }}>
                     <canvas ref={twistCanvasRef}
                       style={{ maxWidth: '100%', height: 'auto', borderRadius: 10, border: differences.length > 0 ? '1px solid #f3f4f6' : 'none', display: 'block', visibility: differences.length > 0 ? 'visible' : 'hidden' }} />
