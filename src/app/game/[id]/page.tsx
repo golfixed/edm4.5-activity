@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStore } from '@/lib/store'
 import SpotDifferenceGame from '@/components/SpotDifferenceGame'
+import SpotDifferenceSettings from '@/components/SpotDifferenceSettings'
 import PhysicalGame from '@/components/PhysicalGame'
 import BingoGame from '@/components/BingoGame'
 import GameSettings from '@/components/GameSettings'
@@ -36,6 +37,10 @@ export default function GamePage({ params }: { params: { id: string } }) {
         </div>
       </div>
     )
+  }
+
+  if (game.type === 'spot-difference' && settingsOpen) {
+    return <SpotDifferenceSettings game={game} onClose={() => setSettingsOpen(false)} />
   }
 
   return (
