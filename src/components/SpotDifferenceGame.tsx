@@ -186,8 +186,8 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
   // ── SETUP ─────────────────────────────────────────────────────────────────
   if (phase === 'setup') {
     return (
-      <div className="h-screen bg-neutral-950 flex flex-col overflow-hidden" style={{ zoom: uiScale }}>
-        <div className="flex items-center justify-between gap-3 px-5 py-3 bg-neutral-900 border-b border-white/10 flex-shrink-0">
+      <div className="h-screen bg-neutral-800 flex flex-col overflow-hidden" style={{ zoom: uiScale }}>
+        <div className="flex items-center justify-between gap-3 px-5 py-3 bg-neutral-700 border-b border-white/10 flex-shrink-0">
           {backBtn(onBack ?? (() => {}))}
           <h1 className="text-white text-xl font-bold flex-1 text-center">{game.name}</h1>
           <div className="flex items-center gap-2">
@@ -298,7 +298,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
   // ── COUNTDOWN ─────────────────────────────────────────────────────────────
   if (phase === 'countdown') {
     return (
-      <div className="h-screen bg-neutral-950 flex flex-col items-center justify-center" style={{ zoom: uiScale }}>
+      <div className="h-screen bg-neutral-800 flex flex-col items-center justify-center" style={{ zoom: uiScale }}>
         <div className="text-white/40 text-xl mb-6 tracking-widest uppercase font-light">เตรียมพร้อม</div>
         <div
           key={countdownNum}
@@ -329,8 +329,8 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
     const correct = currentPair?.correctImage
 
     return (
-      <div className="h-screen bg-neutral-950 flex flex-col overflow-hidden" style={{ zoom: uiScale }}>
-        <div className="flex items-center justify-between gap-3 px-5 py-3 bg-neutral-900 border-b border-white/10 flex-shrink-0">
+      <div className="h-screen bg-neutral-800 flex flex-col overflow-hidden" style={{ zoom: uiScale }}>
+        <div className="flex items-center justify-between gap-3 px-5 py-3 bg-neutral-700 border-b border-white/10 flex-shrink-0">
           {backBtn((e) => { e.preventDefault(); setPhase('setup') })}
           <div className="text-center flex-1 min-w-0">
             <h1 className="text-white text-lg font-bold leading-tight truncate">{game.name}</h1>
@@ -398,12 +398,17 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
           })}
         </div>
 
-        <div className="bg-neutral-900/80 border-t border-white/10 px-6 py-4 flex items-center justify-between flex-shrink-0">
+        <div className="bg-neutral-700/80 border-t border-white/10 px-6 py-4 flex items-center justify-between flex-shrink-0">
           <button
             onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
             disabled={currentIndex === 0}
-            className="px-6 py-2 bg-white/10 border border-white/15 text-white rounded-lg hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed font-medium"
-          >← ก่อนหน้า</button>
+            className="flex items-center gap-2 px-5 py-2 bg-white/10 border border-white/15 text-white rounded-lg hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed font-medium"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            ก่อนหน้า
+          </button>
 
           <div className="flex gap-1.5">
             {pairs.map((_, i) => (
@@ -413,8 +418,10 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
           </div>
 
           {revealed ? (
-            <button onClick={goNext} className="px-6 py-2 bg-white text-gray-900 font-bold rounded-lg hover:bg-gray-100 transition-colors">
-              {isLast ? 'จบเกม → ใส่คะแนน' : 'ข้อถัดไป →'}
+            <button onClick={goNext} className="flex items-center gap-2 px-5 py-2 bg-white text-gray-900 font-bold rounded-lg hover:bg-gray-100 transition-colors">
+              {isLast ? 'จบเกม → ใส่คะแนน' : (
+                <>ข้อถัดไป <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg></>
+              )}
             </button>
           ) : (
             <div className="flex gap-2">
@@ -422,8 +429,8 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                 เฉลยก่อนเวลา
               </button>
               {!isLast && (
-                <button onClick={goNext} className="px-6 py-2 bg-white/10 border border-white/15 text-white rounded-lg hover:bg-white/20 font-medium">
-                  ถัดไป →
+                <button onClick={goNext} className="flex items-center gap-2 px-5 py-2 bg-white/10 border border-white/15 text-white rounded-lg hover:bg-white/20 font-medium">
+                  ถัดไป <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
                 </button>
               )}
             </div>
@@ -435,8 +442,8 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
 
   // ── SCORING ───────────────────────────────────────────────────────────────
   return (
-    <div className="h-screen bg-neutral-950 flex flex-col overflow-hidden" style={{ zoom: uiScale }}>
-      <div className="flex items-center justify-between gap-3 px-5 py-3 bg-neutral-900 border-b border-white/10 flex-shrink-0">
+    <div className="h-screen bg-neutral-800 flex flex-col overflow-hidden" style={{ zoom: uiScale }}>
+      <div className="flex items-center justify-between gap-3 px-5 py-3 bg-neutral-700 border-b border-white/10 flex-shrink-0">
         {backBtn((e) => { e.preventDefault(); setPhase(pairs.length > 0 ? 'playing' : 'setup') })}
         <h1 className="text-white text-xl font-bold flex-1 text-center">บันทึกคะแนน — {game.name}</h1>
         <div className="flex items-center gap-2">
