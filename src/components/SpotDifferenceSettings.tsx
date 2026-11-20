@@ -394,8 +394,6 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
           : 'border-white/10 hover:border-white/15'
         return (
         <div key={pair.id}
-          draggable
-          onDragStart={() => handleDragStart(i)}
           onDragOver={e => handleDragOver(e, i)}
           onDrop={() => handleDrop(i)}
           onDragEnd={handleDragEnd}
@@ -405,8 +403,12 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
           <div className="flex items-stretch gap-0">
 
             {/* Drag + number */}
-            <div className="flex flex-col items-center justify-center gap-1 px-2 py-3 flex-shrink-0 border-r border-white/8">
-              <div className="text-white/20 hover:text-white/50 cursor-grab active:cursor-grabbing select-none" title="ลากเพื่อเรียงลำดับ">
+            <div
+              draggable
+              onDragStart={() => handleDragStart(i)}
+              className="flex flex-col items-center justify-center gap-1 px-2 py-3 flex-shrink-0 border-r border-white/8 cursor-grab active:cursor-grabbing"
+            >
+              <div className="text-white/20 hover:text-white/50 select-none" title="ลากเพื่อเรียงลำดับ">
                 <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="currentColor">
                   <circle cx="5" cy="4" r="1.2"/><circle cx="11" cy="4" r="1.2"/>
                   <circle cx="5" cy="8" r="1.2"/><circle cx="11" cy="8" r="1.2"/>
