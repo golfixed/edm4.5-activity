@@ -443,17 +443,21 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
                             </button>
                           </>
                         ) : (
-                          <div className="w-20 h-14 rounded-lg bg-white/8 border border-white/10 flex items-center justify-center px-2 relative">
-                            <span className="text-white/70 text-xs text-center leading-tight line-clamp-3 break-all">{val || '—'}</span>
-                            <span className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center shadow ${badgeCls}`}>{side}</span>
+                          <div className="w-20 h-14 rounded-lg bg-white/8 border border-white/10 flex items-center justify-center px-1 relative">
+                            <textarea
+                              value={val || ''}
+                              onChange={e => onChange(pairs.map(p => p.id === pair.id ? { ...p, [key]: e.target.value } : p))}
+                              className="w-full h-full bg-transparent text-white/80 text-xs text-center leading-tight resize-none focus:outline-none placeholder-white/25 py-1"
+                              placeholder="พิมพ์..."
+                            />
+                            <span className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center shadow pointer-events-none ${badgeCls}`}>{side}</span>
                           </div>
                         )}
                       </div>
                       <div className="flex border border-white/10 rounded overflow-hidden">
                         <button
                           onClick={() => {
-                            const text = prompt(`ข้อความสำหรับตัวเลือก ${side}:`, !isImg(val) ? (val ?? '') : '') ?? ''
-                            onChange(pairs.map(p => p.id === pair.id ? { ...p, [key]: text } : p))
+                            if (isImg(val)) onChange(pairs.map(p => p.id === pair.id ? { ...p, [key]: '' } : p))
                           }}
                           className={`px-1.5 py-0.5 text-[10px] leading-none transition-colors ${!isImg(val) ? 'bg-white/15 text-white' : 'text-white/25 hover:bg-white/8'}`}
                           title="ข้อความ">T</button>
