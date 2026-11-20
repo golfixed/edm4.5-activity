@@ -20,6 +20,8 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
   const [newSetName, setNewSetName] = useState('')
   const [showSounds, setShowSounds] = useState(false)
   const [uiScale, setUiScale] = useState(1.0)
+  const [setDragIndex, setSetDragIndex] = useState<number | null>(null)
+  const [setDropIndex, setSetDropIndex] = useState<number | null>(null)
 
   const updateGame = (partial: Partial<Game>) =>
     setGames(games.map(g => g.id === game.id ? { ...g, ...partial } : g))
@@ -46,6 +48,19 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
 
   const renameSet = (id: string, name: string) =>
     updateGame({ imageSets: sets.map(s => s.id === id ? { ...s, name } : s) })
+
+  const handleSetDragStart = (i: number) => setSetDragIndex(i)
+  const handleSetDragOver = (e: React.DragEvent, i: number) => { e.preventDefault(); setSetDropIndex(i) }
+  const handleSetDrop = (i: number) => {
+    if (setDragIndex === null || setDragIndex === i) { setSetDragIndex(null); setSetDropIndex(null); return }
+    const next = [...sets]
+    const [item] = next.splice(setDragIndex, 1)
+    next.splice(i, 0, item)
+    updateGame({ imageSets: next })
+    setSetDragIndex(null)
+    setSetDropIndex(null)
+  }
+  const handleSetDragEnd = () => { setSetDragIndex(null); setSetDropIndex(null) }
 
   const updatePairs = (setId: string, pairs: ImagePair[]) =>
     updateGame({ imageSets: sets.map(s => s.id === setId ? { ...s, pairs } : s) })
@@ -154,18 +169,36 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
           </div>
 
           <div className="flex-1 overflow-y-auto py-1.5 px-2 space-y-0.5">
-            {sets.map(set => {
+            {sets.map((set, i) => {
               const answered = set.pairs.filter(p => p.correctImage).length
               const isComplete = answered === set.pairs.length && set.pairs.length > 0
               const isSelected = selectedSetId === set.id
               return (
                 <div
                   key={set.id}
+                  draggable
+                  onDragStart={() => handleSetDragStart(i)}
+                  onDragOver={e => handleSetDragOver(e, i)}
+                  onDrop={() => handleSetDrop(i)}
+                  onDragEnd={handleSetDragEnd}
                   onClick={() => setSelectedSetId(set.id)}
-                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors group ${
-                    isSelected ? 'bg-white/15 text-white' : 'text-white/50 hover:bg-white/10 hover:text-white/75'
+                  className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg cursor-pointer transition-colors group ${
+                    setDragIndex === i
+                      ? 'opacity-30 border border-white/10'
+                      : setDropIndex === i && setDragIndex !== null
+                      ? 'border border-blue-400/60 bg-blue-400/5'
+                      : isSelected
+                      ? 'bg-white/15 text-white'
+                      : 'text-white/50 hover:bg-white/10 hover:text-white/75'
                   }`}
                 >
+                  <div className="text-white/20 hover:text-white/50 cursor-grab active:cursor-grabbing flex-shrink-0 select-none" title="ลากเพื่อเรียงลำดับ">
+                    <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
+                      <circle cx="5" cy="4" r="1.2"/><circle cx="11" cy="4" r="1.2"/>
+                      <circle cx="5" cy="8" r="1.2"/><circle cx="11" cy="8" r="1.2"/>
+                      <circle cx="5" cy="12" r="1.2"/><circle cx="11" cy="12" r="1.2"/>
+                    </svg>
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium truncate">{set.name}</div>
                     <div className="text-xs text-white/30 mt-0.5">
@@ -247,24 +280,45 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
 /* ── Pairs editor ───────────────────────────────────────────────────── */
 function PairsEditorFull({ pairs, onChange }: { pairs: ImagePair[]; onChange: (p: ImagePair[]) => void }) {
   const [pendingA, setPendingA] = useState<string | null>(null)
+  const [pendingAMode, setPendingAMode] = useState<'image' | 'text'>('image')
+  const [pendingAText, setPendingAText] = useState('')
   const [pendingB, setPendingB] = useState<string | null>(null)
+  const [pendingBMode, setPendingBMode] = useState<'image' | 'text'>('image')
+  const [pendingBText, setPendingBText] = useState('')
   const [pendingLabel, setPendingLabel] = useState('')
+  const [pendingQuestion, setPendingQuestion] = useState('')
+  const [pendingQuestionImage, setPendingQuestionImage] = useState<string | null>(null)
+  const [pendingRevealImage, setPendingRevealImage] = useState<string | null>(null)
+  const [pendingQMode, setPendingQMode] = useState<'text' | 'image'>('text')
   const [pendingCorrect, setPendingCorrect] = useState<'A' | 'B'>('A')
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [dropIndex, setDropIndex] = useState<number | null>(null)
+  // tracks which pair IDs are in image-question mode (independent of whether image is uploaded yet)
+  const [imageModePairIds, setImageModePairIds] = useState<Set<string>>(
+    () => new Set(pairs.filter(p => p.questionImage).map(p => p.id))
+  )
+  const isImageMode = (pair: ImagePair) => imageModePairIds.has(pair.id) || !!pair.questionImage
+  const isImg = (s?: string) => !!s && s.startsWith('data:image')
 
   const readFile = (file: File, setter: (v: string) => void) =>
     compressImage(file, 900, 0.72).then(setter)
 
   const addPair = () => {
-    if (!pendingA || !pendingB) return
+    const valA = pendingAMode === 'text' ? pendingAText : pendingA
+    const valB = pendingBMode === 'text' ? pendingBText : pendingB
+    if (!valA || !valB) return
     onChange([...pairs, {
       id: String(Date.now()),
-      imageA: pendingA, imageB: pendingB,
+      imageA: valA, imageB: valB,
       label: pendingLabel || `ข้อที่ ${pairs.length + 1}`,
+      question: pendingQuestion || undefined,
+      questionImage: pendingQuestionImage || undefined,
+      revealImage: pendingRevealImage || undefined,
       correctImage: pendingCorrect,
     }])
-    setPendingA(null); setPendingB(null); setPendingLabel(''); setPendingCorrect('A')
+    setPendingA(null); setPendingAMode('image'); setPendingAText('')
+    setPendingB(null); setPendingBMode('image'); setPendingBText('')
+    setPendingLabel(''); setPendingQuestion(''); setPendingQuestionImage(null); setPendingRevealImage(null); setPendingQMode('text'); setPendingCorrect('A')
   }
 
   const handleBulkUpload = (files: FileList) => {
@@ -319,7 +373,7 @@ function PairsEditorFull({ pairs, onChange }: { pairs: ImagePair[]; onChange: (p
           onDragOver={e => handleDragOver(e, i)}
           onDrop={() => handleDrop(i)}
           onDragEnd={handleDragEnd}
-          className={`flex items-center gap-3 px-3 py-2 bg-white/5 border rounded-xl transition-all ${
+          className={`flex flex-col gap-1.5 px-3 py-2 bg-white/5 border rounded-xl transition-all ${
             dragIndex === i
               ? 'opacity-30 border-white/10'
               : dropIndex === i && dragIndex !== null
@@ -327,74 +381,187 @@ function PairsEditorFull({ pairs, onChange }: { pairs: ImagePair[]; onChange: (p
               : 'border-white/10 hover:border-white/15'
           }`}
         >
-          {/* Drag handle */}
-          <div className="text-white/20 hover:text-white/50 cursor-grab active:cursor-grabbing flex-shrink-0 select-none" title="ลากเพื่อเรียงลำดับ">
-            <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
-              <circle cx="5" cy="4" r="1.2"/><circle cx="11" cy="4" r="1.2"/>
-              <circle cx="5" cy="8" r="1.2"/><circle cx="11" cy="8" r="1.2"/>
-              <circle cx="5" cy="12" r="1.2"/><circle cx="11" cy="12" r="1.2"/>
-            </svg>
-          </div>
-
-          <span className="text-white/20 text-xs w-4 text-right flex-shrink-0">{i + 1}</span>
-
-          {/* Images A vs B */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <div className="relative group/imgA">
-              <img src={pair.imageA} alt="A" className="w-16 h-11 object-cover rounded-lg" />
-              <span className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center shadow ${
-                pair.correctImage === 'A' ? 'bg-green-500 text-white' : 'bg-black/60 text-white/50'
-              }`}>A</span>
-              <button
-                onClick={() => downloadImage(pair.imageA, `${(pair.label ?? 'pair').replace(/\s+/g, '_')}_A.jpg`)}
-                title="ดาวน์โหลด A"
-                className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/50 opacity-0 group-hover/imgA:opacity-100 transition-opacity">
-                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
-                </svg>
-              </button>
+          {/* Top row: handle + num + images + label + correct + delete */}
+          <div className="flex items-center gap-3">
+            <div className="text-white/20 hover:text-white/50 cursor-grab active:cursor-grabbing flex-shrink-0 select-none" title="ลากเพื่อเรียงลำดับ">
+              <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
+                <circle cx="5" cy="4" r="1.2"/><circle cx="11" cy="4" r="1.2"/>
+                <circle cx="5" cy="8" r="1.2"/><circle cx="11" cy="8" r="1.2"/>
+                <circle cx="5" cy="12" r="1.2"/><circle cx="11" cy="12" r="1.2"/>
+              </svg>
             </div>
-            <span className="text-white/20 text-xs">vs</span>
-            <div className="relative group/imgB">
-              <img src={pair.imageB} alt="B" className="w-16 h-11 object-cover rounded-lg" />
-              <span className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center shadow ${
-                pair.correctImage === 'B' ? 'bg-green-500 text-white' : 'bg-black/60 text-white/50'
-              }`}>B</span>
-              <button
-                onClick={() => downloadImage(pair.imageB, `${(pair.label ?? 'pair').replace(/\s+/g, '_')}_B.jpg`)}
-                title="ดาวน์โหลด B"
-                className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/50 opacity-0 group-hover/imgB:opacity-100 transition-opacity">
-                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
-                </svg>
-              </button>
+
+            <span className="text-white/20 text-xs w-4 text-right flex-shrink-0">{i + 1}</span>
+
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {(['A', 'B'] as const).map((side, idx) => {
+                const key = side === 'A' ? 'imageA' : 'imageB'
+                const val = pair[key]
+                const groupCls = side === 'A' ? 'group/imgA' : 'group/imgB'
+                const hoverCls = side === 'A' ? 'group-hover/imgA:opacity-100' : 'group-hover/imgB:opacity-100'
+                const badgeCls = pair.correctImage === side ? 'bg-green-500 text-white' : 'bg-black/60 text-white/50'
+                return (
+                  <div key={side} className="flex items-center gap-2">
+                    {idx === 1 && <span className="text-white/20 text-xs">vs</span>}
+                    <div className="flex flex-col items-center gap-0.5">
+                      <div className={`relative ${groupCls}`}>
+                        {isImg(val) ? (
+                          <>
+                            <img src={val} alt={side} className="w-16 h-11 object-cover rounded-lg" />
+                            <span className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center shadow ${badgeCls}`}>{side}</span>
+                            <button
+                              onClick={() => downloadImage(val, `${(pair.label ?? 'pair').replace(/\s+/g, '_')}_${side}.jpg`)}
+                              title={`ดาวน์โหลด ${side}`}
+                              className={`absolute inset-0 flex items-center justify-center rounded-lg bg-black/50 opacity-0 ${hoverCls} transition-opacity`}>
+                              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+                              </svg>
+                            </button>
+                          </>
+                        ) : (
+                          <div className="w-16 h-11 rounded-lg bg-white/8 border border-white/10 flex items-center justify-center px-1 relative">
+                            <span className="text-white/70 text-xs text-center leading-tight line-clamp-2 break-all">{val || '—'}</span>
+                            <span className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center shadow ${badgeCls}`}>{side}</span>
+                          </div>
+                        )}
+                      </div>
+                      {/* T/🖼 mini toggle */}
+                      <div className="flex border border-white/10 rounded overflow-hidden">
+                        <button
+                          onClick={() => {
+                            const text = prompt(`ข้อความสำหรับตัวเลือก ${side}:`, !isImg(val) ? (val ?? '') : '') ?? ''
+                            onChange(pairs.map(p => p.id === pair.id ? { ...p, [key]: text } : p))
+                          }}
+                          className={`px-1.5 py-0.5 text-[10px] leading-none transition-colors ${!isImg(val) ? 'bg-white/15 text-white' : 'text-white/25 hover:bg-white/8'}`}
+                          title="ข้อความ">T</button>
+                        <label className={`px-1.5 py-0.5 text-[10px] leading-none cursor-pointer transition-colors ${isImg(val) ? 'bg-white/15 text-white' : 'text-white/25 hover:bg-white/8'}`} title="ภาพ">
+                          🖼
+                          <input type="file" accept="image/*" hidden onChange={e => {
+                            const f = e.target.files?.[0]
+                            if (f) compressImage(f, 900, 0.72).then(img =>
+                              onChange(pairs.map(p => p.id === pair.id ? { ...p, [key]: img } : p))
+                            )
+                          }} />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
+
+            <input
+              value={pair.label ?? ''}
+              onChange={e => onChange(pairs.map(p => p.id === pair.id ? { ...p, label: e.target.value } : p))}
+              className="flex-1 bg-transparent text-white/55 text-xs focus:outline-none focus:ring-1 focus:ring-white/15 rounded px-1.5 py-0.5 min-w-0"
+              placeholder="ชื่ออ้างอิง..."
+            />
+
+            {/* per-pair timer */}
+            <div className="flex items-center gap-1 border border-white/10 rounded-lg px-2 h-7 flex-shrink-0">
+              <span className="text-white/30 text-xs">⏱</span>
+              <input
+                type="number" min={1} max={300}
+                value={pair.timerSeconds ?? ''}
+                onChange={e => {
+                  const v = e.target.value === '' ? undefined : parseInt(e.target.value) || undefined
+                  onChange(pairs.map(p => p.id === pair.id ? { ...p, timerSeconds: v } : p))
+                }}
+                className="w-8 text-center bg-transparent text-white/70 text-xs focus:outline-none tabular-nums"
+                placeholder="—"
+              />
+            </div>
+
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <span className="text-white/25 text-xs">เฉลย</span>
+              {(['A', 'B'] as const).map(side => (
+                <button key={side}
+                  onClick={() => onChange(pairs.map(p => p.id === pair.id ? { ...p, correctImage: side } : p))}
+                  className={`w-8 h-7 rounded-lg text-xs font-bold transition-all ${
+                    pair.correctImage === side
+                      ? 'bg-green-500 text-white'
+                      : 'bg-white/8 text-white/35 hover:bg-white/15 hover:text-white/60'
+                  }`}>{side}</button>
+              ))}
+            </div>
+
+            <button onClick={() => onChange(pairs.filter(p => p.id !== pair.id))}
+              className="text-red-400/40 hover:text-red-400 text-sm transition-colors flex-shrink-0 px-1">✕</button>
           </div>
 
-          {/* Label */}
-          <input
-            value={pair.label ?? ''}
-            onChange={e => onChange(pairs.map(p => p.id === pair.id ? { ...p, label: e.target.value } : p))}
-            className="flex-1 bg-transparent text-white/65 text-sm focus:outline-none focus:ring-1 focus:ring-white/15 rounded px-1.5 py-0.5 min-w-0"
-            placeholder="ชื่อข้อ..."
-          />
+          {/* Question row */}
+          <div className="flex items-center gap-2 pl-9">
+            {/* T / 🖼 toggle */}
+            <div className="flex border border-white/10 rounded-md overflow-hidden flex-shrink-0">
+              <button
+                onClick={() => {
+                  setImageModePairIds(s => { const n = new Set(s); n.delete(pair.id); return n })
+                  onChange(pairs.map(p => p.id === pair.id ? { ...p, questionImage: undefined } : p))
+                }}
+                className={`px-2 py-1 text-xs transition-colors ${!isImageMode(pair) ? 'bg-white/15 text-white' : 'text-white/30 hover:bg-white/8'}`}
+                title="คำถามข้อความ">T</button>
+              <button
+                onClick={() => {
+                  setImageModePairIds(s => { const n = new Set(s); n.add(pair.id); return n })
+                  onChange(pairs.map(p => p.id === pair.id ? { ...p, question: undefined } : p))
+                }}
+                className={`px-2 py-1 text-xs transition-colors ${isImageMode(pair) ? 'bg-white/15 text-white' : 'text-white/30 hover:bg-white/8'}`}
+                title="คำถามภาพ">🖼</button>
+            </div>
 
-          {/* Correct answer toggle */}
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            <span className="text-white/25 text-xs">เฉลย</span>
-            {(['A', 'B'] as const).map(side => (
-              <button key={side}
-                onClick={() => onChange(pairs.map(p => p.id === pair.id ? { ...p, correctImage: side } : p))}
-                className={`w-8 h-7 rounded-lg text-xs font-bold transition-all ${
-                  pair.correctImage === side
-                    ? 'bg-green-500 text-white'
-                    : 'bg-white/8 text-white/35 hover:bg-white/15 hover:text-white/60'
-                }`}>{side}</button>
-            ))}
+            {isImageMode(pair) ? (
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                {/* question image */}
+                {pair.questionImage ? (
+                  <img src={pair.questionImage} alt="Q" className="h-8 max-w-[120px] rounded object-contain bg-white/5" />
+                ) : (
+                  <span className="text-white/20 text-xs">ยังไม่มีภาพ</span>
+                )}
+                <label className="text-white/40 hover:text-white/70 text-xs cursor-pointer transition-colors">
+                  {pair.questionImage ? 'เปลี่ยน' : '+ อัพโหลด'}
+                  <input type="file" accept="image/*" hidden onChange={e => {
+                    const f = e.target.files?.[0]
+                    if (f) compressImage(f, 900, 0.72).then(img =>
+                      onChange(pairs.map(p => p.id === pair.id ? { ...p, questionImage: img } : p))
+                    )
+                  }} />
+                </label>
+                {pair.questionImage && (
+                  <button onClick={() => onChange(pairs.map(p => p.id === pair.id ? { ...p, questionImage: undefined } : p))}
+                    className="text-red-400/40 hover:text-red-400 text-xs transition-colors">✕</button>
+                )}
+                {/* reveal image */}
+                <div className="flex items-center gap-1.5 ml-3 pl-3 border-l border-white/10">
+                  <span className="text-amber-400/60 text-xs flex-shrink-0">เฉลย</span>
+                  {pair.revealImage ? (
+                    <img src={pair.revealImage} alt="เฉลย" className="h-8 max-w-[80px] rounded object-contain bg-white/5" />
+                  ) : (
+                    <span className="text-white/15 text-xs">—</span>
+                  )}
+                  <label className="text-white/40 hover:text-white/70 text-xs cursor-pointer transition-colors">
+                    {pair.revealImage ? 'เปลี่ยน' : '+ เพิ่ม'}
+                    <input type="file" accept="image/*" hidden onChange={e => {
+                      const f = e.target.files?.[0]
+                      if (f) compressImage(f, 900, 0.72).then(img =>
+                        onChange(pairs.map(p => p.id === pair.id ? { ...p, revealImage: img } : p))
+                      )
+                    }} />
+                  </label>
+                  {pair.revealImage && (
+                    <button onClick={() => onChange(pairs.map(p => p.id === pair.id ? { ...p, revealImage: undefined } : p))}
+                      className="text-red-400/40 hover:text-red-400 text-xs transition-colors">✕</button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <input
+                value={pair.question ?? ''}
+                onChange={e => onChange(pairs.map(p => p.id === pair.id ? { ...p, question: e.target.value || undefined } : p))}
+                className="flex-1 bg-white/5 border border-white/8 rounded-lg px-2.5 py-1 text-white/85 text-sm font-medium placeholder-white/20 focus:outline-none focus:border-white/25 focus:bg-white/8"
+                placeholder="คำถาม/บริบท เช่น 'ลูกค้า Jobthai' — แสดงใหญ่ระหว่างเล่น"
+              />
+            )}
           </div>
-
-          <button onClick={() => onChange(pairs.filter(p => p.id !== pair.id))}
-            className="text-red-400/40 hover:text-red-400 text-sm transition-colors flex-shrink-0 px-1">✕</button>
         </div>
       ))}
 
@@ -409,43 +576,135 @@ function PairsEditorFull({ pairs, onChange }: { pairs: ImagePair[]; onChange: (p
         </div>
 
         <div className="flex items-start gap-4">
-          {/* Upload A */}
+          {/* Slot A */}
           <div className="flex flex-col items-center gap-1.5">
-            <span className="text-white/35 text-xs">ภาพ A</span>
-            <label className="cursor-pointer">
-              {pendingA ? (
-                <img src={pendingA} className="w-24 h-16 object-cover rounded-lg border-2 border-white/30" />
-              ) : (
-                <div className="w-24 h-16 rounded-lg border-2 border-dashed border-white/15 flex items-center justify-center hover:border-white/30 transition-colors bg-white/5 text-white/25 text-2xl">+</div>
-              )}
-              <input type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) readFile(f, setPendingA) }} />
-            </label>
+            <div className="flex items-center gap-1">
+              <span className="text-white/35 text-xs">{pendingAMode === 'text' ? 'ข้อความ' : 'ภาพ'} A</span>
+              <div className="flex border border-white/10 rounded overflow-hidden">
+                <button onClick={() => { setPendingAMode('text'); setPendingA(null) }}
+                  className={`px-1.5 py-0.5 text-[10px] leading-none transition-colors ${pendingAMode === 'text' ? 'bg-white/15 text-white' : 'text-white/25 hover:bg-white/8'}`}>T</button>
+                <button onClick={() => { setPendingAMode('image'); setPendingAText('') }}
+                  className={`px-1.5 py-0.5 text-[10px] leading-none transition-colors ${pendingAMode === 'image' ? 'bg-white/15 text-white' : 'text-white/25 hover:bg-white/8'}`}>🖼</button>
+              </div>
+            </div>
+            {pendingAMode === 'text' ? (
+              <textarea
+                value={pendingAText}
+                onChange={e => setPendingAText(e.target.value)}
+                placeholder="พิมพ์ข้อความ..."
+                className="w-24 h-16 rounded-lg border-2 border-white/20 bg-white/5 text-white/80 text-sm p-1.5 resize-none focus:outline-none focus:border-white/40 placeholder-white/20"
+              />
+            ) : (
+              <label className="cursor-pointer">
+                {pendingA ? (
+                  <img src={pendingA} className="w-24 h-16 object-cover rounded-lg border-2 border-white/30" />
+                ) : (
+                  <div className="w-24 h-16 rounded-lg border-2 border-dashed border-white/15 flex items-center justify-center hover:border-white/30 transition-colors bg-white/5 text-white/25 text-2xl">+</div>
+                )}
+                <input type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) readFile(f, setPendingA) }} />
+              </label>
+            )}
           </div>
 
-          <div className="text-white/20 text-sm pt-8">vs</div>
+          <div className="text-white/20 text-sm pt-9">vs</div>
 
-          {/* Upload B */}
+          {/* Slot B */}
           <div className="flex flex-col items-center gap-1.5">
-            <span className="text-white/35 text-xs">ภาพ B</span>
-            <label className="cursor-pointer">
-              {pendingB ? (
-                <img src={pendingB} className="w-24 h-16 object-cover rounded-lg border-2 border-white/30" />
-              ) : (
-                <div className="w-24 h-16 rounded-lg border-2 border-dashed border-white/15 flex items-center justify-center hover:border-white/30 transition-colors bg-white/5 text-white/25 text-2xl">+</div>
-              )}
-              <input type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) readFile(f, setPendingB) }} />
-            </label>
+            <div className="flex items-center gap-1">
+              <span className="text-white/35 text-xs">{pendingBMode === 'text' ? 'ข้อความ' : 'ภาพ'} B</span>
+              <div className="flex border border-white/10 rounded overflow-hidden">
+                <button onClick={() => { setPendingBMode('text'); setPendingB(null) }}
+                  className={`px-1.5 py-0.5 text-[10px] leading-none transition-colors ${pendingBMode === 'text' ? 'bg-white/15 text-white' : 'text-white/25 hover:bg-white/8'}`}>T</button>
+                <button onClick={() => { setPendingBMode('image'); setPendingBText('') }}
+                  className={`px-1.5 py-0.5 text-[10px] leading-none transition-colors ${pendingBMode === 'image' ? 'bg-white/15 text-white' : 'text-white/25 hover:bg-white/8'}`}>🖼</button>
+              </div>
+            </div>
+            {pendingBMode === 'text' ? (
+              <textarea
+                value={pendingBText}
+                onChange={e => setPendingBText(e.target.value)}
+                placeholder="พิมพ์ข้อความ..."
+                className="w-24 h-16 rounded-lg border-2 border-white/20 bg-white/5 text-white/80 text-sm p-1.5 resize-none focus:outline-none focus:border-white/40 placeholder-white/20"
+              />
+            ) : (
+              <label className="cursor-pointer">
+                {pendingB ? (
+                  <img src={pendingB} className="w-24 h-16 object-cover rounded-lg border-2 border-white/30" />
+                ) : (
+                  <div className="w-24 h-16 rounded-lg border-2 border-dashed border-white/15 flex items-center justify-center hover:border-white/30 transition-colors bg-white/5 text-white/25 text-2xl">+</div>
+                )}
+                <input type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) readFile(f, setPendingB) }} />
+              </label>
+            )}
           </div>
 
-          {/* Label + correct + add */}
+          {/* Label + question + correct + add */}
           <div className="flex-1 flex flex-col gap-2 pt-6 min-w-0">
             <input
               value={pendingLabel}
               onChange={e => setPendingLabel(e.target.value)}
-              placeholder="ชื่อข้อ (ไม่บังคับ)"
+              placeholder="ชื่ออ้างอิง (ไม่บังคับ)"
               onKeyDown={e => e.key === 'Enter' && addPair()}
               className="w-full px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white/65 text-sm placeholder-white/20 focus:outline-none focus:border-white/25"
             />
+            <div className="flex items-center gap-2">
+              <div className="flex border border-white/10 rounded-md overflow-hidden flex-shrink-0">
+                <button onClick={() => { setPendingQMode('text'); setPendingQuestionImage(null) }}
+                  className={`px-2 py-1 text-xs transition-colors ${pendingQMode === 'text' ? 'bg-white/15 text-white' : 'text-white/30 hover:bg-white/8'}`}
+                  title="คำถามข้อความ">T</button>
+                <button onClick={() => { setPendingQMode('image'); setPendingQuestion('') }}
+                  className={`px-2 py-1 text-xs transition-colors ${pendingQMode === 'image' ? 'bg-white/15 text-white' : 'text-white/30 hover:bg-white/8'}`}
+                  title="คำถามภาพ">🖼</button>
+              </div>
+              {pendingQMode === 'image' ? (
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  {pendingQuestionImage ? (
+                    <img src={pendingQuestionImage} alt="Q" className="h-8 max-w-[120px] rounded object-contain bg-white/5" />
+                  ) : (
+                    <span className="text-white/20 text-xs">ยังไม่มีภาพ</span>
+                  )}
+                  <label className="text-white/40 hover:text-white/70 text-xs cursor-pointer transition-colors">
+                    {pendingQuestionImage ? 'เปลี่ยน' : '+ อัพโหลด'}
+                    <input type="file" accept="image/*" hidden onChange={e => {
+                      const f = e.target.files?.[0]
+                      if (f) compressImage(f, 900, 0.72).then(setPendingQuestionImage)
+                    }} />
+                  </label>
+                  {pendingQuestionImage && (
+                    <button onClick={() => setPendingQuestionImage(null)}
+                      className="text-red-400/40 hover:text-red-400 text-xs transition-colors">✕</button>
+                  )}
+                  {/* reveal image for new pair */}
+                  <div className="flex items-center gap-1.5 ml-3 pl-3 border-l border-white/10">
+                    <span className="text-amber-400/60 text-xs flex-shrink-0">เฉลย</span>
+                    {pendingRevealImage ? (
+                      <img src={pendingRevealImage} alt="เฉลย" className="h-8 max-w-[80px] rounded object-contain bg-white/5" />
+                    ) : (
+                      <span className="text-white/15 text-xs">—</span>
+                    )}
+                    <label className="text-white/40 hover:text-white/70 text-xs cursor-pointer transition-colors">
+                      {pendingRevealImage ? 'เปลี่ยน' : '+ เพิ่ม'}
+                      <input type="file" accept="image/*" hidden onChange={e => {
+                        const f = e.target.files?.[0]
+                        if (f) compressImage(f, 900, 0.72).then(setPendingRevealImage)
+                      }} />
+                    </label>
+                    {pendingRevealImage && (
+                      <button onClick={() => setPendingRevealImage(null)}
+                        className="text-red-400/40 hover:text-red-400 text-xs transition-colors">✕</button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <input
+                  value={pendingQuestion}
+                  onChange={e => setPendingQuestion(e.target.value)}
+                  placeholder="คำถาม/บริบท เช่น 'ลูกค้า Jobthai' — แสดงใหญ่ระหว่างเล่น"
+                  onKeyDown={e => e.key === 'Enter' && addPair()}
+                  className="flex-1 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white/85 text-sm font-medium placeholder-white/20 focus:outline-none focus:border-white/25"
+                />
+              )}
+            </div>
             <div className="flex items-center gap-2">
               <span className="text-white/30 text-xs">เฉลย:</span>
               {(['A', 'B'] as const).map(side => (
@@ -454,7 +713,7 @@ function PairsEditorFull({ pairs, onChange }: { pairs: ImagePair[]; onChange: (p
                     pendingCorrect === side ? 'bg-green-500 text-white' : 'bg-white/8 text-white/40 hover:bg-white/15'
                   }`}>{side}</button>
               ))}
-              <button onClick={addPair} disabled={!pendingA || !pendingB}
+              <button onClick={addPair} disabled={!(pendingAMode === 'text' ? pendingAText : pendingA) || !(pendingBMode === 'text' ? pendingBText : pendingB)}
                 className="ml-auto px-5 py-1.5 bg-white text-gray-900 rounded-lg text-sm font-bold hover:bg-gray-100 transition-colors disabled:opacity-25 disabled:cursor-not-allowed">
                 + เพิ่ม
               </button>

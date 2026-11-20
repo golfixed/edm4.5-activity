@@ -10,6 +10,10 @@ export interface ImagePair {
   imageA: string // base64
   imageB: string // base64
   label?: string
+  question?: string
+  questionImage?: string
+  revealImage?: string // shown after timeout/reveal
+  timerSeconds?: number // overrides game default if set
   correctImage?: 'A' | 'B'
 }
 

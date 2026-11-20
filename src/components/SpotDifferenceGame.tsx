@@ -33,7 +33,8 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
   const pairs = selectedSet?.pairs ?? []
   const currentPair = pairs[currentIndex]
   const isLast = currentIndex === pairs.length - 1
-  const pct = customTimer > 0 ? timeLeft / customTimer : 0
+  const activeTimer = currentPair?.timerSeconds ?? customTimer
+  const pct = activeTimer > 0 ? timeLeft / activeTimer : 0
   const timerColor = pct > 0.5 ? 'bg-green-400' : pct > 0.2 ? 'bg-yellow-400' : 'bg-red-500'
 
   const tickAudioRef = useRef<HTMLAudioElement | null>(null)
@@ -112,14 +113,18 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
 
   useEffect(() => {
     if (phase === 'playing') {
-      setCurrentIndex(0); setTimeLeft(customTimer); setRevealed(false)
+      setCurrentIndex(0)
+      setTimeLeft(pairs[0]?.timerSeconds ?? customTimer)
+      setRevealed(false)
       playSound(game.soundStart ?? undefined); startTickLoop()
     } else { stopTick() }
   }, [phase])
 
   useEffect(() => {
     if (phase !== 'playing') return
-    stopTick(); setTimeLeft(customTimer); setRevealed(false); startTickLoop()
+    stopTick()
+    setTimeLeft(pairs[currentIndex]?.timerSeconds ?? customTimer)
+    setRevealed(false); startTickLoop()
   }, [currentIndex])
 
   const toggleTeam = (id: string) =>
@@ -198,12 +203,12 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
 
         <div className="flex-1 flex overflow-hidden">
           {/* Left: Teams */}
-          <div className="flex-1 flex flex-col p-5 overflow-y-auto border-r border-white/10">
-            <div className="flex items-baseline gap-2 mb-3">
+          <div className="flex-1 flex flex-col p-5 overflow-hidden border-r border-white/10">
+            <div className="flex items-baseline gap-2 mb-3 flex-shrink-0">
               <h2 className="text-white text-base font-bold">เลือกทีม</h2>
               <span className="text-gray-400 text-xs">{selectedTeamIds.length > 0 ? `${selectedTeamIds.length} ทีม` : 'ยังไม่ได้เลือก'}</span>
             </div>
-            <div className="grid grid-cols-2 gap-2 flex-1 content-start">
+            <div className="grid grid-cols-2 gap-2 flex-1 overflow-y-auto content-start">
               {teams.map((team) => {
                 const selected = selectedTeamIds.includes(team.id)
                 return (
@@ -228,14 +233,14 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
           </div>
 
           {/* Right: Sets + timer + start */}
-          <div className="flex-1 flex flex-col p-5 overflow-y-auto">
+          <div className="flex-1 flex flex-col p-5 overflow-hidden">
             {sets.length > 0 && (
-              <>
-                <div className="flex items-baseline gap-2 mb-3">
+              <div className="flex-1 min-h-0 flex flex-col overflow-hidden mb-4">
+                <div className="flex items-baseline gap-2 mb-3 flex-shrink-0">
                   <h2 className="text-white text-base font-bold">ชุดภาพ</h2>
                   <span className="text-gray-400 text-xs">แต่ละรอบใช้คนละชุด</span>
                 </div>
-                <div className="grid grid-cols-2 gap-2 mb-5">
+                <div className="grid grid-cols-2 gap-2 overflow-y-auto content-start">
                   {sets.map((set) => {
                     const selected = selectedSetId === set.id
                     return (
@@ -256,11 +261,11 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                     )
                   })}
                 </div>
-              </>
+              </div>
             )}
 
             {/* Timer */}
-            <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 mb-5">
+            <div className="flex-shrink-0 flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 mb-4">
               <span className="text-gray-400 text-sm">⏱</span>
               <span className="text-white/60 text-sm">เวลาต่อข้อ</span>
               <input
@@ -281,7 +286,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                 setPhase(pairs.length > 0 ? 'countdown' : 'scoring')
               }}
               disabled={!canStart}
-              className="w-full py-4 bg-white text-gray-900 font-bold text-lg rounded-xl hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed mt-auto"
+              className="flex-shrink-0 w-full py-4 bg-white text-gray-900 font-bold text-lg rounded-xl hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               {sets.length > 0 && !selectedSetId
                 ? '← เลือกชุดภาพก่อน'
@@ -327,17 +332,40 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
   // ── PLAYING ───────────────────────────────────────────────────────────────
   if (phase === 'playing') {
     const correct = currentPair?.correctImage
+    const isImgChoice = (val?: string) => !!val && val.startsWith('data:image')
+    const bothTextChoices = currentPair && !isImgChoice(currentPair.imageA) && !isImgChoice(currentPair.imageB)
+    const showBigQuestion = !!currentPair?.questionImage && bothTextChoices
 
     return (
       <div className="h-screen bg-neutral-800 flex flex-col overflow-hidden" style={{ zoom: uiScale }}>
         <div className="flex items-center justify-between gap-3 px-5 py-3 bg-neutral-700 border-b border-white/10 flex-shrink-0">
           {backBtn((e) => { e.preventDefault(); setPhase('setup') })}
-          <div className="text-center flex-1 min-w-0">
-            <h1 className="text-white text-lg font-bold leading-tight truncate">{game.name}</h1>
-            <span className="text-gray-400 text-sm">
-              {selectedSet && <span className="text-white/50 mr-2">[{selectedSet.name}]</span>}
-              ข้อที่ {currentIndex + 1} / {pairs.length}
-            </span>
+          <div className="text-center flex-1 min-w-0 flex flex-col items-center justify-center">
+            {!showBigQuestion && currentPair?.questionImage ? (
+              <>
+                <img src={currentPair.questionImage} alt="คำถาม" className="max-h-14 max-w-xs object-contain rounded-lg" />
+                <span className="text-white/40 text-xs mt-0.5 truncate block">
+                  {game.name}{selectedSet && <span className="ml-1.5">[{selectedSet.name}]</span>}
+                  {' · '}ข้อที่ {currentIndex + 1} / {pairs.length}
+                </span>
+              </>
+            ) : currentPair?.question ? (
+              <>
+                <p className="text-white text-2xl font-bold leading-tight truncate">{currentPair.question}</p>
+                <span className="text-white/40 text-sm truncate block">
+                  {game.name}{selectedSet && <span className="ml-1.5">[{selectedSet.name}]</span>}
+                  {' · '}ข้อที่ {currentIndex + 1} / {pairs.length}
+                </span>
+              </>
+            ) : (
+              <>
+                <h1 className="text-white text-lg font-bold leading-tight truncate">{game.name}</h1>
+                <span className="text-gray-400 text-sm">
+                  {selectedSet && <span className="text-white/50 mr-2">[{selectedSet.name}]</span>}
+                  ข้อที่ {currentIndex + 1} / {pairs.length}
+                </span>
+              </>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <div className={`text-4xl font-bold tabular-nums flex-shrink-0 ${pct > 0.5 ? 'text-green-400' : pct > 0.2 ? 'text-yellow-400' : 'text-red-400'} ${timeLeft <= 5 && !revealed ? 'animate-pulse' : ''}`}>
@@ -351,7 +379,22 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
           <div className={`h-full transition-all duration-1000 ease-linear ${timerColor}`} style={{ width: `${pct * 100}%` }} />
         </div>
 
-        <div className="flex-1 flex gap-4 p-4 min-h-0">
+        {showBigQuestion && (
+          <div className="flex-1 flex items-center justify-center bg-black/30 border-b border-white/10 py-3 px-6 min-h-0 relative">
+            <img
+              src={revealed && currentPair!.revealImage ? currentPair!.revealImage : currentPair!.questionImage}
+              alt={revealed && currentPair!.revealImage ? 'เฉลย' : 'คำถาม'}
+              className="max-h-full max-w-full object-contain rounded-xl"
+              draggable={false}
+            />
+            {revealed && currentPair!.revealImage && (
+              <span className="absolute top-2 right-3 text-amber-400 text-xs font-semibold tracking-wide bg-black/50 px-2 py-0.5 rounded-full">เฉลย</span>
+            )}
+          </div>
+        )}
+
+        <div className={showBigQuestion ? 'flex-shrink-0 flex gap-4 px-4 pb-3 pt-2' : 'flex-1 flex gap-4 p-4 min-h-0'}
+          style={showBigQuestion ? { height: 220 } : undefined}>
           {(['A', 'B'] as const).map((side) => {
             const imgSrc = side === 'A' ? currentPair?.imageA : currentPair?.imageB
             const isCorrect = correct === side
@@ -365,13 +408,13 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                     : ''
                 }`}>
                   {revealed && correct !== undefined && (
-                    <div className={`flex-shrink-0 flex items-center justify-center ${isCorrect ? 'bg-green-500' : 'bg-red-500'}`} style={{ height: 100 }}>
+                    <div className={`flex-shrink-0 flex items-center justify-center ${isCorrect ? 'bg-green-500' : 'bg-red-500'}`} style={{ height: showBigQuestion ? 56 : 100 }}>
                       {isCorrect ? (
-                        <svg width="80" height="80" viewBox="0 0 48 48" fill="none">
+                        <svg width={showBigQuestion ? 44 : 80} height={showBigQuestion ? 44 : 80} viewBox="0 0 48 48" fill="none">
                           <polyline points="6,26 18,40 42,10" stroke="white" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                       ) : (
-                        <svg width="80" height="80" viewBox="0 0 48 48" fill="none">
+                        <svg width={showBigQuestion ? 44 : 80} height={showBigQuestion ? 44 : 80} viewBox="0 0 48 48" fill="none">
                           <line x1="8" y1="8" x2="40" y2="40" stroke="white" strokeWidth="6" strokeLinecap="round"/>
                           <line x1="40" y1="8" x2="8" y2="40" stroke="white" strokeWidth="6" strokeLinecap="round"/>
                         </svg>
@@ -379,7 +422,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                     </div>
                   )}
                   <div className="relative bg-black/20 flex-1 min-h-0">
-                    {imgSrc ? (
+                    {imgSrc && imgSrc.startsWith('data:image') ? (
                       <>
                         <img src={imgSrc} alt={side} className="w-full h-full object-contain block" draggable={false} />
                         {revealed && correct === undefined && (
@@ -388,6 +431,10 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                           </div>
                         )}
                       </>
+                    ) : imgSrc ? (
+                      <div className="w-full h-full flex items-center justify-center p-6">
+                        <span className="text-white font-bold text-center leading-snug" style={{ fontSize: 'clamp(1.5rem, 5vw, 3.5rem)' }}>{imgSrc}</span>
+                      </div>
                     ) : (
                       <div className="h-48 flex items-center justify-center"><span className="text-white/40">ไม่มีภาพ</span></div>
                     )}
