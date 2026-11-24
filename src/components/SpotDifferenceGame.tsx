@@ -7,6 +7,7 @@ import { Game, ImageSet } from '@/lib/types'
 import Link from 'next/link'
 import TeamSpinner from '@/components/TeamSpinner'
 import { useConfirm } from '@/components/ConfirmDialog'
+import GameMenu, { ScaleControls } from '@/components/GameMenu'
 
 interface Props {
   game: Game
@@ -38,8 +39,6 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
   // Bonus round: once every team has played, all teams play together and the
   // bonus is added on top of each team's recorded score.
   const [bonus, setBonus] = useState(false)
-  const [menuOpen, setMenuOpen] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
   const confirm = useConfirm()
 
   const selectedSet = sets.find((s) => s.id === selectedSetId) ?? null
@@ -158,18 +157,8 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
   // Scores were reset (not every team has played any more): allow a fresh bonus round later.
   useEffect(() => { if (isSynced && bonusDone && !allPlayed) setBonusPlayed(false) }, [isSynced, bonusDone, allPlayed])
 
-  useEffect(() => {
-    if (!menuOpen) return
-    const close = (e: PointerEvent) => { if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false) }
-    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(false) }
-    document.addEventListener('pointerdown', close)
-    document.addEventListener('keydown', esc)
-    return () => { document.removeEventListener('pointerdown', close); document.removeEventListener('keydown', esc) }
-  }, [menuOpen])
-
   // Clears every team's score for this game and the bonus round, back to a fresh start.
   const resetGame = async () => {
-    setMenuOpen(false)
     const ok = await confirm({
       title: 'เริ่มเกมใหม่ตั้งแต่ต้น?',
       message: `คะแนน ${game.name} ของทุกทีม (เล่นแล้ว ${playedPoints.size} ทีม), ชุดภาพที่ใช้ไปแล้ว และรอบโบนัสจะถูกล้าง ทุกทีมและทุกชุดจะกลับมาเล่นได้อีกครั้ง`,
@@ -249,68 +238,24 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
     </button>
   )
 
-  const scaleControls = (
-    <div className="flex items-center border border-orange-200 bg-white rounded-lg overflow-hidden flex-shrink-0">
-      <button
-        onClick={() => setUiScale(s => Math.max(0.75, +(s - 0.1).toFixed(1)))}
-        className="w-8 h-8 flex items-center justify-center text-orange-700 hover:bg-orange-50 transition-colors"
-        title="ลดขนาด"
-      >{minusIcon}</button>
-      <span className="text-orange-800/60 text-xs w-11 text-center tabular-nums border-x border-orange-100 h-8 flex items-center justify-center">
-        {Math.round(uiScale * 100)}%
-      </span>
-      <button
-        onClick={() => setUiScale(s => Math.min(2.0, +(s + 0.1).toFixed(1)))}
-        className="w-8 h-8 flex items-center justify-center text-orange-700 hover:bg-orange-50 transition-colors"
-        title="เพิ่มขนาด"
-      >{plusIcon}</button>
-    </div>
-  )
+  const scaleControls = <ScaleControls scale={uiScale} onChange={setUiScale} />
 
+  const resetItem = (
+    <button role="menuitem" onClick={resetGame}
+      className="w-full flex items-start gap-3 px-3 py-2.5 rounded-lg text-left hover:bg-red-50 transition-colors">
+      <svg className="w-5 h-5 mt-0.5 text-red-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5" />
+      </svg>
+      <span className="flex flex-col">
+        <span className="text-red-700 font-semibold text-sm">เริ่มเกมใหม่ตั้งแต่ต้น</span>
+        <span className="text-gray-500 text-xs mt-0.5">ล้างคะแนนเกมนี้ของทุกทีม ชุดภาพที่ใช้แล้ว และรอบโบนัส</span>
+      </span>
+    </button>
+  )
   const moreMenu = (withReset: boolean) => (
-    <div ref={menuRef} className="relative flex-shrink-0">
-      <button
-        onClick={() => setMenuOpen((o) => !o)}
-        className={`w-8 h-8 flex items-center justify-center rounded-lg ${outlineBtnCls} ${menuOpen ? 'bg-orange-50' : ''}`}
-        title="เพิ่มเติม" aria-haspopup="menu" aria-expanded={menuOpen}
-      >
-        <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor"><circle cx="3" cy="8" r="1.5" /><circle cx="8" cy="8" r="1.5" /><circle cx="13" cy="8" r="1.5" /></svg>
-      </button>
-      {menuOpen && (
-        <div role="menu" className="absolute right-0 top-full mt-2 w-72 z-50 bg-white border border-orange-100 rounded-xl shadow-lg p-1.5">
-          <div className="flex items-center justify-between gap-3 px-3 py-2">
-            <span className="flex items-center gap-3 text-gray-700 text-sm font-semibold">
-              <svg className="w-5 h-5 text-orange-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="6.5" /><path d="M20.5 20.5 16 16M8.5 11h5M11 8.5v5" />
-              </svg>
-              ขนาดหน้าจอ
-            </span>
-            {scaleControls}
-          </div>
-          <button role="menuitem" onClick={() => { setMenuOpen(false); onOpenSettings?.() }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-gray-700 text-sm font-semibold hover:bg-orange-50 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            ตั้งค่าเกม
-          </button>
-          {withReset && <>
-          <div className="my-1 border-t border-orange-100" />
-          <button role="menuitem" onClick={resetGame}
-            className="w-full flex items-start gap-3 px-3 py-2.5 rounded-lg text-left hover:bg-red-50 transition-colors">
-            <svg className="w-5 h-5 mt-0.5 text-red-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5" />
-            </svg>
-            <span className="flex flex-col">
-              <span className="text-red-700 font-semibold text-sm">เริ่มเกมใหม่ตั้งแต่ต้น</span>
-              <span className="text-gray-500 text-xs mt-0.5">ล้างคะแนนเกมนี้ของทุกทีม ชุดภาพที่ใช้แล้ว และรอบโบนัส</span>
-            </span>
-          </button>
-          </>}
-        </div>
-      )}
-    </div>
+    <GameMenu uiScale={uiScale} onScaleChange={setUiScale} onOpenSettings={onOpenSettings}>
+      {withReset ? resetItem : null}
+    </GameMenu>
   )
 
   const checkIcon = (

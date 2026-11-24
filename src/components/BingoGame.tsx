@@ -6,6 +6,8 @@ import { useStore } from '@/lib/store'
 import { generateBingoCard, BINGO_LINES } from '@/lib/bingo'
 import { useConfirm } from '@/components/ConfirmDialog'
 import ScoreRecordPanel from '@/components/ScoreRecordPanel'
+import GameMenu from '@/components/GameMenu'
+import { zoomFit } from '@/lib/zoomFit'
 
 // Tailwind color → hex mapping for PDF
 const COLOR_HEX: Record<string, string> = {
@@ -387,6 +389,7 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
 
   const [phase, setPhase] = useState<Phase>('home')
   const [scorePanelOpen, setScorePanelOpen] = useState(false)
+  const [uiScale, setUiScale] = useState(1.0)
   const [cardCount, setCardCount] = useState(teams.length || 12)
   const [cards, setCards] = useState<string[][]>([])
   const [previewIdx, setPreviewIdx] = useState(0)
@@ -546,6 +549,8 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
   const plusIcon = <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round"><path d="M3.5 8h9M8 3.5v9" /></svg>
   const backIcon =<svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
 
+  const gameMenu = <GameMenu uiScale={uiScale} onScaleChange={setUiScale} onOpenSettings={onOpenSettings} />
+
   // ── Home phase ───────────────────────────────────────────────────────────
   if (phase === 'home') {
     const startGroup = (
@@ -570,17 +575,11 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
       </>
     )
     return (
-      <div className="h-screen flex flex-col overflow-hidden bg-orange-50">
+      <div className="h-screen flex flex-col overflow-hidden bg-orange-50" style={zoomFit(uiScale)}>
           <div className={`${headerCls} justify-between`}>
             <button onClick={onBack} className={backBtnCls}>{backIcon}กลับ</button>
             <h1 className={titleCls}>{game.name}</h1>
-            <button onClick={onOpenSettings} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm ${outlineBtnCls}`} title="ตั้งค่าเกม">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              ตั้งค่า
-            </button>
+            {gameMenu}
           </div>
 
           <div ref={homeStageRef} className="relative flex-1 min-h-0 overflow-hidden flex bg-gradient-to-b from-orange-50 to-orange-100">
@@ -696,7 +695,7 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
   if (phase === 'preview') {
     const card = cards[previewIdx] ?? []
     return (
-      <div className="h-screen flex flex-col overflow-hidden bg-orange-50">
+      <div className="h-screen flex flex-col overflow-hidden bg-orange-50" style={zoomFit(uiScale)}>
           <div className={headerCls}>
             <button onClick={() => setPhase('home')} className={backBtnCls}>{backIcon}กลับ</button>
             <h1 className={`${titleCls} mx-auto`}>ตัวอย่างกระดาษ</h1>
@@ -721,6 +720,7 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
               className={`flex items-center justify-center w-9 h-[34px] rounded-lg flex-shrink-0 ${outlineBtnCls}`}>
               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
             </button>
+            {gameMenu}
           </div>
 
         <div className="flex-1 min-h-0 flex flex-col p-4 gap-3">
@@ -742,11 +742,11 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
   // ── Scoring example phase ─────────────────────────────────────────────────
   if (phase === 'scoring-example') {
     return (
-      <div className="h-screen flex flex-col overflow-hidden bg-orange-50">
+      <div className="h-screen flex flex-col overflow-hidden bg-orange-50" style={zoomFit(uiScale)}>
           <div className={headerCls}>
             <button onClick={() => setPhase('home')} className={backBtnCls}>{backIcon}กลับ</button>
             <h1 className={`${titleCls} mx-auto`}>ตัวอย่างการนับคะแนน</h1>
-            <div className="w-[72px] flex-shrink-0" />
+            {gameMenu}
           </div>
         <div className="flex-1 min-h-0 flex flex-col p-4">
           <ScoringExample card={generateBingoCard(keywords, 'scoring-example')} />
@@ -763,7 +763,7 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
   const isWarning = countdown !== null && countdown <= 10 && countdown > 5
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-orange-50">
+    <div className="h-screen flex flex-col overflow-hidden bg-orange-50" style={zoomFit(uiScale)}>
 
       {/* Shuffle animation overlay */}
       {shuffleWord && !overlayKeyword && (
@@ -838,7 +838,10 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
       <div className={`${headerCls} justify-between`}>
         <button onClick={() => setPhase('home')} className={backBtnCls}>{backIcon}กลับ</button>
         <h1 className={titleCls}>{game.name}</h1>
-        <span className="text-orange-700 bg-orange-50 border border-orange-200 rounded-full px-3 py-1 text-sm font-semibold">เรียกไปแล้ว {calledKeywords.length} / {keywords.length}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-orange-700 bg-orange-50 border border-orange-200 rounded-full px-3 py-1 text-sm font-semibold">เรียกไปแล้ว {calledKeywords.length} / {keywords.length}</span>
+          {gameMenu}
+        </div>
       </div>
 
       <div className="flex-1 min-h-0 flex flex-col lg:flex-row p-4 gap-3 overflow-hidden">
