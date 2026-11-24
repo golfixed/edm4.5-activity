@@ -332,6 +332,19 @@ function ScoringExample({ card }: { card: string[] }) {
   )
 }
 
+function loadProgress(key: string, keywords: string[]): { calledKeywords: string[]; countdownSeconds: number } {
+  try {
+    const raw = JSON.parse(localStorage.getItem(key) ?? 'null')
+    return {
+      // drop keywords that were removed in settings since the progress was saved
+      calledKeywords: Array.isArray(raw?.calledKeywords) ? raw.calledKeywords.filter((k: string) => keywords.includes(k)) : [],
+      countdownSeconds: typeof raw?.countdownSeconds === 'number' ? raw.countdownSeconds : 30,
+    }
+  } catch {
+    return { calledKeywords: [], countdownSeconds: 30 }
+  }
+}
+
 function generateRandomCards(keywords: string[], count: number): string[][] {
   return Array.from({ length: count }, (_, i) =>
     generateBingoCard(keywords, `${Date.now()}-${i}-${Math.random()}`)
@@ -347,11 +360,19 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
   const [cards, setCards] = useState<string[][]>([])
   const [previewIdx, setPreviewIdx] = useState(0)
 
-  const [calledKeywords, setCalledKeywords] = useState<string[]>([])
+  const progressKey = `bingo-progress:${game.id}`
+  const [savedProgress] = useState(() => loadProgress(progressKey, keywords))
+  const [calledKeywords, setCalledKeywords] = useState<string[]>(savedProgress.calledKeywords)
   const [overlayKeyword, setOverlayKeyword] = useState<string | null>(null)
   const [shuffleWord, setShuffleWord] = useState<string | null>(null)
 
-  const [countdownSeconds, setCountdownSeconds] = useState(30)
+  const [countdownSeconds, setCountdownSeconds] = useState(savedProgress.countdownSeconds)
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(progressKey, JSON.stringify({ calledKeywords, countdownSeconds }))
+    } catch {}
+  }, [progressKey, calledKeywords, countdownSeconds])
   const [countdown, setCountdown] = useState<number | null>(null)
   const [timeUp, setTimeUp] = useState(false)
   const [flash, setFlash] = useState(false)
@@ -425,7 +446,10 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
     setPhase('preview')
   }
 
-  const startGame = () => {
+  const startGame = () => setPhase('playing')
+
+  const restartGame = () => {
+    if (!window.confirm(`ล้าง keyword ที่เรียกไปแล้ว ${calledKeywords.length} คำ และเริ่มเกมใหม่ทั้งหมด?`)) return
     setCalledKeywords([])
     setPhase('playing')
   }
@@ -434,7 +458,6 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
     const pool = keywords.length > 0 ? keywords : ['ตัวอย่าง Keyword']
     const pick = pool[Math.floor(Math.random() * pool.length)]
     setDemoMode(true)
-    setCalledKeywords([])
     setPhase('playing')
     // slight delay so playing phase renders before overlay appears
     setTimeout(() => setOverlayKeyword(pick), 50)
@@ -557,9 +580,25 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
               </button>
             </div>
           </div>
-          <button onClick={startGame}
-            className={`absolute left-1/2 top-[40%] -translate-x-1/2 -translate-y-1/2 px-16 py-5 font-extrabold text-3xl rounded-2xl ring-4 ring-white hover:scale-105 whitespace-nowrap ${primaryBtnCls}`}
-          >🎲 เริ่มเกม</button>
+          <div className="absolute left-1/2 top-[40%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-3">
+            <button onClick={startGame}
+              className={`px-16 py-5 font-extrabold text-3xl rounded-2xl ring-4 ring-white hover:scale-105 whitespace-nowrap ${primaryBtnCls}`}
+            >{calledKeywords.length > 0 ? '🎲 เล่นต่อ' : '🎲 เริ่มเกม'}</button>
+            {calledKeywords.length > 0 && (
+              <>
+                <span className="px-3 py-1 rounded-full bg-white/90 border border-orange-200 text-orange-700 text-sm font-semibold shadow-sm">
+                  เรียกไปแล้ว {calledKeywords.length} / {keywords.length} keyword
+                </span>
+                <button onClick={restartGame}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/95 border border-orange-200 text-orange-700 hover:bg-orange-50 text-sm font-semibold shadow-md transition-colors">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5" />
+                  </svg>
+                  เริ่มเกมใหม่ทั้งหมด
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     )
