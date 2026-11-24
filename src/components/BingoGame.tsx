@@ -774,13 +774,10 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
             disabled={calledKeywords.length === 0}
             className={`h-11 rounded-xl text-sm font-semibold disabled:opacity-30 ${outlineBtnCls}`}
           >↩ ยกเลิกล่าสุด</button>
-          <div className="h-11 flex items-center gap-2">
-            <span className="flex-1 text-center text-gray-400 text-sm whitespace-nowrap">เหลือ {remaining.length} keyword</span>
-            <Link
-              href="/admin"
-              className="h-full flex items-center px-4 bg-red-700 hover:bg-red-800 text-white rounded-xl text-sm font-semibold transition-colors whitespace-nowrap shadow"
-            >🏁 จบเกม → ใส่คะแนน</Link>
-          </div>
+          <Link
+            href="/admin"
+            className="h-11 flex items-center justify-center px-4 bg-red-700 hover:bg-red-800 text-white rounded-xl text-sm font-semibold transition-colors whitespace-nowrap shadow"
+          >🏁 จบเกม → ใส่คะแนน</Link>
         </div>
       </div>
     </div>
