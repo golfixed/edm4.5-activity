@@ -478,16 +478,14 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
 
   const undoLast = () => setCalledKeywords((prev) => prev.slice(0, -1))
 
-  const bgStyle = game.backgroundImage
-    ? { backgroundImage: `url(${game.backgroundImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-    : {}
-  const bgClass = game.backgroundImage ? '' : 'bg-gradient-to-b from-orange-50 to-orange-100'
+  const bgUrl = game.backgroundImage ? `url(${game.backgroundImage})` : undefined
   const headerCls = 'flex-shrink-0 flex items-center gap-2 px-6 py-4 bg-white border-b border-orange-100 shadow-sm'
   const titleCls = 'text-gray-900 font-bold text-xl'
   const backBtnCls = 'flex items-center gap-1 px-3 py-1.5 border border-orange-200 rounded-lg text-orange-700 hover:bg-orange-50 transition-colors text-sm flex-shrink-0'
   const outlineBtnCls = 'bg-white hover:bg-orange-50 border border-orange-200 text-orange-700 transition-colors'
   const primaryBtnCls = 'bg-gradient-to-b from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white shadow-[0_6px_20px_rgba(194,65,12,0.35)] transition-all'
-  const stepBtnCls = 'flex items-center justify-center rounded-full bg-orange-100 hover:bg-orange-200 text-orange-700 transition-colors flex-shrink-0'
+  const barBtnCls = 'flex-shrink-0 flex items-center gap-2 px-4 font-semibold rounded-xl shadow-md whitespace-nowrap bg-white/95 backdrop-blur hover:bg-orange-50 border border-orange-200 text-orange-700 transition-colors'
+  const stepBtnCls ='flex items-center justify-center rounded-full bg-orange-100 hover:bg-orange-200 text-orange-700 transition-colors flex-shrink-0'
   const minusIcon = <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round"><path d="M3.5 8h9" /></svg>
   const plusIcon = <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round"><path d="M3.5 8h9M8 3.5v9" /></svg>
   const backIcon =<svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
@@ -508,7 +506,16 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
             </button>
           </div>
 
-          <div className={`relative flex-1 min-h-0 ${bgClass}`} style={bgStyle}>
+          <div className="relative flex-1 min-h-0 overflow-hidden bg-gradient-to-b from-orange-50 to-orange-100">
+          {bgUrl && (
+            <>
+              {/* blurred fill for the area the uncropped image doesn't cover */}
+              <div className="absolute inset-0 scale-110 blur-2xl opacity-80"
+                style={{ backgroundImage: bgUrl, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+              <div className="absolute inset-0"
+                style={{ backgroundImage: bgUrl, backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }} />
+            </>
+          )}
           <div className="absolute inset-x-0 bottom-0 pt-16 px-5 pb-5 bg-gradient-to-t from-white/80 via-white/40 to-transparent">
             <div className="flex items-stretch justify-center gap-3 h-14">
               <div className="flex-shrink-0 flex items-center gap-2 bg-white/95 backdrop-blur border border-orange-200 shadow-md rounded-xl px-3">
@@ -520,15 +527,29 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
                   className={`w-8 h-8 ${stepBtnCls}`}>{plusIcon}</button>
                 <span className="text-gray-500 text-sm">แผ่น</span>
               </div>
-              <button onClick={openPreview}
-                className={`flex-shrink-0 px-4 font-semibold rounded-xl shadow-md whitespace-nowrap bg-white/95 backdrop-blur hover:bg-orange-50 border border-orange-200 text-orange-700 transition-colors`}
-              >🃏 ตัวอย่างกระดาษ</button>
-              <button onClick={() => setPhase('scoring-example')}
-                className={`flex-shrink-0 px-4 font-semibold rounded-xl shadow-md whitespace-nowrap bg-white/95 backdrop-blur hover:bg-orange-50 border border-orange-200 text-orange-700 transition-colors`}
-              >🏆 การนับคะแนน</button>
-              <button onClick={startDemo} title="ทดสอบ Countdown (10 วิ)"
-                className={`flex-shrink-0 px-4 font-semibold rounded-xl shadow-md whitespace-nowrap bg-white/95 backdrop-blur hover:bg-orange-50 border border-orange-200 text-orange-700 transition-colors`}
-              >⏱ ทดสอบ</button>
+              <button onClick={openPreview} className={barBtnCls}>
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinejoin="round">
+                  <rect x="3.5" y="3.5" width="17" height="17" rx="2.5" />
+                  <path d="M3.5 9.5h17M3.5 14.5h17M9.5 3.5v17M14.5 3.5v17" strokeWidth={1.5} />
+                  <rect x="10.25" y="10.25" width="3.5" height="3.5" rx=".5" fill="currentColor" stroke="none" />
+                </svg>
+                ตัวอย่างกระดาษ
+              </button>
+              <button onClick={() => setPhase('scoring-example')} className={barBtnCls}>
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M7 4h10v5a5 5 0 0 1-10 0z" />
+                  <path d="M7 6H4.5v1.5A3.5 3.5 0 0 0 8 11M17 6h2.5v1.5A3.5 3.5 0 0 1 16 11" />
+                  <path d="M12 14v3M8.5 20h7M9.5 20l.5-3h4l.5 3" />
+                </svg>
+                การนับคะแนน
+              </button>
+              <button onClick={startDemo} title="ทดสอบ Countdown (10 วิ)" className={barBtnCls}>
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="13" r="8" />
+                  <path d="M12 9v4l2.5 2.5M9.5 2.5h5M12 2.5V5" />
+                </svg>
+                ทดสอบ
+              </button>
             </div>
           </div>
           <button onClick={startGame}
