@@ -736,19 +736,19 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
         </div>
 
         {/* Controls */}
-        <div className="flex-shrink-0 space-y-2">
+        <div className="flex-shrink-0 grid grid-cols-[1fr_auto] gap-2">
           {allCalled ? (
-            <div className="text-center py-4 text-2xl font-bold text-orange-600">🎉 เรียกครบทุก keyword แล้ว!</div>
+            <div className="col-span-2 text-center py-4 text-2xl font-bold text-orange-600">🎉 เรียกครบทุก keyword แล้ว!</div>
           ) : (
-            <div className="flex gap-2 items-stretch h-16">
+            <>
               <button
                 onClick={drawKeyword}
-                className={`flex-1 font-bold text-xl rounded-xl ${primaryBtnCls}`}
+                className={`h-16 font-bold text-xl rounded-xl ${primaryBtnCls}`}
               >
                 {calledKeywords.length === 0 ? '🎲 เริ่ม Keyword แรก' : '🎲 สุ่ม Keyword ถัดไป'}
               </button>
               {/* Countdown setting */}
-              <div className="flex items-center gap-2 bg-white border border-orange-200 rounded-xl px-3 flex-shrink-0">
+              <div className="h-16 flex items-center justify-between gap-2 bg-white border border-orange-200 rounded-xl px-3">
                 <svg className="w-7 h-7 text-orange-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="13" r="8" />
                   <path d="M12 9v4l2.5 2.5M9.5 2.5h5M12 2.5V5" />
@@ -767,18 +767,18 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
                   className={`w-9 h-9 ${stepBtnCls}`}>{plusIcon}</button>
                 <span className="text-gray-400 text-sm">วิ</span>
               </div>
-            </div>
+            </>
           )}
-          <div className="flex gap-2 items-center">
-            <button
-              onClick={undoLast}
-              disabled={calledKeywords.length === 0}
-              className={`flex-1 py-2 rounded-lg text-sm disabled:opacity-30 ${outlineBtnCls}`}
-            >↩ ยกเลิกล่าสุด</button>
-            <span className="text-gray-400 text-sm px-2">เหลือ {remaining.length} keyword</span>
+          <button
+            onClick={undoLast}
+            disabled={calledKeywords.length === 0}
+            className={`h-11 rounded-xl text-sm font-semibold disabled:opacity-30 ${outlineBtnCls}`}
+          >↩ ยกเลิกล่าสุด</button>
+          <div className="h-11 flex items-center gap-2">
+            <span className="flex-1 text-center text-gray-400 text-sm whitespace-nowrap">เหลือ {remaining.length} keyword</span>
             <Link
               href="/admin"
-              className="px-4 py-2 bg-red-700 hover:bg-red-800 text-white rounded-lg text-sm font-semibold transition-colors whitespace-nowrap shadow"
+              className="h-full flex items-center px-4 bg-red-700 hover:bg-red-800 text-white rounded-xl text-sm font-semibold transition-colors whitespace-nowrap shadow"
             >🏁 จบเกม → ใส่คะแนน</Link>
           </div>
         </div>
