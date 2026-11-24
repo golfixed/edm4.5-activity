@@ -369,7 +369,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
   // ── COUNTDOWN ─────────────────────────────────────────────────────────────
   if (phase === 'countdown') {
     return (
-      <div className="h-screen bg-orange-50 flex flex-col items-center justify-center" style={{ zoom: uiScale }}>
+      <div className="h-screen overflow-hidden bg-orange-50 flex flex-col items-center justify-center" style={{ zoom: uiScale }}>
         <div className="text-orange-900/40 text-xl mb-6 tracking-widest uppercase font-semibold">เตรียมพร้อม</div>
         <div
           key={countdownNum}
