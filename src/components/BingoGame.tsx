@@ -487,7 +487,10 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
   const backBtnCls = 'flex items-center gap-1 px-3 py-1.5 border border-orange-200 rounded-lg text-orange-700 hover:bg-orange-50 transition-colors text-sm flex-shrink-0'
   const outlineBtnCls = 'bg-white hover:bg-orange-50 border border-orange-200 text-orange-700 transition-colors'
   const primaryBtnCls = 'bg-gradient-to-b from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white shadow-[0_6px_20px_rgba(194,65,12,0.35)] transition-all'
-  const backIcon = <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+  const stepBtnCls = 'flex items-center justify-center rounded-full bg-orange-100 hover:bg-orange-200 text-orange-700 transition-colors flex-shrink-0'
+  const minusIcon = <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round"><path d="M3.5 8h9" /></svg>
+  const plusIcon = <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round"><path d="M3.5 8h9M8 3.5v9" /></svg>
+  const backIcon =<svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
 
   // ── Home phase ───────────────────────────────────────────────────────────
   if (phase === 'home') {
@@ -511,10 +514,10 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
               <div className="flex-shrink-0 flex items-center gap-2 bg-white/95 backdrop-blur border border-orange-200 shadow-md rounded-xl px-3">
                 <span className="text-gray-500 text-sm whitespace-nowrap">จำนวน</span>
                 <button onClick={() => setCardCount(c => Math.max(1, c - 1))}
-                  className="w-8 h-8 rounded-full bg-orange-100 hover:bg-orange-200 text-orange-700 font-bold transition-colors">−</button>
+                  className={`w-8 h-8 ${stepBtnCls}`}>{minusIcon}</button>
                 <span className="text-orange-600 font-extrabold text-2xl w-9 text-center tabular-nums">{cardCount}</span>
                 <button onClick={() => setCardCount(c => c + 1)}
-                  className="w-8 h-8 rounded-full bg-orange-100 hover:bg-orange-200 text-orange-700 font-bold transition-colors">+</button>
+                  className={`w-8 h-8 ${stepBtnCls}`}>{plusIcon}</button>
                 <span className="text-gray-500 text-sm">แผ่น</span>
               </div>
               <button onClick={openPreview}
@@ -699,9 +702,12 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
               </button>
               {/* Countdown setting */}
               <div className="flex items-center gap-2 bg-white border border-orange-200 rounded-xl px-3 flex-shrink-0">
-                <span className="text-gray-500 text-sm">⏱</span>
+                <svg className="w-7 h-7 text-orange-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="13" r="8" />
+                  <path d="M12 9v4l2.5 2.5M9.5 2.5h5M12 2.5V5" />
+                </svg>
                 <button onClick={() => setCountdownSeconds(s => Math.max(0, s - 5))}
-                  className="w-9 h-9 rounded-full bg-orange-100 hover:bg-orange-200 text-orange-700 font-bold text-lg transition-colors">−</button>
+                  className={`w-9 h-9 ${stepBtnCls}`}>{minusIcon}</button>
                 <input
                   type="number"
                   min="0"
@@ -711,7 +717,7 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
                   className="w-12 text-center font-extrabold text-orange-600 focus:outline-none text-2xl tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
                 <button onClick={() => setCountdownSeconds(s => Math.min(300, s + 5))}
-                  className="w-9 h-9 rounded-full bg-orange-100 hover:bg-orange-200 text-orange-700 font-bold text-lg transition-colors">+</button>
+                  className={`w-9 h-9 ${stepBtnCls}`}>{plusIcon}</button>
                 <span className="text-gray-400 text-sm">วิ</span>
               </div>
             </div>
