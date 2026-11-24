@@ -15,7 +15,7 @@ interface Props {
 type Phase = 'setup' | 'countdown' | 'playing' | 'scoring'
 
 export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Props) {
-  const { teams, scores, addScore } = useStore()
+  const { teams, scores, addScore, isSynced } = useStore()
   // Teams with a saved score for this game have already played and can't be picked again.
   const playedPoints = new Map(scores.filter((sc) => sc.gameId === game.id).map((sc) => [sc.teamId, sc.points]))
   const availableTeams = teams.filter((t) => !playedPoints.has(t.id))
@@ -135,7 +135,14 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
     setRevealed(false); startTickLoop()
   }, [currentIndex])
 
-  useEffect(() => { if (!allPlayed) setBonus(false) }, [allPlayed])
+  const bonusDone = !!game.bonusRoundPlayed
+  const setBonusPlayed = (played: boolean) => {
+    const st = useStore.getState()
+    st.setGames(st.games.map((g) => (g.id === game.id ? { ...g, bonusRoundPlayed: played } : g)))
+  }
+  useEffect(() => { if (!allPlayed || bonusDone) setBonus(false) }, [allPlayed, bonusDone])
+  // Scores were reset (not every team has played any more): allow a fresh bonus round later.
+  useEffect(() => { if (isSynced && bonusDone && !allPlayed) setBonusPlayed(false) }, [isSynced, bonusDone, allPlayed])
 
   const startBonus = () => { setBonus(true); setSelectedTeamIds(teams.map((t) => t.id)) }
   const cancelBonus = () => { setBonus(false); setSelectedTeamIds([]) }
@@ -159,6 +166,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
         points: (bonus ? playedPoints.get(teamId) ?? 0 : 0) + (finalScores[teamId] ?? 0),
       })
     )
+    if (bonus) setBonusPlayed(true)
     setBonus(false)
     setPhase('setup'); setSelectedTeamIds([]); setSelectedSetId(null); setCurrentIndex(0)
   }
@@ -266,16 +274,20 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
               <>
                 <div className="flex items-baseline gap-2 mb-3 flex-shrink-0">
                   <h2 className="text-gray-900 text-base font-bold">รอบโบนัส</h2>
-                  <span className="text-gray-500 text-xs">ทุกทีมเล่นครบแล้ว</span>
+                  <span className="text-gray-500 text-xs">{bonusDone ? 'เล่นไปแล้ว' : 'ทุกทีมเล่นครบแล้ว'}</span>
                 </div>
-                <div className={`flex-1 min-h-0 rounded-2xl border-2 flex flex-col items-center justify-center gap-4 px-6 text-center transition-colors ${bonus ? 'border-orange-500 bg-white shadow-[0_6px_20px_rgba(194,65,12,0.18)]' : 'border-orange-100 bg-white'}`}>
+                <div className={`flex-1 min-h-0 rounded-2xl border-2 flex flex-col items-center justify-center gap-4 px-6 text-center transition-colors ${bonusDone ? 'border-gray-200 bg-gray-50 [&>span:first-child]:grayscale [&>span:first-child]:opacity-50' : bonus ? 'border-orange-500 bg-white shadow-[0_6px_20px_rgba(194,65,12,0.18)]' : 'border-orange-100 bg-white'}`}>
                   <span className="w-16 h-16 rounded-2xl bg-gradient-to-b from-amber-400 to-orange-500 text-white flex items-center justify-center shadow-md">
                     <svg className="w-9 h-9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.8l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.6l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z" /></svg>
                   </span>
-                  <h3 className="text-gray-900 font-extrabold text-2xl">{bonus ? 'พร้อมเล่นรอบโบนัส' : 'รอบโบนัส'}</h3>
-                  <p className="text-gray-500 text-sm leading-relaxed">ทุกทีมเล่นพร้อมกัน<br />คะแนนที่ได้จะบวกเพิ่มจากคะแนนเดิม</p>
+                  <h3 className="text-gray-900 font-extrabold text-2xl">{bonusDone ? 'เล่นรอบโบนัสแล้ว' : bonus ? 'พร้อมเล่นรอบโบนัส' : 'รอบโบนัส'}</h3>
+                  <p className="text-gray-500 text-sm leading-relaxed">
+                    {bonusDone
+                      ? <>เกมนี้เล่นครบทุกรอบแล้ว<br />รอบโบนัสเล่นได้ครั้งเดียว</>
+                      : <>ทุกทีมเล่นพร้อมกัน<br />คะแนนที่ได้จะบวกเพิ่มจากคะแนนเดิม</>}
+                  </p>
                 </div>
-                {bonus ? (
+                {bonusDone ? null : bonus ? (
                   <button onClick={cancelBonus} className={`mt-3 flex-shrink-0 h-14 flex items-center justify-center gap-2 font-semibold rounded-xl ${outlineBtnCls}`}>
                     ยกเลิกรอบโบนัส
                   </button>
@@ -308,7 +320,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                 <span className="ml-auto text-gray-400 text-xs">เล่นแล้ว {playedPoints.size} / {teams.length} ทีม</span>
               )}
             </div>
-            <div className="grid grid-cols-2 gap-3 flex-1 overflow-y-auto content-start">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(12rem,1fr))] gap-3 flex-1 overflow-y-auto content-start">
               {teams.map((team) => {
                 const selected = selectedTeamIds.includes(team.id)
                 const played = playedPoints.get(team.id)
@@ -363,7 +375,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                   <h2 className="text-gray-900 text-base font-bold">ชุดภาพ</h2>
                   <span className="text-gray-500 text-xs">แต่ละรอบใช้คนละชุด</span>
                 </div>
-                <div className="grid grid-cols-2 gap-3 overflow-y-auto content-start">
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-3 overflow-y-auto content-start">
                   {sets.map((set) => {
                     const selected = selectedSetId === set.id
                     return (

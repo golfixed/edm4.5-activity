@@ -45,6 +45,7 @@ export interface Game {
   soundTick?: string | null
   soundTimeUp?: string | null
   auctionItems?: AuctionItem[]
+  bonusRoundPlayed?: boolean // Left or Right?: the all-teams bonus round has been saved (once per game)
 }
 
 export interface Score {
