@@ -547,6 +547,27 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
 
   // ── Home phase ───────────────────────────────────────────────────────────
   if (phase === 'home') {
+    const startGroup = (
+      <>
+        <button onClick={startGame}
+          className={`${sidePane ? 'w-full' : ''} px-16 py-5 font-extrabold text-3xl rounded-2xl ring-4 ring-white hover:scale-105 whitespace-nowrap ${primaryBtnCls}`}
+        >{calledKeywords.length > 0 ? '🎲 เล่นต่อ' : '🎲 เริ่มเกม'}</button>
+        {calledKeywords.length > 0 && (
+          <>
+            <span className="px-3 py-1 rounded-full bg-white/90 border border-orange-200 text-orange-700 text-sm font-semibold shadow-sm">
+              เรียกไปแล้ว {calledKeywords.length} / {keywords.length} keyword
+            </span>
+            <button onClick={restartGame}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/95 border border-orange-200 text-orange-700 hover:bg-orange-50 text-sm font-semibold shadow-md transition-colors">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5" />
+              </svg>
+              เริ่มเกมใหม่ทั้งหมด
+            </button>
+          </>
+        )}
+      </>
+    )
     return (
       <div className="h-screen flex flex-col overflow-hidden bg-orange-50">
           <div className={`${headerCls} justify-between`}>
@@ -567,35 +588,22 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
             <div className="absolute inset-0 scale-110 blur-2xl opacity-80"
               style={{ backgroundImage: bgUrl, backgroundSize: 'cover', backgroundPosition: 'center' }} />
           )}
-          {/* the page: wallpaper + start button; pinned left when the menu moves to the side pane */}
+          {/* the page: wallpaper (+ start button unless it's in the side pane); pinned left on wide screens */}
           <div className="relative h-full flex-shrink-0" style={{ width: sidePane ? sideImageWidth : '100%' }}>
             {bgUrl && (
               <div className="absolute inset-0"
                 style={{ backgroundImage: bgUrl, backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }} />
             )}
-            <div className="absolute left-1/2 top-[40%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-3">
-              <button onClick={startGame}
-                className={`px-16 py-5 font-extrabold text-3xl rounded-2xl ring-4 ring-white hover:scale-105 whitespace-nowrap ${primaryBtnCls}`}
-              >{calledKeywords.length > 0 ? '🎲 เล่นต่อ' : '🎲 เริ่มเกม'}</button>
-              {calledKeywords.length > 0 && (
-                <>
-                  <span className="px-3 py-1 rounded-full bg-white/90 border border-orange-200 text-orange-700 text-sm font-semibold shadow-sm">
-                    เรียกไปแล้ว {calledKeywords.length} / {keywords.length} keyword
-                  </span>
-                  <button onClick={restartGame}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/95 border border-orange-200 text-orange-700 hover:bg-orange-50 text-sm font-semibold shadow-md transition-colors">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5" />
-                    </svg>
-                    เริ่มเกมใหม่ทั้งหมด
-                  </button>
-                </>
-              )}
-            </div>
+            {!sidePane && (
+              <div className="absolute left-1/2 top-[40%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-3">
+                {startGroup}
+              </div>
+            )}
           </div>
           {sidePane ? (
             <div className="relative flex-1 min-w-0 flex items-center justify-center p-6 bg-white/50 backdrop-blur-md border-l border-white/60">
               <div className="w-full max-w-xs flex flex-col gap-3">
+                <div className="flex flex-col items-center gap-3 mb-5">{startGroup}</div>
                 <div className={`flex-shrink-0 flex items-center gap-2 bg-white/95 backdrop-blur border border-orange-200 shadow-md rounded-xl px-3 ${sidePane ? 'h-14' : ''}`}>
                   <svg className="w-5 h-5 text-orange-700 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                     <path d="M8 3.5h8.5a2 2 0 0 1 2 2V17" />
