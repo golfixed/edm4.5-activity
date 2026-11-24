@@ -575,12 +575,24 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                   {team.name}
                   {team.captain && <span className="text-gray-400 text-sm font-normal ml-1">({team.captain})</span>}
                 </span>
-                <input
-                  type="number" min="0"
-                  value={finalScores[team.id] ?? 0}
-                  onChange={(e) => setFinalScores((prev) => ({ ...prev, [team.id]: parseInt(e.target.value) || 0 }))}
-                  className="w-24 px-3 py-2 rounded-lg bg-orange-50 text-orange-700 text-center text-xl font-bold border border-orange-200 focus:outline-none focus:border-orange-500"
-                />
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <button
+                    onClick={() => setFinalScores((prev) => ({ ...prev, [team.id]: Math.max(0, (prev[team.id] ?? 0) - 1) }))}
+                    disabled={(finalScores[team.id] ?? 0) <= 0}
+                    className={`w-10 h-10 ${stepBtnCls} disabled:opacity-40`} title="ลดคะแนน"
+                  >{minusIcon}</button>
+                  <input
+                    type="number" min="0" inputMode="numeric"
+                    value={finalScores[team.id] ?? 0}
+                    onChange={(e) => setFinalScores((prev) => ({ ...prev, [team.id]: Math.max(0, parseInt(e.target.value) || 0) }))}
+                    onFocus={(e) => e.target.select()}
+                    className="w-20 px-2 py-2 rounded-lg bg-orange-50 text-orange-700 text-center text-xl font-bold tabular-nums border border-orange-200 focus:outline-none focus:border-orange-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  />
+                  <button
+                    onClick={() => setFinalScores((prev) => ({ ...prev, [team.id]: (prev[team.id] ?? 0) + 1 }))}
+                    className={`w-10 h-10 ${stepBtnCls}`} title="เพิ่มคะแนน"
+                  >{plusIcon}</button>
+                </div>
                 <span className="text-gray-500 text-sm w-12">คะแนน</span>
               </div>
             ))}
