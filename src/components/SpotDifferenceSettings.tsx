@@ -12,6 +12,22 @@ interface Props {
 
 type SoundKey = 'soundStart' | 'soundTick' | 'soundTimeUp'
 
+const svgProps = { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+const ICON = {
+  x: <svg className="w-3.5 h-3.5" {...svgProps} strokeWidth={2.5}><path d="M6 6l12 12M18 6 6 18" /></svg>,
+  plus: (cls = 'w-4 h-4') => <svg className={cls} {...svgProps} strokeWidth={2.5}><path d="M12 5v14M5 12h14" /></svg>,
+  minus: <svg className="w-4 h-4" {...svgProps} strokeWidth={2.5}><path d="M5 12h14" /></svg>,
+  check: (cls = 'w-3.5 h-3.5') => <svg className={cls} {...svgProps} strokeWidth={2.75}><path d="M5 12.5l4.5 4.5L19 7" /></svg>,
+  play: (cls = 'w-3 h-3') => <svg className={cls} viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z" /></svg>,
+  clock: (cls: string) => <svg className={cls} {...svgProps}><circle cx="12" cy="13" r="8" /><path d="M12 9v4l2.5 2.5M9.5 2.5h5M12 2.5V5" /></svg>,
+  alarm: <svg className="w-3.5 h-3.5" {...svgProps}><circle cx="12" cy="13" r="7.5" /><path d="M12 9.5V13l2.5 2M5 3.5 2.5 6M19 3.5 21.5 6" /></svg>,
+  music: <svg className="w-3.5 h-3.5" {...svgProps}><path d="M9 18V5l11-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="17" cy="16" r="3" /></svg>,
+  speaker: <svg className="w-4 h-4" {...svgProps}><path d="M11 5 6 9H3v6h3l5 4V5z" /><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13" /></svg>,
+  image: (cls = 'w-3 h-3') => <svg className={cls} {...svgProps}><rect x="3" y="4" width="18" height="16" rx="2.5" /><circle cx="9" cy="10" r="1.75" /><path d="m21 16-5-5-9 9" /></svg>,
+  folder: <svg className="w-3.5 h-3.5" {...svgProps}><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H9l2 2.5h7.5A2.5 2.5 0 0 1 21 10v7.5a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z" /></svg>,
+  chevronRight: <svg className="w-3.5 h-3.5" {...svgProps} strokeWidth={2.5}><path d="M9 5l7 7-7 7" /></svg>,
+}
+
 export default function SpotDifferenceSettings({ game, onClose }: Props) {
   const { games, setGames } = useStore()
   const [selectedSetId, setSelectedSetId] = useState<string | null>(
@@ -66,80 +82,81 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
     updateGame({ imageSets: sets.map(s => s.id === setId ? { ...s, pairs } : s) })
 
   return (
-    <div className="h-screen bg-neutral-800 flex flex-col overflow-hidden" style={{ zoom: uiScale }}>
+    <div className="h-screen bg-orange-50 flex flex-col overflow-hidden" style={{ zoom: uiScale }}>
 
       {/* ── Top bar ─────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3 px-5 py-3 bg-neutral-700 border-b border-white/10 flex-shrink-0">
+      <div className="flex items-center gap-3 px-6 py-4 bg-white border-b border-orange-100 shadow-sm flex-shrink-0">
         <button onClick={onClose}
-          className="w-9 h-9 flex items-center justify-center border border-white/25 rounded-lg text-white hover:bg-white/10 transition-colors flex-shrink-0">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          className="flex items-center gap-1 px-3 py-1.5 bg-white hover:bg-orange-50 border border-orange-200 text-orange-700 rounded-lg text-sm transition-colors flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
+          กลับ
         </button>
 
         <div className="flex items-center gap-1.5 flex-1 min-w-0">
-          <span className="text-white/40 text-sm">ตั้งค่า</span>
-          <span className="text-white/25 text-sm">›</span>
-          <span className="text-white font-semibold truncate">{liveGame.name}</span>
+          <span className="text-gray-500 text-sm">ตั้งค่า</span>
+          <span className="text-gray-300">{ICON.chevronRight}</span>
+          <span className="text-gray-900 font-semibold truncate">{liveGame.name}</span>
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
           {/* Timer */}
-          <div className="flex items-center gap-1.5 border border-white/15 rounded-lg px-3 h-9">
-            <span className="text-white/50 text-sm">⏱</span>
+          <div className="flex items-center gap-1.5 border border-orange-200 rounded-lg px-3 h-9">
+            {ICON.clock('w-4 h-4 text-orange-500')}
             <input
               type="number" min={5} max={300}
               value={liveGame.timerSeconds ?? 10}
               onChange={e => updateGame({ timerSeconds: parseInt(e.target.value) || 10 })}
-              className="w-10 text-center bg-transparent text-white font-bold text-sm focus:outline-none"
+              className="w-10 text-center bg-transparent text-gray-900 font-bold text-sm focus:outline-none"
             />
-            <span className="text-white/35 text-xs">วิ/ข้อ</span>
+            <span className="text-gray-400 text-xs">วิ/ข้อ</span>
           </div>
 
           {/* Sounds */}
           <button
             onClick={() => setShowSounds(v => !v)}
             className={`flex items-center gap-1.5 px-3 h-9 border rounded-lg text-sm transition-colors ${
-              showSounds ? 'border-white/40 bg-white/10 text-white' : 'border-white/15 text-white/60 hover:bg-white/5'
+              showSounds ? 'border-orange-400 bg-orange-50 text-orange-700' : 'border-orange-200 bg-white text-orange-700 hover:bg-orange-50'
             }`}>
-            🔊
-            {soundsSet > 0 && <span className="text-green-400 text-xs font-bold">{soundsSet}/3</span>}
+            {ICON.speaker}
+            {soundsSet > 0 && <span className="text-green-600 text-xs font-bold">{soundsSet}/3</span>}
           </button>
 
           {/* Scale */}
-          <div className="flex items-center border border-white/15 rounded-lg overflow-hidden">
+          <div className="flex items-center border border-orange-200 rounded-lg overflow-hidden">
             <button onClick={() => setUiScale(s => Math.max(0.75, +(s - 0.1).toFixed(1)))}
-              className="w-7 h-9 flex items-center justify-center text-white/50 hover:bg-white/10 text-base select-none">−</button>
-            <span className="text-white/35 text-xs w-10 text-center border-x border-white/10 h-9 flex items-center justify-center tabular-nums">
+              className="w-7 h-9 flex items-center justify-center text-orange-700 hover:bg-orange-50 select-none">{ICON.minus}</button>
+            <span className="text-gray-400 text-xs w-10 text-center border-x border-orange-100 h-9 flex items-center justify-center tabular-nums">
               {Math.round(uiScale * 100)}%
             </span>
             <button onClick={() => setUiScale(s => Math.min(2.0, +(s + 0.1).toFixed(1)))}
-              className="w-7 h-9 flex items-center justify-center text-white/50 hover:bg-white/10 text-base select-none">+</button>
+              className="w-7 h-9 flex items-center justify-center text-orange-700 hover:bg-orange-50 select-none">{ICON.plus()}</button>
           </div>
         </div>
       </div>
 
       {/* ── Sounds strip ────────────────────────────────────────────────── */}
       {showSounds && (
-        <div className="bg-neutral-700/60 border-b border-white/10 px-5 py-3 flex items-center gap-3 flex-shrink-0 overflow-x-auto">
-          <span className="text-white/35 text-xs font-semibold uppercase tracking-wider flex-shrink-0">เสียง</span>
+        <div className="bg-white border-b border-orange-100 px-5 py-3 flex items-center gap-3 flex-shrink-0 overflow-x-auto">
+          <span className="text-gray-400 text-xs font-semibold uppercase tracking-wider flex-shrink-0">เสียง</span>
           {([
-            { key: 'soundStart' as SoundKey, label: '▶ เริ่มเกม' },
-            { key: 'soundTick' as SoundKey, label: '🎵 Countdown' },
-            { key: 'soundTimeUp' as SoundKey, label: '⏰ หมดเวลา' },
-          ] as const).map(({ key, label }) => (
+            { key: 'soundStart' as SoundKey, label: 'เริ่มเกม', icon: ICON.play('w-3.5 h-3.5') },
+            { key: 'soundTick' as SoundKey, label: 'Countdown', icon: ICON.music },
+            { key: 'soundTimeUp' as SoundKey, label: 'หมดเวลา', icon: ICON.alarm },
+          ]).map(({ key, label, icon }) => (
             <div key={key} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm flex-shrink-0 ${
-              liveGame[key] ? 'border-green-500/30 bg-green-500/8' : 'border-white/10 bg-white/5'
+              liveGame[key] ? 'border-green-300 bg-green-50' : 'border-orange-100 bg-white'
             }`}>
-              <span className="text-white/60 text-xs whitespace-nowrap">{label}</span>
+              <span className="flex items-center gap-1.5 text-gray-600 text-xs whitespace-nowrap"><span className="text-orange-500">{icon}</span>{label}</span>
               {liveGame[key] && (
                 <>
-                  <span className="text-green-400 text-xs">✓</span>
+                  <span className="text-green-600">{ICON.check()}</span>
                   <button onClick={() => new Audio(liveGame[key] as string).play()}
-                    className="text-white/40 hover:text-white text-xs transition-colors px-1">▶</button>
+                    className="text-gray-500 hover:text-orange-600 transition-colors px-1" title="ฟังเสียง">{ICON.play()}</button>
                 </>
               )}
-              <label className="text-white/45 hover:text-white/80 text-xs cursor-pointer transition-colors">
+              <label className="text-gray-500 hover:text-gray-700 text-xs cursor-pointer transition-colors">
                 {liveGame[key] ? 'เปลี่ยน' : 'เลือก'}
                 <input type="file" accept="audio/*" hidden onChange={e => {
                   const f = e.target.files?.[0]
@@ -151,7 +168,7 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
               </label>
               {liveGame[key] && (
                 <button onClick={() => updateGame({ [key]: null })}
-                  className="text-red-400/50 hover:text-red-400 text-xs transition-colors">✕</button>
+                  className="text-red-300 hover:text-red-500 text-xs transition-colors">{ICON.x}</button>
               )}
             </div>
           ))}
@@ -162,10 +179,10 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
       <div className="flex-1 flex overflow-hidden">
 
         {/* Left: sets list */}
-        <div className="w-56 flex flex-col border-r border-white/10 flex-shrink-0">
-          <div className="px-4 py-2 flex items-center justify-between border-b border-white/5 flex-shrink-0">
-            <span className="text-white/35 text-xs font-semibold uppercase tracking-wider">ชุดภาพ</span>
-            <span className="text-white/20 text-xs">{totalPairs} โจทย์รวม</span>
+        <div className="w-56 flex flex-col border-r border-orange-100 flex-shrink-0">
+          <div className="px-4 py-2 flex items-center justify-between border-b border-orange-100 flex-shrink-0">
+            <span className="text-gray-400 text-xs font-semibold uppercase tracking-wider">ชุดภาพ</span>
+            <span className="text-gray-300 text-xs">{totalPairs} โจทย์รวม</span>
           </div>
 
           <div className="flex-1 overflow-y-auto py-1.5 px-2 space-y-0.5">
@@ -184,15 +201,15 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
                   onClick={() => setSelectedSetId(set.id)}
                   className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg cursor-pointer transition-colors group ${
                     setDragIndex === i
-                      ? 'opacity-30 border border-white/10'
+                      ? 'opacity-30 border border-orange-100'
                       : setDropIndex === i && setDragIndex !== null
-                      ? 'border border-blue-400/60 bg-blue-400/5'
+                      ? 'border border-orange-400 bg-orange-50'
                       : isSelected
-                      ? 'bg-white/15 text-white'
-                      : 'text-white/50 hover:bg-white/10 hover:text-white/75'
+                      ? 'bg-orange-100 text-orange-900'
+                      : 'text-gray-500 hover:bg-orange-50 hover:text-gray-700'
                   }`}
                 >
-                  <div className="text-white/20 hover:text-white/50 cursor-grab active:cursor-grabbing flex-shrink-0 select-none" title="ลากเพื่อเรียงลำดับ">
+                  <div className="text-gray-300 hover:text-gray-600 cursor-grab active:cursor-grabbing flex-shrink-0 select-none" title="ลากเพื่อเรียงลำดับ">
                     <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
                       <circle cx="5" cy="4" r="1.2"/><circle cx="11" cy="4" r="1.2"/>
                       <circle cx="5" cy="8" r="1.2"/><circle cx="11" cy="8" r="1.2"/>
@@ -201,41 +218,41 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium truncate">{set.name}</div>
-                    <div className="text-xs text-white/30 mt-0.5">
+                    <div className="text-xs text-gray-400 mt-0.5">
                       {set.pairs.length} โจทย์
                       {set.pairs.length > 0 && (
-                        <span className={`ml-1 ${isComplete ? 'text-green-400' : 'text-amber-400'}`}>
-                          · {answered}/{set.pairs.length} ✓
+                        <span className={`ml-1 ${isComplete ? 'text-green-600' : 'text-amber-600'}`}>
+                          · {answered}/{set.pairs.length} <span className="inline-block align-[-1px]">{ICON.check('w-3 h-3')}</span>
                         </span>
                       )}
                     </div>
                   </div>
                   <button
                     onClick={e => { e.stopPropagation(); deleteSet(set.id) }}
-                    className="opacity-0 group-hover:opacity-100 text-red-400/60 hover:text-red-400 text-xs transition-opacity flex-shrink-0 p-0.5">
-                    ✕
+                    className="opacity-0 group-hover:opacity-100 text-red-300 hover:text-red-500 transition-opacity flex-shrink-0 p-0.5">
+                    {ICON.x}
                   </button>
                 </div>
               )
             })}
 
             {sets.length === 0 && (
-              <p className="text-white/20 text-xs text-center py-6 px-2">ยังไม่มีชุดภาพ</p>
+              <p className="text-gray-300 text-xs text-center py-6 px-2">ยังไม่มีชุดภาพ</p>
             )}
           </div>
 
-          <div className="p-2.5 border-t border-white/10 flex-shrink-0">
+          <div className="p-2.5 border-t border-orange-100 flex-shrink-0">
             <div className="flex gap-1.5">
               <input
                 value={newSetName}
                 onChange={e => setNewSetName(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && addSet()}
                 placeholder="ชื่อชุดใหม่..."
-                className="flex-1 px-2.5 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white/70 text-xs placeholder-white/20 focus:outline-none focus:border-white/25"
+                className="flex-1 px-2.5 py-1.5 bg-white border border-orange-100 rounded-lg text-gray-600 text-xs placeholder-gray-300 focus:outline-none focus:border-orange-400"
               />
               <button onClick={addSet}
-                className="px-2.5 py-1.5 bg-white/8 hover:bg-white/15 border border-white/15 rounded-lg text-white/60 text-sm font-bold transition-colors">
-                +
+                className="px-2.5 py-1.5 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-lg text-orange-700 transition-colors">
+                {ICON.plus()}
               </button>
             </div>
           </div>
@@ -245,13 +262,13 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
         <div className="flex-1 flex flex-col overflow-hidden">
           {selectedSet ? (
             <>
-              <div className="flex items-center gap-3 px-5 py-2.5 border-b border-white/10 flex-shrink-0">
+              <div className="flex items-center gap-3 px-5 py-2.5 border-b border-orange-100 flex-shrink-0">
                 <input
                   value={selectedSet.name}
                   onChange={e => renameSet(selectedSet.id, e.target.value)}
-                  className="text-white font-bold text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-white/20 rounded-md px-1.5 py-0.5 flex-1"
+                  className="text-gray-900 font-bold text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-orange-300 rounded-md px-1.5 py-0.5 flex-1"
                 />
-                <span className="text-white/30 text-xs flex-shrink-0">
+                <span className="text-gray-400 text-xs flex-shrink-0">
                   {selectedSet.pairs.filter(p => p.correctImage).length}/{selectedSet.pairs.length} ตั้งเฉลยแล้ว
                 </span>
               </div>
@@ -277,8 +294,8 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center">
-              <div className="text-center text-white/25">
-                <div className="text-5xl mb-3 opacity-50">🖼</div>
+              <div className="text-center text-gray-300">
+                <div className="flex justify-center mb-3 text-orange-200">{ICON.image('w-14 h-14')}</div>
                 <p className="text-sm">{sets.length === 0 ? 'สร้างชุดภาพจากช่องด้านซ้าย' : 'เลือกชุดภาพจากซ้าย'}</p>
               </div>
             </div>
@@ -389,15 +406,15 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
 
       {/* Existing pairs */}
       {pairs.map((pair, i) => {
-        const dragCls = dragIndex === i ? 'opacity-30 border-white/10'
-          : dropIndex === i && dragIndex !== null ? 'border-blue-400/60 bg-blue-400/5'
-          : 'border-white/10 hover:border-white/15'
+        const dragCls = dragIndex === i ? 'opacity-30 border-orange-100'
+          : dropIndex === i && dragIndex !== null ? 'border-orange-400 bg-orange-50'
+          : 'border-orange-100 hover:border-orange-200'
         return (
         <div key={pair.id}
           onDragOver={e => handleDragOver(e, i)}
           onDrop={() => handleDrop(i)}
           onDragEnd={handleDragEnd}
-          className={`flex flex-col bg-white/5 border rounded-xl transition-all overflow-hidden ${dragCls}`}
+          className={`flex flex-col bg-white border rounded-xl transition-all overflow-hidden ${dragCls}`}
         >
           {/* ── Main row ─────────────────────────────────── */}
           <div className="flex items-stretch gap-0">
@@ -406,16 +423,16 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
             <div
               draggable
               onDragStart={() => handleDragStart(i)}
-              className="flex flex-col items-center justify-center gap-1 px-2 py-3 flex-shrink-0 border-r border-white/8 cursor-grab active:cursor-grabbing"
+              className="flex flex-col items-center justify-center gap-1 px-2 py-3 flex-shrink-0 border-r border-orange-100 cursor-grab active:cursor-grabbing"
             >
-              <div className="text-white/20 hover:text-white/50 select-none" title="ลากเพื่อเรียงลำดับ">
+              <div className="text-gray-300 hover:text-gray-600 select-none" title="ลากเพื่อเรียงลำดับ">
                 <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="currentColor">
                   <circle cx="5" cy="4" r="1.2"/><circle cx="11" cy="4" r="1.2"/>
                   <circle cx="5" cy="8" r="1.2"/><circle cx="11" cy="8" r="1.2"/>
                   <circle cx="5" cy="12" r="1.2"/><circle cx="11" cy="12" r="1.2"/>
                 </svg>
               </div>
-              <span className="text-white/25 text-xs font-mono leading-none">{i + 1}</span>
+              <span className="text-gray-300 text-xs font-mono leading-none">{i + 1}</span>
             </div>
 
             {/* Choices */}
@@ -425,10 +442,10 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
                 const val = pair[key]
                 const groupCls = side === 'A' ? 'group/imgA' : 'group/imgB'
                 const hoverCls = side === 'A' ? 'group-hover/imgA:opacity-100' : 'group-hover/imgB:opacity-100'
-                const badgeCls = pair.correctImage === side ? 'bg-green-500 text-white' : 'bg-black/60 text-white/50'
+                const badgeCls = pair.correctImage === side ? 'bg-green-500 text-white' : 'bg-white text-gray-400 border border-orange-200'
                 return (
                   <div key={side} className="flex items-center gap-2">
-                    {idx === 1 && <span className="text-white/20 text-xs self-center">vs</span>}
+                    {idx === 1 && <span className="text-gray-300 text-xs self-center">vs</span>}
                     <div className="flex flex-col items-center gap-1">
                       <div className={`relative ${groupCls}`}>
                         {isImg(val) ? (
@@ -445,26 +462,26 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
                             </button>
                           </>
                         ) : (
-                          <div className="w-20 h-14 rounded-lg bg-white/8 border border-white/10 flex items-center justify-center px-1 relative">
+                          <div className="w-20 h-14 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center px-1 relative">
                             <textarea
                               value={val || ''}
                               onChange={e => onChange(pairs.map(p => p.id === pair.id ? { ...p, [key]: e.target.value } : p))}
-                              className="w-full h-full bg-transparent text-white/80 text-xs text-center leading-tight resize-none focus:outline-none placeholder-white/25 py-1"
+                              className="w-full h-full bg-transparent text-gray-700 text-xs text-center leading-tight resize-none focus:outline-none placeholder-gray-300 py-1"
                               placeholder="พิมพ์..."
                             />
                             <span className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center shadow pointer-events-none ${badgeCls}`}>{side}</span>
                           </div>
                         )}
                       </div>
-                      <div className="flex border border-white/10 rounded overflow-hidden">
+                      <div className="flex border border-orange-100 rounded overflow-hidden">
                         <button
                           onClick={() => {
                             if (isImg(val)) onChange(pairs.map(p => p.id === pair.id ? { ...p, [key]: '' } : p))
                           }}
-                          className={`px-1.5 py-0.5 text-[10px] leading-none transition-colors ${!isImg(val) ? 'bg-white/15 text-white' : 'text-white/25 hover:bg-white/8'}`}
+                          className={`px-1.5 py-0.5 text-[10px] leading-none transition-colors ${!isImg(val) ? 'bg-orange-500 text-white' : 'text-gray-300 hover:bg-orange-50'}`}
                           title="ข้อความ">T</button>
-                        <label className={`px-1.5 py-0.5 text-[10px] leading-none cursor-pointer transition-colors ${isImg(val) ? 'bg-white/15 text-white' : 'text-white/25 hover:bg-white/8'}`} title="ภาพ">
-                          🖼
+                        <label className={`px-1.5 py-0.5 text-[10px] leading-none cursor-pointer transition-colors ${isImg(val) ? 'bg-orange-500 text-white' : 'text-gray-300 hover:bg-orange-50'}`} title="ภาพ">
+                          {ICON.image()}
                           <input type="file" accept="image/*" hidden onChange={e => {
                             const f = e.target.files?.[0]
                             if (f) compressImage(f, 900, 0.72).then(img =>
@@ -480,13 +497,13 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
             </div>
 
             {/* Meta (flex-1) */}
-            <div className="flex-1 flex flex-col justify-center gap-2 px-3 py-3 min-w-0 border-l border-white/8">
+            <div className="flex-1 flex flex-col justify-center gap-2 px-3 py-3 min-w-0 border-l border-orange-100">
               {/* Row 1: label + move + delete */}
               <div className="flex items-center gap-2">
                 <input
                   value={pair.label ?? ''}
                   onChange={e => onChange(pairs.map(p => p.id === pair.id ? { ...p, label: e.target.value } : p))}
-                  className="flex-1 bg-white/5 border border-white/8 rounded-lg px-2.5 py-1.5 text-white/70 text-sm placeholder-white/25 focus:outline-none focus:border-white/20 focus:bg-white/8 min-w-0"
+                  className="flex-1 bg-white border border-orange-100 rounded-lg px-2.5 py-1.5 text-gray-600 text-sm placeholder-gray-300 focus:outline-none focus:border-orange-400 focus:bg-white min-w-0"
                   placeholder="ชื่อโจทย์..."
                 />
                 {onMovePair && sets && sets.filter(s => s.id !== currentSetId).length > 0 && (
@@ -502,7 +519,7 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
                         }
                       }}
                       title="ย้ายไปชุดอื่น"
-                      className="w-7 h-7 flex items-center justify-center text-blue-400/40 hover:text-blue-400 hover:bg-blue-400/8 rounded-lg transition-colors text-sm">
+                      className="w-7 h-7 flex items-center justify-center text-orange-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors text-sm">
                       <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                         <path d="M2 8h10M9 5l3 3-3 3" />
                         <path d="M13 3v10" strokeWidth={1.5} />
@@ -512,14 +529,14 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
                       <>
                         <div className="fixed inset-0 z-40" onClick={() => { setMoveDropdownPairId(null); setDropdownPos(null) }} />
                         <div
-                          className="fixed z-50 bg-zinc-800 border border-white/15 rounded-xl shadow-2xl min-w-[140px] py-1 overflow-hidden"
+                          className="fixed z-50 bg-white border border-orange-100 rounded-xl shadow-2xl min-w-[140px] py-1 overflow-hidden"
                           style={{ top: dropdownPos.top, right: dropdownPos.right }}
                         >
-                          <p className="text-white/35 text-[10px] font-semibold uppercase tracking-wider px-3 py-1.5">ย้ายไปชุด</p>
+                          <p className="text-gray-400 text-[10px] font-semibold uppercase tracking-wider px-3 py-1.5">ย้ายไปชุด</p>
                           {sets.filter(s => s.id !== currentSetId).map(s => (
                             <button key={s.id}
                               onClick={() => { onMovePair(pair.id, s.id); setMoveDropdownPairId(null); setDropdownPos(null) }}
-                              className="w-full text-left px-3 py-2 text-sm text-white/70 hover:bg-white/8 hover:text-white transition-colors truncate">
+                              className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-orange-50 hover:text-gray-900 transition-colors truncate">
                               {s.name}
                             </button>
                           ))}
@@ -529,12 +546,12 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
                   </div>
                 )}
                 <button onClick={() => onChange(pairs.filter(p => p.id !== pair.id))}
-                  className="w-7 h-7 flex items-center justify-center text-red-400/40 hover:text-red-400 hover:bg-red-400/8 rounded-lg transition-colors text-sm flex-shrink-0">✕</button>
+                  className="w-7 h-7 flex items-center justify-center text-red-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0">{ICON.x}</button>
               </div>
               {/* Row 2: timer + correct answer */}
               <div className="flex items-center gap-3 flex-wrap">
-                <div className="flex items-center gap-1.5 border border-white/10 rounded-lg px-2.5 h-8 flex-shrink-0">
-                  <span className="text-white/35 text-xs">⏱</span>
+                <div className="flex items-center gap-1.5 border border-orange-100 rounded-lg px-2.5 h-8 flex-shrink-0">
+                  {ICON.clock('w-3.5 h-3.5 text-orange-500')}
                   <input
                     type="number" min={1} max={300}
                     value={pair.timerSeconds ?? ''}
@@ -542,20 +559,20 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
                       const v = e.target.value === '' ? undefined : parseInt(e.target.value) || undefined
                       onChange(pairs.map(p => p.id === pair.id ? { ...p, timerSeconds: v } : p))
                     }}
-                    className="w-10 text-center bg-transparent text-white/70 text-sm focus:outline-none tabular-nums"
+                    className="w-10 text-center bg-transparent text-gray-600 text-sm focus:outline-none tabular-nums"
                     placeholder="—"
                   />
-                  <span className="text-white/30 text-xs">วิ</span>
+                  <span className="text-gray-400 text-xs">วิ</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-white/35 text-xs font-medium">เฉลย</span>
+                  <span className="text-gray-400 text-xs font-medium">เฉลย</span>
                   {(['A', 'B'] as const).map(side => (
                     <button key={side}
                       onClick={() => onChange(pairs.map(p => p.id === pair.id ? { ...p, correctImage: side } : p))}
                       className={`w-9 h-8 rounded-lg text-xs font-bold transition-all ${
                         pair.correctImage === side
                           ? 'bg-green-500 text-white shadow-sm'
-                          : 'bg-white/8 text-white/35 hover:bg-white/15 hover:text-white/60'
+                          : 'bg-orange-50 text-gray-400 hover:bg-orange-100 hover:text-gray-600'
                       }`}>{side}</button>
                   ))}
                 </div>
@@ -564,35 +581,35 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
           </div>
 
           {/* ── Question / reveal row ─────────────────────── */}
-          <div className="flex items-start gap-3 px-3 py-2.5 border-t border-white/8 bg-black/10">
-            {/* T / 🖼 toggle */}
-            <div className="flex border border-white/10 rounded-md overflow-hidden flex-shrink-0 mt-0.5">
+          <div className="flex items-start gap-3 px-3 py-2.5 border-t border-orange-100 bg-orange-50/60">
+            {/* text / image question toggle */}
+            <div className="flex border border-orange-100 rounded-md overflow-hidden flex-shrink-0 mt-0.5">
               <button
                 onClick={() => {
                   setImageModePairIds(s => { const n = new Set(s); n.delete(pair.id); return n })
                   onChange(pairs.map(p => p.id === pair.id ? { ...p, questionImage: undefined } : p))
                 }}
-                className={`px-2 py-1 text-xs transition-colors ${!isImageMode(pair) ? 'bg-white/15 text-white' : 'text-white/30 hover:bg-white/8'}`}
+                className={`px-2 py-1 text-xs transition-colors ${!isImageMode(pair) ? 'bg-orange-500 text-white' : 'text-gray-400 hover:bg-orange-50'}`}
                 title="คำถามข้อความ">T</button>
               <button
                 onClick={() => {
                   setImageModePairIds(s => { const n = new Set(s); n.add(pair.id); return n })
                   onChange(pairs.map(p => p.id === pair.id ? { ...p, question: undefined } : p))
                 }}
-                className={`px-2 py-1 text-xs transition-colors ${isImageMode(pair) ? 'bg-white/15 text-white' : 'text-white/30 hover:bg-white/8'}`}
-                title="คำถามภาพ">🖼</button>
+                className={`px-2 py-1 text-xs transition-colors ${isImageMode(pair) ? 'bg-orange-500 text-white' : 'text-gray-400 hover:bg-orange-50'}`}
+                title="คำถามภาพ">{ICON.image()}</button>
             </div>
 
             {isImageMode(pair) ? (
               <div className="flex gap-4 flex-1 min-w-0">
                 {/* Question image slot */}
                 <div className="flex flex-col gap-1">
-                  <span className="text-white/35 text-[10px] font-semibold uppercase tracking-wider">โจทย์</span>
+                  <span className="text-gray-400 text-[10px] font-semibold uppercase tracking-wider">โจทย์</span>
                   {pair.questionImage ? (
                     <>
-                      <img src={pair.questionImage} alt="Q" className="h-14 max-w-[140px] rounded-lg object-contain bg-white/5 border border-white/10" />
+                      <img src={pair.questionImage} alt="Q" className="h-14 max-w-[140px] rounded-lg object-contain bg-white border border-orange-100" />
                       <div className="flex items-center gap-1.5 mt-0.5">
-                        <label className="text-white/40 hover:text-white/70 text-xs cursor-pointer transition-colors">
+                        <label className="text-gray-500 hover:text-gray-700 text-xs cursor-pointer transition-colors">
                           เปลี่ยน
                           <input type="file" accept="image/*" hidden onChange={e => {
                             const f = e.target.files?.[0]
@@ -602,13 +619,13 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
                           }} />
                         </label>
                         <button onClick={() => onChange(pairs.map(p => p.id === pair.id ? { ...p, questionImage: undefined } : p))}
-                          className="text-red-400/40 hover:text-red-400 text-xs transition-colors">✕</button>
+                          className="text-red-300 hover:text-red-500 text-xs transition-colors">{ICON.x}</button>
                       </div>
                     </>
                   ) : (
                     <label className="cursor-pointer">
-                      <div className="h-14 w-24 rounded-lg border-2 border-dashed border-white/15 flex flex-col items-center justify-center hover:border-white/30 bg-white/3 text-white/25 transition-colors gap-0.5">
-                        <span className="text-lg">+</span>
+                      <div className="h-14 w-24 rounded-lg border-2 border-dashed border-orange-200 flex flex-col items-center justify-center hover:border-orange-300 bg-orange-50/40 text-gray-300 transition-colors gap-0.5">
+                        {ICON.plus('w-5 h-5')}
                         <span className="text-[10px]">อัพโหลด</span>
                       </div>
                       <input type="file" accept="image/*" hidden onChange={e => {
@@ -623,12 +640,12 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
 
                 {/* Reveal image slot */}
                 <div className="flex flex-col gap-1">
-                  <span className="text-amber-400/60 text-[10px] font-semibold uppercase tracking-wider">เฉลย</span>
+                  <span className="text-amber-600 text-[10px] font-semibold uppercase tracking-wider">เฉลย</span>
                   {pair.revealImage ? (
                     <>
-                      <img src={pair.revealImage} alt="เฉลย" className="h-14 max-w-[140px] rounded-lg object-contain bg-white/5 border border-amber-400/20" />
+                      <img src={pair.revealImage} alt="เฉลย" className="h-14 max-w-[140px] rounded-lg object-contain bg-white border border-amber-200" />
                       <div className="flex items-center gap-1.5 mt-0.5">
-                        <label className="text-amber-400/50 hover:text-amber-400/80 text-xs cursor-pointer transition-colors">
+                        <label className="text-amber-600 hover:text-amber-700 text-xs cursor-pointer transition-colors">
                           เปลี่ยน
                           <input type="file" accept="image/*" hidden onChange={e => {
                             const f = e.target.files?.[0]
@@ -638,13 +655,13 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
                           }} />
                         </label>
                         <button onClick={() => onChange(pairs.map(p => p.id === pair.id ? { ...p, revealImage: undefined } : p))}
-                          className="text-red-400/40 hover:text-red-400 text-xs transition-colors">✕</button>
+                          className="text-red-300 hover:text-red-500 text-xs transition-colors">{ICON.x}</button>
                       </div>
                     </>
                   ) : (
                     <label className="cursor-pointer">
-                      <div className="h-14 w-24 rounded-lg border-2 border-dashed border-amber-400/15 flex flex-col items-center justify-center hover:border-amber-400/30 bg-white/3 text-amber-400/25 transition-colors gap-0.5">
-                        <span className="text-lg">+</span>
+                      <div className="h-14 w-24 rounded-lg border-2 border-dashed border-amber-300 flex flex-col items-center justify-center hover:border-amber-400 bg-orange-50/40 text-amber-400 transition-colors gap-0.5">
+                        {ICON.plus('w-5 h-5')}
                         <span className="text-[10px]">อัพโหลด</span>
                       </div>
                       <input type="file" accept="image/*" hidden onChange={e => {
@@ -661,7 +678,7 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
               <input
                 value={pair.question ?? ''}
                 onChange={e => onChange(pairs.map(p => p.id === pair.id ? { ...p, question: e.target.value || undefined } : p))}
-                className="flex-1 bg-white/5 border border-white/8 rounded-lg px-2.5 py-1.5 text-white/85 text-sm placeholder-white/20 focus:outline-none focus:border-white/25 focus:bg-white/8"
+                className="flex-1 bg-white border border-orange-100 rounded-lg px-2.5 py-1.5 text-gray-700 text-sm placeholder-gray-300 focus:outline-none focus:border-orange-400 focus:bg-white"
                 placeholder="คำถาม/บริบท เช่น 'ลูกค้า Jobthai' — แสดงใหญ่ระหว่างเล่น"
               />
             )}
@@ -671,11 +688,11 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
       })}
 
       {/* Add new pair form */}
-      <div className="border border-dashed border-white/15 rounded-xl p-4 mt-3">
+      <div className="border border-dashed border-orange-200 rounded-xl p-4 mt-3">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-white/40 text-xs font-semibold">+ เพิ่มโจทย์ใหม่</p>
-          <label className="flex items-center gap-1.5 px-3 py-1 bg-white/8 hover:bg-white/12 border border-white/10 rounded-lg text-white/50 text-xs cursor-pointer transition-colors">
-            <span>📂 นำเข้าหลายรูป</span>
+          <p className="flex items-center gap-1.5 text-orange-700 text-xs font-semibold">{ICON.plus('w-3.5 h-3.5')}เพิ่มโจทย์ใหม่</p>
+          <label className="flex items-center gap-1.5 px-3 py-1 bg-orange-50 hover:bg-orange-100 border border-orange-100 rounded-lg text-gray-500 text-xs cursor-pointer transition-colors">
+            {ICON.folder}<span>นำเข้าหลายรูป</span>
             <input type="file" accept="image/*" multiple hidden onChange={e => { if (e.target.files?.length) handleBulkUpload(e.target.files) }} />
           </label>
         </div>
@@ -684,12 +701,12 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
           {/* Slot A */}
           <div className="flex flex-col items-center gap-1.5">
             <div className="flex items-center gap-1">
-              <span className="text-white/35 text-xs">{pendingAMode === 'text' ? 'ข้อความ' : 'ภาพ'} A</span>
-              <div className="flex border border-white/10 rounded overflow-hidden">
+              <span className="text-gray-400 text-xs">{pendingAMode === 'text' ? 'ข้อความ' : 'ภาพ'} A</span>
+              <div className="flex border border-orange-100 rounded overflow-hidden">
                 <button onClick={() => { setPendingAMode('text'); setPendingA(null) }}
-                  className={`px-1.5 py-0.5 text-[10px] leading-none transition-colors ${pendingAMode === 'text' ? 'bg-white/15 text-white' : 'text-white/25 hover:bg-white/8'}`}>T</button>
+                  className={`px-1.5 py-0.5 text-[10px] leading-none transition-colors ${pendingAMode === 'text' ? 'bg-orange-500 text-white' : 'text-gray-300 hover:bg-orange-50'}`}>T</button>
                 <button onClick={() => { setPendingAMode('image'); setPendingAText('') }}
-                  className={`px-1.5 py-0.5 text-[10px] leading-none transition-colors ${pendingAMode === 'image' ? 'bg-white/15 text-white' : 'text-white/25 hover:bg-white/8'}`}>🖼</button>
+                  className={`px-1.5 py-0.5 text-[10px] leading-none transition-colors ${pendingAMode === 'image' ? 'bg-orange-500 text-white' : 'text-gray-300 hover:bg-orange-50'}`}>{ICON.image()}</button>
               </div>
             </div>
             {pendingAMode === 'text' ? (
@@ -697,31 +714,31 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
                 value={pendingAText}
                 onChange={e => setPendingAText(e.target.value)}
                 placeholder="พิมพ์ข้อความ..."
-                className="w-24 h-16 rounded-lg border-2 border-white/20 bg-white/5 text-white/80 text-sm p-1.5 resize-none focus:outline-none focus:border-white/40 placeholder-white/20"
+                className="w-24 h-16 rounded-lg border-2 border-orange-200 bg-white text-gray-700 text-sm p-1.5 resize-none focus:outline-none focus:border-orange-400 placeholder-gray-300"
               />
             ) : (
               <label className="cursor-pointer">
                 {pendingA ? (
-                  <img src={pendingA} className="w-24 h-16 object-cover rounded-lg border-2 border-white/30" />
+                  <img src={pendingA} className="w-24 h-16 object-cover rounded-lg border-2 border-orange-300" />
                 ) : (
-                  <div className="w-24 h-16 rounded-lg border-2 border-dashed border-white/15 flex items-center justify-center hover:border-white/30 transition-colors bg-white/5 text-white/25 text-2xl">+</div>
+                  <div className="w-24 h-16 rounded-lg border-2 border-dashed border-orange-200 flex items-center justify-center hover:border-orange-300 transition-colors bg-white text-gray-300">{ICON.plus('w-6 h-6')}</div>
                 )}
                 <input type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) readFile(f, setPendingA) }} />
               </label>
             )}
           </div>
 
-          <div className="text-white/20 text-sm pt-9">vs</div>
+          <div className="text-gray-300 text-sm pt-9">vs</div>
 
           {/* Slot B */}
           <div className="flex flex-col items-center gap-1.5">
             <div className="flex items-center gap-1">
-              <span className="text-white/35 text-xs">{pendingBMode === 'text' ? 'ข้อความ' : 'ภาพ'} B</span>
-              <div className="flex border border-white/10 rounded overflow-hidden">
+              <span className="text-gray-400 text-xs">{pendingBMode === 'text' ? 'ข้อความ' : 'ภาพ'} B</span>
+              <div className="flex border border-orange-100 rounded overflow-hidden">
                 <button onClick={() => { setPendingBMode('text'); setPendingB(null) }}
-                  className={`px-1.5 py-0.5 text-[10px] leading-none transition-colors ${pendingBMode === 'text' ? 'bg-white/15 text-white' : 'text-white/25 hover:bg-white/8'}`}>T</button>
+                  className={`px-1.5 py-0.5 text-[10px] leading-none transition-colors ${pendingBMode === 'text' ? 'bg-orange-500 text-white' : 'text-gray-300 hover:bg-orange-50'}`}>T</button>
                 <button onClick={() => { setPendingBMode('image'); setPendingBText('') }}
-                  className={`px-1.5 py-0.5 text-[10px] leading-none transition-colors ${pendingBMode === 'image' ? 'bg-white/15 text-white' : 'text-white/25 hover:bg-white/8'}`}>🖼</button>
+                  className={`px-1.5 py-0.5 text-[10px] leading-none transition-colors ${pendingBMode === 'image' ? 'bg-orange-500 text-white' : 'text-gray-300 hover:bg-orange-50'}`}>{ICON.image()}</button>
               </div>
             </div>
             {pendingBMode === 'text' ? (
@@ -729,14 +746,14 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
                 value={pendingBText}
                 onChange={e => setPendingBText(e.target.value)}
                 placeholder="พิมพ์ข้อความ..."
-                className="w-24 h-16 rounded-lg border-2 border-white/20 bg-white/5 text-white/80 text-sm p-1.5 resize-none focus:outline-none focus:border-white/40 placeholder-white/20"
+                className="w-24 h-16 rounded-lg border-2 border-orange-200 bg-white text-gray-700 text-sm p-1.5 resize-none focus:outline-none focus:border-orange-400 placeholder-gray-300"
               />
             ) : (
               <label className="cursor-pointer">
                 {pendingB ? (
-                  <img src={pendingB} className="w-24 h-16 object-cover rounded-lg border-2 border-white/30" />
+                  <img src={pendingB} className="w-24 h-16 object-cover rounded-lg border-2 border-orange-300" />
                 ) : (
-                  <div className="w-24 h-16 rounded-lg border-2 border-dashed border-white/15 flex items-center justify-center hover:border-white/30 transition-colors bg-white/5 text-white/25 text-2xl">+</div>
+                  <div className="w-24 h-16 rounded-lg border-2 border-dashed border-orange-200 flex items-center justify-center hover:border-orange-300 transition-colors bg-white text-gray-300">{ICON.plus('w-6 h-6')}</div>
                 )}
                 <input type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) readFile(f, setPendingB) }} />
               </label>
@@ -750,25 +767,25 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
               onChange={e => setPendingLabel(e.target.value)}
               placeholder="ชื่ออ้างอิง (ไม่บังคับ)"
               onKeyDown={e => e.key === 'Enter' && addPair()}
-              className="w-full px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white/65 text-sm placeholder-white/20 focus:outline-none focus:border-white/25"
+              className="w-full px-3 py-1.5 bg-white border border-orange-100 rounded-lg text-gray-600 text-sm placeholder-gray-300 focus:outline-none focus:border-orange-400"
             />
             <div className="flex items-center gap-2">
-              <div className="flex border border-white/10 rounded-md overflow-hidden flex-shrink-0">
+              <div className="flex border border-orange-100 rounded-md overflow-hidden flex-shrink-0">
                 <button onClick={() => { setPendingQMode('text'); setPendingQuestionImage(null) }}
-                  className={`px-2 py-1 text-xs transition-colors ${pendingQMode === 'text' ? 'bg-white/15 text-white' : 'text-white/30 hover:bg-white/8'}`}
+                  className={`px-2 py-1 text-xs transition-colors ${pendingQMode === 'text' ? 'bg-orange-500 text-white' : 'text-gray-400 hover:bg-orange-50'}`}
                   title="คำถามข้อความ">T</button>
                 <button onClick={() => { setPendingQMode('image'); setPendingQuestion('') }}
-                  className={`px-2 py-1 text-xs transition-colors ${pendingQMode === 'image' ? 'bg-white/15 text-white' : 'text-white/30 hover:bg-white/8'}`}
-                  title="คำถามภาพ">🖼</button>
+                  className={`px-2 py-1 text-xs transition-colors ${pendingQMode === 'image' ? 'bg-orange-500 text-white' : 'text-gray-400 hover:bg-orange-50'}`}
+                  title="คำถามภาพ">{ICON.image()}</button>
               </div>
               {pendingQMode === 'image' ? (
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   {pendingQuestionImage ? (
-                    <img src={pendingQuestionImage} alt="Q" className="h-8 max-w-[120px] rounded object-contain bg-white/5" />
+                    <img src={pendingQuestionImage} alt="Q" className="h-8 max-w-[120px] rounded object-contain bg-white" />
                   ) : (
-                    <span className="text-white/20 text-xs">ยังไม่มีภาพ</span>
+                    <span className="text-gray-300 text-xs">ยังไม่มีภาพ</span>
                   )}
-                  <label className="text-white/40 hover:text-white/70 text-xs cursor-pointer transition-colors">
+                  <label className="text-gray-500 hover:text-gray-700 text-xs cursor-pointer transition-colors">
                     {pendingQuestionImage ? 'เปลี่ยน' : '+ อัพโหลด'}
                     <input type="file" accept="image/*" hidden onChange={e => {
                       const f = e.target.files?.[0]
@@ -777,17 +794,17 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
                   </label>
                   {pendingQuestionImage && (
                     <button onClick={() => setPendingQuestionImage(null)}
-                      className="text-red-400/40 hover:text-red-400 text-xs transition-colors">✕</button>
+                      className="text-red-300 hover:text-red-500 text-xs transition-colors">{ICON.x}</button>
                   )}
                   {/* reveal image for new pair */}
-                  <div className="flex items-center gap-1.5 ml-3 pl-3 border-l border-white/10">
-                    <span className="text-amber-400/60 text-xs flex-shrink-0">เฉลย</span>
+                  <div className="flex items-center gap-1.5 ml-3 pl-3 border-l border-orange-100">
+                    <span className="text-amber-600 text-xs flex-shrink-0">เฉลย</span>
                     {pendingRevealImage ? (
-                      <img src={pendingRevealImage} alt="เฉลย" className="h-8 max-w-[80px] rounded object-contain bg-white/5" />
+                      <img src={pendingRevealImage} alt="เฉลย" className="h-8 max-w-[80px] rounded object-contain bg-white" />
                     ) : (
-                      <span className="text-white/15 text-xs">—</span>
+                      <span className="text-gray-300 text-xs">—</span>
                     )}
-                    <label className="text-white/40 hover:text-white/70 text-xs cursor-pointer transition-colors">
+                    <label className="text-gray-500 hover:text-gray-700 text-xs cursor-pointer transition-colors">
                       {pendingRevealImage ? 'เปลี่ยน' : '+ เพิ่ม'}
                       <input type="file" accept="image/*" hidden onChange={e => {
                         const f = e.target.files?.[0]
@@ -796,7 +813,7 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
                     </label>
                     {pendingRevealImage && (
                       <button onClick={() => setPendingRevealImage(null)}
-                        className="text-red-400/40 hover:text-red-400 text-xs transition-colors">✕</button>
+                        className="text-red-300 hover:text-red-500 text-xs transition-colors">{ICON.x}</button>
                     )}
                   </div>
                 </div>
@@ -806,21 +823,21 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
                   onChange={e => setPendingQuestion(e.target.value)}
                   placeholder="คำถาม/บริบท เช่น 'ลูกค้า Jobthai' — แสดงใหญ่ระหว่างเล่น"
                   onKeyDown={e => e.key === 'Enter' && addPair()}
-                  className="flex-1 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white/85 text-sm font-medium placeholder-white/20 focus:outline-none focus:border-white/25"
+                  className="flex-1 px-3 py-1.5 bg-white border border-orange-100 rounded-lg text-gray-700 text-sm font-medium placeholder-gray-300 focus:outline-none focus:border-orange-400"
                 />
               )}
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-white/30 text-xs">เฉลย:</span>
+              <span className="text-gray-400 text-xs">เฉลย:</span>
               {(['A', 'B'] as const).map(side => (
                 <button key={side} onClick={() => setPendingCorrect(side)}
                   className={`w-10 h-8 rounded-lg text-sm font-bold transition-all ${
-                    pendingCorrect === side ? 'bg-green-500 text-white' : 'bg-white/8 text-white/40 hover:bg-white/15'
+                    pendingCorrect === side ? 'bg-green-500 text-white' : 'bg-orange-50 text-gray-400 hover:bg-orange-100'
                   }`}>{side}</button>
               ))}
               <button onClick={addPair} disabled={!(pendingAMode === 'text' ? pendingAText : pendingA) || !(pendingBMode === 'text' ? pendingBText : pendingB)}
-                className="ml-auto px-5 py-1.5 bg-white text-gray-900 rounded-lg text-sm font-bold hover:bg-gray-100 transition-colors disabled:opacity-25 disabled:cursor-not-allowed">
-                + เพิ่ม
+                className="ml-auto flex items-center gap-1.5 px-5 py-1.5 bg-gradient-to-b from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white rounded-lg text-sm font-bold shadow-[0_4px_14px_rgba(194,65,12,0.3)] transition-all disabled:opacity-30 disabled:shadow-none disabled:cursor-not-allowed">
+                {ICON.plus()}เพิ่ม
               </button>
             </div>
           </div>
@@ -828,7 +845,7 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
       </div>
 
       {pairs.length === 0 && (
-        <p className="text-white/20 text-xs text-center py-4">ยังไม่มีโจทย์ — เพิ่มรูปด้านบน</p>
+        <p className="text-gray-300 text-xs text-center py-4">ยังไม่มีโจทย์ — เพิ่มรูปด้านบน</p>
       )}
     </div>
   )
