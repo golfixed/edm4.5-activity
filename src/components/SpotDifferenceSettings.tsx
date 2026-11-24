@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useStore } from '@/lib/store'
+import { zoomFit } from '@/lib/zoomFit'
 import { Game, ImageSet, ImagePair } from '@/lib/types'
 import { compressImage } from '@/lib/compressImage'
 import { resolveIconColor } from '@/lib/iconColors'
@@ -93,7 +94,7 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
     updateGame({ imageSets: sets.map(s => s.id === setId ? { ...s, pairs } : s) })
 
   return (
-    <div className="h-screen bg-orange-50 flex flex-col overflow-hidden" style={{ zoom: uiScale }}>
+    <div className="h-screen bg-orange-50 flex flex-col overflow-hidden" style={zoomFit(uiScale)}>
 
       {/* ── Top bar ─────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3 px-6 py-4 bg-white border-b border-orange-100 shadow-sm flex-shrink-0">

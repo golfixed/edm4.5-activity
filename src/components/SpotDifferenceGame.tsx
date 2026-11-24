@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useStore } from '@/lib/store'
+import { zoomFit } from '@/lib/zoomFit'
 import { Game, ImageSet } from '@/lib/types'
 import Link from 'next/link'
 import TeamSpinner from '@/components/TeamSpinner'
@@ -320,7 +321,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
       ? 'เลือกทีมก่อน'
       : pairs.length > 0 ? 'เริ่มเกม' : 'ข้ามไปใส่คะแนน'
     return (
-      <div className="h-screen bg-orange-50 flex flex-col overflow-hidden" style={{ zoom: uiScale }}>
+      <div className="h-screen bg-orange-50 flex flex-col overflow-hidden" style={zoomFit(uiScale)}>
         <div className={headerCls}>
           {backBtn(onBack ?? (() => {}))}
           <h1 className="text-gray-900 text-xl font-bold flex-1 text-center">{game.name}</h1>
@@ -499,7 +500,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
   // ── COUNTDOWN ─────────────────────────────────────────────────────────────
   if (phase === 'countdown') {
     return (
-      <div className="h-screen overflow-hidden bg-orange-50 flex flex-col items-center justify-center" style={{ zoom: uiScale }}>
+      <div className="h-screen overflow-hidden bg-orange-50 flex flex-col items-center justify-center" style={zoomFit(uiScale)}>
         <div className="text-orange-900/40 text-xl mb-6 tracking-widest uppercase font-semibold">เตรียมพร้อม</div>
         <div
           key={countdownNum}
@@ -540,7 +541,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
     )
 
     return (
-      <div className="h-screen bg-orange-50 flex flex-col overflow-hidden" style={{ zoom: uiScale }}>
+      <div className="h-screen bg-orange-50 flex flex-col overflow-hidden" style={zoomFit(uiScale)}>
         <div className={headerCls}>
           {backBtn((e) => { e.preventDefault(); setPhase('setup') })}
           <div className="text-center flex-1 min-w-0 flex flex-col items-center justify-center">
@@ -683,7 +684,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
 
   // ── SCORING ───────────────────────────────────────────────────────────────
   return (
-    <div className="h-screen bg-orange-50 flex flex-col overflow-hidden" style={{ zoom: uiScale }}>
+    <div className="h-screen bg-orange-50 flex flex-col overflow-hidden" style={zoomFit(uiScale)}>
       <div className={headerCls}>
         {backBtn((e) => { e.preventDefault(); setPhase(pairs.length > 0 ? 'playing' : 'setup') })}
         <h1 className="text-gray-900 text-xl font-bold flex-1 text-center">บันทึกคะแนน — {game.name}</h1>
