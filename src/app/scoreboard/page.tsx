@@ -16,7 +16,7 @@ export default function ScoreboardPage() {
     router.push('/')
   }
   const state = useStore()
-  const [view, setView] = useState<'podium' | 'list'>('list')
+  const [view, setView] = useState<'podium' | 'list'>('podium')
   const ranked = getRankedTeams(state)
   const games = state.games
 
