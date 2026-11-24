@@ -46,11 +46,13 @@ interface StoreActions {
   setWallpaperColor: (color: string) => void
   setFirebaseStatus: (status: FirebaseStatus) => void
   setHydrated: (v: boolean) => void
+  setSynced: (v: boolean) => void
   // internal: bulk-replace state from Firebase snapshot
   _hydrate: (partial: Partial<GameState>) => void
 }
 
-type Store = GameState & { firebaseStatus: FirebaseStatus; isHydrated: boolean } & StoreActions
+// isHydrated: data is available (from cache or Firebase); isSynced: live Firebase data has arrived
+type Store = GameState & { firebaseStatus: FirebaseStatus; isHydrated: boolean; isSynced: boolean } & StoreActions
 
 export const useStore = create<Store>()((set) => ({
   teams: [],
@@ -65,6 +67,7 @@ export const useStore = create<Store>()((set) => ({
   wallpaperColor: '#cacdd8',
   firebaseStatus: 'connecting' as FirebaseStatus,
   isHydrated: false,
+  isSynced: false,
 
   setTeams: (teams) => set({ teams }),
   setGames: (games) => set({ games }),
@@ -91,6 +94,7 @@ export const useStore = create<Store>()((set) => ({
   setWallpaperColor: (wallpaperColor) => set({ wallpaperColor }),
   setFirebaseStatus: (firebaseStatus) => set({ firebaseStatus }),
   setHydrated: (isHydrated) => set({ isHydrated }),
+  setSynced: (isSynced) => set({ isSynced }),
   _hydrate: (partial) => set(partial),
 }))
 

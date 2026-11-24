@@ -65,8 +65,10 @@ function hexLuminance(hex: string): number {
 
 function FirebaseStatusBadge({ status }: { status: FirebaseStatus }) {
   const time = useThaiTime()
-  const color = status === 'connected' ? '#15803d' : status === 'connecting' ? '#b45309' : '#b91c1c'
-  const statusText = status === 'connected' ? 'Connected' : status === 'connecting' ? 'Connecting…' : 'Disconnected'
+  const isSynced = useStore(s => s.isSynced)
+  const syncing = status === 'connected' && !isSynced
+  const color = syncing ? '#b45309' : status === 'connected' ? '#15803d' : status === 'connecting' ? '#b45309' : '#b91c1c'
+  const statusText = syncing ? 'Syncing…' : status === 'connected' ? 'Connected' : status === 'connecting' ? 'Connecting…' : 'Disconnected'
 
   return (
     <div
@@ -77,7 +79,7 @@ function FirebaseStatusBadge({ status }: { status: FirebaseStatus }) {
         <FirebaseMark style={{
           width: 16, height: 16,
           filter: status === 'disconnected' ? 'grayscale(1) opacity(0.5)' : 'none',
-          animation: status === 'connecting' ? 'fb-pulse 0.9s ease-in-out infinite alternate' : 'none',
+          animation: status === 'connecting' || syncing ? 'fb-pulse 0.9s ease-in-out infinite alternate' : 'none',
         }} />
         <span style={{ fontSize: 11, fontWeight: 600, color, letterSpacing: '0.01em', lineHeight: 1, whiteSpace: 'nowrap' }}>
           {statusText}
