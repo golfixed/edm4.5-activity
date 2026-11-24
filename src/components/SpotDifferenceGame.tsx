@@ -630,13 +630,17 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
           {settingsBtn}
         </div>
       </div>
-      <div className="flex-1 flex items-center justify-center p-8 overflow-y-auto">
-        <div className={`bg-white border border-orange-100 shadow-sm rounded-3xl p-8 w-full ${bonus ? 'max-w-xl' : 'max-w-md'}`}>
-          <h2 className="text-gray-900 text-2xl font-bold mb-2 text-center">{bonus ? 'คะแนนรอบโบนัส' : 'ใส่คะแนนแต่ละทีม'}</h2>
-          <p className="text-gray-500 text-sm text-center mb-8">{bonus ? 'คะแนนโบนัสจะบวกเพิ่มจากคะแนนเดิมของแต่ละทีม' : 'นับจากจำนวนผู้เล่นที่เหลือหรือคะแนนที่ได้'}</p>
-          <div className="space-y-4 mb-8">
+      {/* Card fits the screen: title and save button stay put, the team list scrolls inside */}
+      <div className="flex-1 min-h-0 flex items-center justify-center p-6">
+        <div className={`bg-white border border-orange-100 shadow-sm rounded-3xl w-full max-h-full flex flex-col overflow-hidden ${bonus ? 'max-w-xl' : 'max-w-md'}`}>
+          <div className="flex-shrink-0 px-8 pt-7 pb-4 border-b border-orange-100 text-center">
+            <h2 className="text-gray-900 text-2xl font-bold mb-1">{bonus ? 'คะแนนรอบโบนัส' : 'ใส่คะแนนแต่ละทีม'}</h2>
+            <p className="text-gray-500 text-sm">{bonus ? 'คะแนนโบนัสจะบวกเพิ่มจากคะแนนเดิมของแต่ละทีม' : 'นับจากจำนวนผู้เล่นที่เหลือหรือคะแนนที่ได้'}</p>
+            {selectedTeams.length > 5 && <p className="text-orange-700/70 text-xs font-semibold mt-2">{selectedTeams.length} ทีม</p>}
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-8 divide-y divide-orange-50">
             {selectedTeams.map((team, rank) => (
-              <div key={team.id} className="flex items-center gap-4">
+              <div key={team.id} className="flex items-center gap-4 py-2.5">
                 <span className="text-gray-400 text-sm w-6 text-right">{rank + 1}.</span>
                 <span className={`w-5 h-5 rounded-full flex-shrink-0 ${team.color}`} />
                 <span className="text-gray-900 font-medium flex-1">
@@ -672,10 +676,12 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
               </div>
             ))}
           </div>
-          <button onClick={handleSave} className={`w-full py-3 flex items-center justify-center gap-2 font-bold text-lg rounded-xl ${primaryBtnCls}`}>
-            <svg className="w-5 h-5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round"><path d="M3.5 8.5l3 3 6-7" /></svg>
-            บันทึกคะแนน
-          </button>
+          <div className="flex-shrink-0 px-8 pt-4 pb-7 border-t border-orange-100">
+            <button onClick={handleSave} className={`w-full py-3 flex items-center justify-center gap-2 font-bold text-lg rounded-xl ${primaryBtnCls}`}>
+              <svg className="w-5 h-5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round"><path d="M3.5 8.5l3 3 6-7" /></svg>
+              บันทึกคะแนน
+            </button>
+          </div>
         </div>
       </div>
     </div>
