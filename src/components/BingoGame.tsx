@@ -229,7 +229,8 @@ function ScoringExample({ card }: { card: string[] }) {
   const isOn = (i: number) => i === FREE_IDX || marked.has(i)
   const lines = BINGO_LINES.filter(line => line.every(isOn))
   const inLine = new Set(lines.flat())
-  const tileScore = marked.size * TILE_PT
+  const tileCount = marked.size + 1
+  const tileScore = tileCount * TILE_PT
   const bingoScore = lines.length * BINGO_PT
 
   return (
@@ -247,7 +248,7 @@ function ScoringExample({ card }: { card: string[] }) {
               <button key={i} onClick={() => toggle(i)}
                 className={`relative aspect-square flex items-center justify-center rounded-lg border-2 text-center p-1 transition-colors ${cls} ${free ? 'cursor-default font-bold' : ''}`}>
                 <span className="text-xs leading-tight">{cell}</span>
-                {marked.has(i) && (
+                {isOn(i) && (
                   <span className="absolute top-0.5 right-1 text-[10px] font-bold opacity-80">+{TILE_PT}</span>
                 )}
               </button>
@@ -278,12 +279,12 @@ function ScoringExample({ card }: { card: string[] }) {
               </div>
             ))}
           </div>
-          <p className="text-white/50 text-xs">ช่อง FREE นับรวมในแถวบิงโก แต่ไม่ได้คะแนนช่อง</p>
+          <p className="text-white/50 text-xs">ช่อง FREE ได้คะแนนเสมอ และนับรวมในแถวบิงโก</p>
         </div>
 
         <div className="bg-black/50 border border-white/15 rounded-2xl p-4 space-y-2">
           <div className="flex justify-between text-white/80 text-sm">
-            <span>ช่อง {marked.size} × {TILE_PT}</span>
+            <span>ช่อง {tileCount} × {TILE_PT}</span>
             <span className="font-semibold">{tileScore}</span>
           </div>
           <div className="flex justify-between text-white/80 text-sm">
