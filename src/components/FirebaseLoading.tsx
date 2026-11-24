@@ -23,7 +23,7 @@ function FirebaseFlame() {
   return <FirebaseMark className="w-16 h-16 animate-[fb-bob_1.6s_ease-in-out_infinite]" />
 }
 
-export default function FirebaseLoading() {
+export default function FirebaseLoading({ label }: { label?: string }) {
   const status = useStore(s => s.firebaseStatus)
   const offline = status === 'disconnected'
 
@@ -37,7 +37,7 @@ export default function FirebaseLoading() {
       <div className="w-56 h-1.5 rounded-full bg-orange-100 overflow-hidden">
         <div className={`h-full w-1/3 rounded-full animate-[fb-slide_1.2s_ease-in-out_infinite] ${offline ? 'bg-red-400' : 'bg-gradient-to-r from-amber-400 to-orange-500'}`} />
       </div>
-      <p className={`text-sm font-medium ${offline ? 'text-red-500' : 'text-gray-500'}`}>{STATUS_TEXT[status]}</p>
+      <p className={`text-sm font-medium ${offline ? 'text-red-500' : 'text-gray-500'}`}>{label && !offline ? label : STATUS_TEXT[status]}</p>
     </div>
   )
 }

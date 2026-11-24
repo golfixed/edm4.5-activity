@@ -47,12 +47,15 @@ interface StoreActions {
   setFirebaseStatus: (status: FirebaseStatus) => void
   setHydrated: (v: boolean) => void
   setSynced: (v: boolean) => void
+  requestAssets: (gameId: string) => void
+  setAssetsReady: (gameId: string) => void
   // internal: bulk-replace state from Firebase snapshot
   _hydrate: (partial: Partial<GameState>) => void
 }
 
 // isHydrated: data is available (from cache or Firebase); isSynced: live Firebase data has arrived
-type Store = GameState & { firebaseStatus: FirebaseStatus; isHydrated: boolean; isSynced: boolean } & StoreActions
+// assetRequests: games whose heavy data (images/sounds) a page needs; assetsReady: that data is in the store
+type Store = GameState & { firebaseStatus: FirebaseStatus; isHydrated: boolean; isSynced: boolean; assetRequests: string[]; assetsReady: Record<string, boolean> } & StoreActions
 
 export const useStore = create<Store>()((set) => ({
   teams: [],
@@ -68,6 +71,8 @@ export const useStore = create<Store>()((set) => ({
   firebaseStatus: 'connecting' as FirebaseStatus,
   isHydrated: false,
   isSynced: false,
+  assetRequests: [],
+  assetsReady: {},
 
   setTeams: (teams) => set({ teams }),
   setGames: (games) => set({ games }),
@@ -95,6 +100,8 @@ export const useStore = create<Store>()((set) => ({
   setFirebaseStatus: (firebaseStatus) => set({ firebaseStatus }),
   setHydrated: (isHydrated) => set({ isHydrated }),
   setSynced: (isSynced) => set({ isSynced }),
+  requestAssets: (gameId) => set((s) => s.assetRequests.includes(gameId) ? s : { assetRequests: [...s.assetRequests, gameId] }),
+  setAssetsReady: (gameId) => set((s) => s.assetsReady[gameId] ? s : { assetsReady: { ...s.assetsReady, [gameId]: true } }),
   _hydrate: (partial) => set(partial),
 }))
 

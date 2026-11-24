@@ -9,10 +9,12 @@ import PhysicalGame from '@/components/PhysicalGame'
 import BingoGame from '@/components/BingoGame'
 import GameSettings from '@/components/GameSettings'
 import FirebaseLoading from '@/components/FirebaseLoading'
+import { useGameAssets } from '@/lib/useFirebaseSync'
 import Link from 'next/link'
 
 export default function GamePage({ params }: { params: { id: string } }) {
   const { games, isHydrated } = useStore()
+  const assetsReady = useGameAssets(params.id)
   const router = useRouter()
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [closing, setClosing] = useState(false) // prevents double-tap
@@ -28,6 +30,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
   }, [closing, router, game])
 
   if (!isHydrated) return <FirebaseLoading />
+  if (game && !assetsReady) return <FirebaseLoading label="กำลังโหลดภาพและเสียงของเกม…" />
 
   if (!game) {
     return (
