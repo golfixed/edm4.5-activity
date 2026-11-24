@@ -12,11 +12,25 @@ interface Props {
   identityOnly?: boolean
 }
 
-export default function GameSettings({ game, onClose, identityOnly }: Props) {
+export default function GameSettings({ game: savedGame, onClose, identityOnly }: Props) {
   const { games, setGames } = useStore()
+  // edits stay local until saved, so dragging the colour picker doesn't write to Firebase on every tick
+  const [game, setGame] = useState<Game>(savedGame)
+  const [dirty, setDirty] = useState(false)
 
   const updateGame = (partial: Partial<Game>) => {
-    setGames(games.map(g => g.id === game.id ? { ...g, ...partial } : g))
+    setGame(prev => ({ ...prev, ...partial }))
+    setDirty(true)
+  }
+
+  const save = () => {
+    setGames(games.map(g => g.id === game.id ? game : g))
+    onClose()
+  }
+
+  const close = () => {
+    if (dirty && !window.confirm('ยังไม่ได้บันทึก ต้องการปิดโดยไม่บันทึกใช่ไหม?')) return
+    onClose()
   }
 
   const handleBgUpload = (file: File) => {
@@ -29,12 +43,12 @@ export default function GameSettings({ game, onClose, identityOnly }: Props) {
       <div
         className="fixed inset-0 z-40"
         style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)' }}
-        onClick={onClose}
+        onClick={close}
       />
 
       {/* Drawer */}
       <div
-        className="fixed right-0 top-0 bottom-0 z-50 overflow-y-auto"
+        className="fixed right-0 top-0 bottom-0 z-50 flex flex-col"
         style={{
           width: 'min(420px, 100vw)',
           background: '#f5f5f7',
@@ -56,14 +70,15 @@ export default function GameSettings({ game, onClose, identityOnly }: Props) {
             <p style={{ color: 'rgba(0,0,0,0.88)', fontWeight: 700, fontSize: 16, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{game.name}</p>
           </div>
           <button
-            onClick={onClose}
-            style={{ background: 'rgba(0,0,0,0.07)', border: 'none', borderRadius: 8, color: 'rgba(0,0,0,0.6)', cursor: 'pointer', padding: '6px 10px', fontSize: 16 }}
+            onClick={close}
+            title="ปิด"
+            style={{ background: 'rgba(0,0,0,0.07)', border: 'none', borderRadius: 8, color: 'rgba(0,0,0,0.6)', cursor: 'pointer', padding: 8, display: 'flex' }}
           >
-            ✕
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
           </button>
         </div>
 
-        <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div className="flex-1 min-h-0 overflow-y-auto" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 24 }}>
           {/* Identity */}
           <Section title="ไอคอนและชื่อ">
             <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -178,6 +193,19 @@ export default function GameSettings({ game, onClose, identityOnly }: Props) {
               </Section>
             </>
           )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex-shrink-0 flex gap-3 px-5 py-4 bg-white border-t border-orange-100">
+          <button onClick={close}
+            className="flex-1 h-12 rounded-xl bg-white hover:bg-orange-50 border border-orange-200 text-orange-700 font-semibold transition-colors">
+            ยกเลิก
+          </button>
+          <button onClick={save} disabled={!dirty}
+            className="flex-[2] h-12 flex items-center justify-center gap-2 rounded-xl font-bold text-white bg-gradient-to-b from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 shadow-[0_6px_20px_rgba(194,65,12,0.3)] transition-all disabled:from-orange-200 disabled:to-orange-300 disabled:shadow-none disabled:cursor-not-allowed">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.75} strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7" /></svg>
+            บันทึก
+          </button>
         </div>
       </div>
     </>
