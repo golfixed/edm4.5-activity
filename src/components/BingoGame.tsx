@@ -482,12 +482,13 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
     ? { backgroundImage: `url(${game.backgroundImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }
     : {}
   const bgClass = game.backgroundImage ? '' : 'bg-gradient-to-br from-gray-900 to-gray-800'
+  const headerCls = 'flex-shrink-0 flex items-center gap-2 px-6 py-4 bg-neutral-900 border-b border-white/10'
 
   // ── Home phase ───────────────────────────────────────────────────────────
   if (phase === 'home') {
     return (
       <div className="h-screen flex flex-col overflow-hidden bg-neutral-900">
-          <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 bg-neutral-900 border-b border-white/10">
+          <div className={`${headerCls} justify-between`}>
             <button onClick={onBack} className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
               กลับ
@@ -522,7 +523,7 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
             </div>
           </div>
           <button onClick={startGame}
-            className="absolute left-1/2 top-[40%] -translate-x-1/2 -translate-y-1/2 px-16 py-5 bg-school-accent hover:bg-school-accent/80 text-white font-bold text-3xl rounded-2xl transition-all shadow-xl whitespace-nowrap"
+            className="absolute left-1/2 top-[40%] -translate-x-1/2 -translate-y-1/2 px-16 py-5 bg-gradient-to-b from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white font-extrabold text-3xl rounded-2xl ring-4 ring-white shadow-[0_10px_30px_rgba(194,65,12,0.45)] hover:scale-105 transition-all whitespace-nowrap"
           >🎲 เริ่มเกม</button>
         </div>
       </div>
@@ -534,13 +535,12 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
     const card = cards[previewIdx] ?? []
     return (
       <div className="h-screen flex flex-col overflow-hidden bg-neutral-900">
-        <div className="flex flex-col h-full p-4 gap-3">
-          <div className="flex items-center gap-2">
+          <div className={headerCls}>
             <button onClick={() => setPhase('home')} className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm flex-shrink-0">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
               กลับ
             </button>
-            <h1 className="text-white font-bold text-lg mx-auto">{game.icon} {game.name}</h1>
+            <h1 className="text-white font-bold text-xl mx-auto">{game.icon} {game.name}</h1>
             <button
               onClick={() => exportCardsDirectToPDF(cards, game.name)}
               className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm border border-white/20 transition-colors flex-shrink-0"
@@ -554,6 +554,7 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
               className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm border border-white/20 transition-colors flex-shrink-0">→</button>
           </div>
 
+        <div className="flex-1 min-h-0 flex flex-col p-4 gap-3">
           <div className="flex-1 flex items-center justify-center min-h-0">
             <div className="grid grid-cols-5 gap-1 w-full max-w-lg">
               {card.map((cell, idx) => (
@@ -576,15 +577,15 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
   if (phase === 'scoring-example') {
     return (
       <div className="h-screen flex flex-col overflow-hidden bg-neutral-900">
-        <div className="flex flex-col h-full p-4 gap-3">
-          <div className="flex items-center gap-2">
+          <div className={headerCls}>
             <button onClick={() => setPhase('home')} className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm flex-shrink-0">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
               กลับ
             </button>
-            <h1 className="text-white font-bold text-lg mx-auto">ตัวอย่างการนับคะแนน</h1>
+            <h1 className="text-white font-bold text-xl mx-auto">ตัวอย่างการนับคะแนน</h1>
             <div className="w-[72px] flex-shrink-0" />
           </div>
+        <div className="flex-1 min-h-0 flex flex-col p-4">
           <ScoringExample card={generateBingoCard(keywords, 'scoring-example')} />
         </div>
       </div>
@@ -664,16 +665,16 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
         </div>
       )}
 
-      <div className="flex flex-col h-full p-4 gap-3 overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between flex-shrink-0">
-          <button onClick={() => setPhase('home')} className="flex items-center gap-1 px-3 py-1.5 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors text-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
-              กลับ
-            </button>
-          <h1 className="text-gray-800 font-bold text-lg">{game.icon} {game.name}</h1>
-          <span className="text-gray-500 text-sm">เรียกไปแล้ว {calledKeywords.length} / {keywords.length}</span>
-        </div>
+      <div className="flex-shrink-0 flex items-center justify-between gap-2 px-6 py-4 bg-white border-b border-gray-200">
+        <button onClick={() => setPhase('home')} className="flex items-center gap-1 px-3 py-1.5 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors text-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+          กลับ
+        </button>
+        <h1 className="text-gray-800 font-bold text-xl">{game.icon} {game.name}</h1>
+        <span className="text-gray-500 text-sm">เรียกไปแล้ว {calledKeywords.length} / {keywords.length}</span>
+      </div>
+
+      <div className="flex-1 min-h-0 flex flex-col p-4 gap-3 overflow-hidden">
 
         {/* Called keywords */}
         <div className="flex-1 overflow-y-auto min-h-0 bg-white rounded-2xl p-3 border border-gray-200">
