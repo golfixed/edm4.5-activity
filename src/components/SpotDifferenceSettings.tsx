@@ -597,7 +597,7 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
           </div>
 
           {/* ── Question / reveal row ─────────────────────── */}
-          <div className="flex items-start gap-3 px-3 py-2.5 border-t border-orange-100 bg-orange-50/60">
+          <div className="flex items-start gap-3 px-3 py-2.5 border-t border-orange-100 bg-white">
             {/* text / image question toggle */}
             <div className="flex border border-orange-100 rounded-md overflow-hidden flex-shrink-0 mt-0.5">
               <button
