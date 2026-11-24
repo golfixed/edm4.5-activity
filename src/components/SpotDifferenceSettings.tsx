@@ -194,7 +194,7 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
 
         {/* Left: sets list */}
         <div className="w-56 flex flex-col border-r border-orange-100 flex-shrink-0">
-          <div className="px-4 py-2 flex items-center justify-between border-b border-orange-100 flex-shrink-0">
+          <div className="h-12 px-4 flex items-center justify-between border-b border-orange-100 flex-shrink-0">
             <span className="text-gray-400 text-xs font-semibold uppercase tracking-wider">ชุดภาพ</span>
             <span className="text-gray-300 text-xs">{totalPairs} โจทย์รวม</span>
           </div>
@@ -276,7 +276,7 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
         <div className="flex-1 flex flex-col overflow-hidden">
           {selectedSet ? (
             <>
-              <div className="flex items-center gap-3 px-5 py-2.5 border-b border-orange-100 flex-shrink-0">
+              <div className="h-12 flex items-center gap-3 px-5 border-b border-orange-100 flex-shrink-0">
                 <input
                   value={selectedSet.name}
                   onChange={e => renameSet(selectedSet.id, e.target.value)}
