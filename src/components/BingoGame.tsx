@@ -486,10 +486,8 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
   // ── Home phase ───────────────────────────────────────────────────────────
   if (phase === 'home') {
     return (
-      <div className={`h-screen flex flex-col overflow-hidden ${bgClass}`} style={bgStyle}>
-        <div className="absolute inset-0 bg-black/50" />
-        <div className="relative z-10 flex flex-col h-full">
-          <div className="flex items-center justify-between px-6 py-4">
+      <div className="h-screen flex flex-col overflow-hidden bg-neutral-900">
+          <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 bg-neutral-900 border-b border-white/10">
             <button onClick={onBack} className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
               กลับ
@@ -500,7 +498,9 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
             </button>
           </div>
 
-          <div className="flex-1 flex flex-col items-center justify-center gap-8 px-8">
+          <div className={`relative flex-1 min-h-0 ${bgClass}`} style={bgStyle}>
+          <div className="absolute inset-0 bg-black/50" />
+          <div className="relative z-10 h-full flex flex-col items-center justify-center gap-8 px-8">
             <div className="flex items-center gap-3 bg-white/10 border border-white/20 rounded-2xl px-6 py-3">
               <span className="text-white text-lg">จำนวนกระดาษ</span>
               <button onClick={() => setCardCount(c => Math.max(1, c - 1))}
