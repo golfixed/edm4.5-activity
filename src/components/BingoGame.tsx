@@ -4,8 +4,8 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { Game, Team } from '@/lib/types'
 import { useStore } from '@/lib/store'
 import { generateBingoCard, BINGO_LINES } from '@/lib/bingo'
-import Link from 'next/link'
 import { useConfirm } from '@/components/ConfirmDialog'
+import ScoreRecordPanel from '@/components/ScoreRecordPanel'
 
 // Tailwind color → hex mapping for PDF
 const COLOR_HEX: Record<string, string> = {
@@ -386,6 +386,7 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
   const keywords = game.bingoKeywords ?? []
 
   const [phase, setPhase] = useState<Phase>('home')
+  const [scorePanelOpen, setScorePanelOpen] = useState(false)
   const [cardCount, setCardCount] = useState(teams.length || 12)
   const [cards, setCards] = useState<string[][]>([])
   const [previewIdx, setPreviewIdx] = useState(0)
@@ -909,8 +910,8 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
             </svg>
             ยกเลิกล่าสุด
           </button>
-          <Link
-            href="/admin"
+          <button
+            onClick={() => setScorePanelOpen(true)}
             className="h-11 flex items-center justify-center gap-2 px-4 bg-red-700 hover:bg-red-800 text-white rounded-xl text-sm font-semibold transition-colors whitespace-nowrap shadow"
           >
             <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round">
@@ -921,9 +922,18 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
               <path d="M5 12h14M13 6l6 6-6 6" />
             </svg>
             ใส่คะแนน
-          </Link>
+          </button>
         </div>
       </div>
+
+      {scorePanelOpen && (
+        <ScoreRecordPanel
+          game={game}
+          quickAdd={{ label: 'บิงโก', points: BINGO_PT }}
+          onClose={() => setScorePanelOpen(false)}
+          onSaved={() => setPhase('home')}
+        />
+      )}
     </div>
   )
 }
