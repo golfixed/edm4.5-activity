@@ -42,7 +42,7 @@ export default function FirebaseLoading({ label, icon, accent }: {
         @keyframes fb-bob { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
       `}</style>
       {icon
-        ? <div className="animate-[fb-bob_1.6s_ease-in-out_infinite]">{icon}</div>
+        ? icon
         : <FirebaseFlame />}
       <div
         className={`w-56 h-1.5 rounded-full overflow-hidden ${accent ? '' : 'bg-orange-100'}`}
