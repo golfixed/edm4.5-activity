@@ -355,6 +355,31 @@ function generateRandomCards(keywords: string[], count: number): string[][] {
   )
 }
 
+// Width the uncropped wallpaper takes inside `el` when the leftover side space is wide enough
+// to hold the menu as a right-hand pane; null when the menu should stay as the bottom bar.
+const SIDE_PANE_MIN = 300
+function useSidePaneImageWidth(image: string | undefined) {
+  const [el, setEl] = useState<HTMLDivElement | null>(null)
+  const [aspect, setAspect] = useState<number | null>(null)
+  const [box, setBox] = useState<{ w: number; h: number } | null>(null)
+  useEffect(() => {
+    setAspect(null)
+    if (!image) return
+    const img = new Image()
+    img.onload = () => { if (img.naturalHeight) setAspect(img.naturalWidth / img.naturalHeight) }
+    img.src = image
+  }, [image])
+  useEffect(() => {
+    if (!el) return
+    const ro = new ResizeObserver(([e]) => setBox({ w: e.contentRect.width, h: e.contentRect.height }))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [el])
+  const imageWidth = aspect && box ? Math.min(box.w, box.h * aspect) : null
+  const sideImageWidth = imageWidth != null && box && box.w - imageWidth >= SIDE_PANE_MIN ? imageWidth : null
+  return [setEl, sideImageWidth] as const
+}
+
 export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game; onBack?: (e: React.MouseEvent) => void; onOpenSettings?: () => void }) {
   const { teams } = useStore()
   const confirm = useConfirm()
@@ -507,6 +532,8 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
   const undoLast = () => setCalledKeywords((prev) => prev.slice(0, -1))
 
   const bgUrl = game.backgroundImage ? `url(${game.backgroundImage})` : undefined
+  const [homeStageRef, sideImageWidth] = useSidePaneImageWidth(game.backgroundImage)
+  const sidePane = sideImageWidth != null
   const headerCls = 'flex-shrink-0 flex items-center gap-2 px-6 py-4 bg-white border-b border-orange-100 shadow-sm'
   const titleCls = 'text-gray-900 font-bold text-xl'
   const backBtnCls = 'flex items-center gap-1 px-3 py-1.5 border border-orange-200 rounded-lg text-orange-700 hover:bg-orange-50 transition-colors text-sm flex-shrink-0'
@@ -534,76 +561,123 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
             </button>
           </div>
 
-          <div className="relative flex-1 min-h-0 overflow-hidden bg-gradient-to-b from-orange-50 to-orange-100">
+          <div ref={homeStageRef} className="relative flex-1 min-h-0 overflow-hidden flex bg-gradient-to-b from-orange-50 to-orange-100">
           {bgUrl && (
-            <>
-              {/* blurred fill for the area the uncropped image doesn't cover */}
-              <div className="absolute inset-0 scale-110 blur-2xl opacity-80"
-                style={{ backgroundImage: bgUrl, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+            /* blurred fill for the area the uncropped image doesn't cover */
+            <div className="absolute inset-0 scale-110 blur-2xl opacity-80"
+              style={{ backgroundImage: bgUrl, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+          )}
+          {/* the page: wallpaper + start button; pinned left when the menu moves to the side pane */}
+          <div className="relative h-full flex-shrink-0" style={{ width: sidePane ? sideImageWidth : '100%' }}>
+            {bgUrl && (
               <div className="absolute inset-0"
                 style={{ backgroundImage: bgUrl, backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }} />
-            </>
-          )}
-          <div className="absolute inset-x-0 bottom-0 pt-16 px-5 pb-5 bg-gradient-to-t from-white/80 via-white/40 to-transparent">
-            <div className="flex items-stretch justify-center gap-3 h-14">
-              <div className="flex-shrink-0 flex items-center gap-2 bg-white/95 backdrop-blur border border-orange-200 shadow-md rounded-xl px-3">
-                <svg className="w-5 h-5 text-orange-700 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M8 3.5h8.5a2 2 0 0 1 2 2V17" />
-                  <rect x="5.5" y="6.5" width="10" height="14" rx="2" />
-                  <path d="M8.5 11h4M8.5 14.5h4" />
-                </svg>
-                <span className="text-gray-500 text-sm whitespace-nowrap">จำนวน</span>
-                <button onClick={() => setCardCount(c => Math.max(1, c - 1))}
-                  className={`w-8 h-8 ${stepBtnCls}`}>{minusIcon}</button>
-                <span className="text-orange-600 font-extrabold text-2xl w-9 text-center tabular-nums">{cardCount}</span>
-                <button onClick={() => setCardCount(c => c + 1)}
-                  className={`w-8 h-8 ${stepBtnCls}`}>{plusIcon}</button>
-                <span className="text-gray-500 text-sm">แผ่น</span>
-              </div>
-              <button onClick={openPreview} className={barBtnCls}>
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinejoin="round">
-                  <rect x="3.5" y="3.5" width="17" height="17" rx="2.5" />
-                  <path d="M3.5 9.5h17M3.5 14.5h17M9.5 3.5v17M14.5 3.5v17" strokeWidth={1.5} />
-                  <rect x="10.25" y="10.25" width="3.5" height="3.5" rx=".5" fill="currentColor" stroke="none" />
-                </svg>
-                ตัวอย่างกระดาษ
-              </button>
-              <button onClick={() => setPhase('scoring-example')} className={barBtnCls}>
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M7 4h10v5a5 5 0 0 1-10 0z" />
-                  <path d="M7 6H4.5v1.5A3.5 3.5 0 0 0 8 11M17 6h2.5v1.5A3.5 3.5 0 0 1 16 11" />
-                  <path d="M12 14v3M8.5 20h7M9.5 20l.5-3h4l.5 3" />
-                </svg>
-                การนับคะแนน
-              </button>
-              <button onClick={startDemo} title="ทดสอบ Countdown (10 วิ)" className={barBtnCls}>
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="13" r="8" />
-                  <path d="M12 9v4l2.5 2.5M9.5 2.5h5M12 2.5V5" />
-                </svg>
-                ทดสอบ
-              </button>
+            )}
+            <div className="absolute left-1/2 top-[40%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-3">
+              <button onClick={startGame}
+                className={`px-16 py-5 font-extrabold text-3xl rounded-2xl ring-4 ring-white hover:scale-105 whitespace-nowrap ${primaryBtnCls}`}
+              >{calledKeywords.length > 0 ? '🎲 เล่นต่อ' : '🎲 เริ่มเกม'}</button>
+              {calledKeywords.length > 0 && (
+                <>
+                  <span className="px-3 py-1 rounded-full bg-white/90 border border-orange-200 text-orange-700 text-sm font-semibold shadow-sm">
+                    เรียกไปแล้ว {calledKeywords.length} / {keywords.length} keyword
+                  </span>
+                  <button onClick={restartGame}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/95 border border-orange-200 text-orange-700 hover:bg-orange-50 text-sm font-semibold shadow-md transition-colors">
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5" />
+                    </svg>
+                    เริ่มเกมใหม่ทั้งหมด
+                  </button>
+                </>
+              )}
             </div>
           </div>
-          <div className="absolute left-1/2 top-[40%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-3">
-            <button onClick={startGame}
-              className={`px-16 py-5 font-extrabold text-3xl rounded-2xl ring-4 ring-white hover:scale-105 whitespace-nowrap ${primaryBtnCls}`}
-            >{calledKeywords.length > 0 ? '🎲 เล่นต่อ' : '🎲 เริ่มเกม'}</button>
-            {calledKeywords.length > 0 && (
-              <>
-                <span className="px-3 py-1 rounded-full bg-white/90 border border-orange-200 text-orange-700 text-sm font-semibold shadow-sm">
-                  เรียกไปแล้ว {calledKeywords.length} / {keywords.length} keyword
-                </span>
-                <button onClick={restartGame}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/95 border border-orange-200 text-orange-700 hover:bg-orange-50 text-sm font-semibold shadow-md transition-colors">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5" />
+          {sidePane ? (
+            <div className="relative flex-1 min-w-0 flex items-center justify-center p-6 bg-white/50 backdrop-blur-md border-l border-white/60">
+              <div className="w-full max-w-xs flex flex-col gap-3">
+                <div className={`flex-shrink-0 flex items-center gap-2 bg-white/95 backdrop-blur border border-orange-200 shadow-md rounded-xl px-3 ${sidePane ? 'h-14' : ''}`}>
+                  <svg className="w-5 h-5 text-orange-700 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M8 3.5h8.5a2 2 0 0 1 2 2V17" />
+                    <rect x="5.5" y="6.5" width="10" height="14" rx="2" />
+                    <path d="M8.5 11h4M8.5 14.5h4" />
                   </svg>
-                  เริ่มเกมใหม่ทั้งหมด
+                  <span className={`text-gray-500 text-sm whitespace-nowrap ${sidePane ? 'flex-1' : ''}`}>จำนวน</span>
+                  <button onClick={() => setCardCount(c => Math.max(1, c - 1))}
+                    className={`w-8 h-8 ${stepBtnCls}`}>{minusIcon}</button>
+                  <span className="text-orange-600 font-extrabold text-2xl w-9 text-center tabular-nums">{cardCount}</span>
+                  <button onClick={() => setCardCount(c => c + 1)}
+                    className={`w-8 h-8 ${stepBtnCls}`}>{plusIcon}</button>
+                  <span className="text-gray-500 text-sm">แผ่น</span>
+                </div>
+                <button onClick={openPreview} className={`${barBtnCls} ${sidePane ? 'h-14' : ''}`}>
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinejoin="round">
+                    <rect x="3.5" y="3.5" width="17" height="17" rx="2.5" />
+                    <path d="M3.5 9.5h17M3.5 14.5h17M9.5 3.5v17M14.5 3.5v17" strokeWidth={1.5} />
+                    <rect x="10.25" y="10.25" width="3.5" height="3.5" rx=".5" fill="currentColor" stroke="none" />
+                  </svg>
+                  ตัวอย่างกระดาษ
                 </button>
-              </>
-            )}
-          </div>
+                <button onClick={() => setPhase('scoring-example')} className={`${barBtnCls} ${sidePane ? 'h-14' : ''}`}>
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M7 4h10v5a5 5 0 0 1-10 0z" />
+                    <path d="M7 6H4.5v1.5A3.5 3.5 0 0 0 8 11M17 6h2.5v1.5A3.5 3.5 0 0 1 16 11" />
+                    <path d="M12 14v3M8.5 20h7M9.5 20l.5-3h4l.5 3" />
+                  </svg>
+                  การนับคะแนน
+                </button>
+                <button onClick={startDemo} title="ทดสอบ Countdown (10 วิ)" className={`${barBtnCls} ${sidePane ? 'h-14' : ''}`}>
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="13" r="8" />
+                    <path d="M12 9v4l2.5 2.5M9.5 2.5h5M12 2.5V5" />
+                  </svg>
+                  ทดสอบ
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="absolute inset-x-0 bottom-0 pt-16 px-5 pb-5 bg-gradient-to-t from-white/80 via-white/40 to-transparent">
+              <div className="flex items-stretch justify-center gap-3 h-14">
+                <div className={`flex-shrink-0 flex items-center gap-2 bg-white/95 backdrop-blur border border-orange-200 shadow-md rounded-xl px-3 ${sidePane ? 'h-14' : ''}`}>
+                  <svg className="w-5 h-5 text-orange-700 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M8 3.5h8.5a2 2 0 0 1 2 2V17" />
+                    <rect x="5.5" y="6.5" width="10" height="14" rx="2" />
+                    <path d="M8.5 11h4M8.5 14.5h4" />
+                  </svg>
+                  <span className={`text-gray-500 text-sm whitespace-nowrap ${sidePane ? 'flex-1' : ''}`}>จำนวน</span>
+                  <button onClick={() => setCardCount(c => Math.max(1, c - 1))}
+                    className={`w-8 h-8 ${stepBtnCls}`}>{minusIcon}</button>
+                  <span className="text-orange-600 font-extrabold text-2xl w-9 text-center tabular-nums">{cardCount}</span>
+                  <button onClick={() => setCardCount(c => c + 1)}
+                    className={`w-8 h-8 ${stepBtnCls}`}>{plusIcon}</button>
+                  <span className="text-gray-500 text-sm">แผ่น</span>
+                </div>
+                <button onClick={openPreview} className={`${barBtnCls} ${sidePane ? 'h-14' : ''}`}>
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinejoin="round">
+                    <rect x="3.5" y="3.5" width="17" height="17" rx="2.5" />
+                    <path d="M3.5 9.5h17M3.5 14.5h17M9.5 3.5v17M14.5 3.5v17" strokeWidth={1.5} />
+                    <rect x="10.25" y="10.25" width="3.5" height="3.5" rx=".5" fill="currentColor" stroke="none" />
+                  </svg>
+                  ตัวอย่างกระดาษ
+                </button>
+                <button onClick={() => setPhase('scoring-example')} className={`${barBtnCls} ${sidePane ? 'h-14' : ''}`}>
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M7 4h10v5a5 5 0 0 1-10 0z" />
+                    <path d="M7 6H4.5v1.5A3.5 3.5 0 0 0 8 11M17 6h2.5v1.5A3.5 3.5 0 0 1 16 11" />
+                    <path d="M12 14v3M8.5 20h7M9.5 20l.5-3h4l.5 3" />
+                  </svg>
+                  การนับคะแนน
+                </button>
+                <button onClick={startDemo} title="ทดสอบ Countdown (10 วิ)" className={`${barBtnCls} ${sidePane ? 'h-14' : ''}`}>
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="13" r="8" />
+                    <path d="M12 9v4l2.5 2.5M9.5 2.5h5M12 2.5V5" />
+                  </svg>
+                  ทดสอบ
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     )
