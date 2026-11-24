@@ -597,11 +597,12 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
           </div>
 
         <div className="flex-1 min-h-0 flex flex-col p-4 gap-3">
-          <div className="flex-1 flex items-center justify-center min-h-0">
-            <div className="grid grid-cols-5 gap-1 w-full max-w-lg">
+          <div className="flex-1 flex items-center justify-center min-h-0 [container-type:size]">
+            <div className="grid grid-cols-5 grid-rows-5 gap-[1%] [container-type:inline-size]"
+              style={{ width: 'min(100cqw, 100cqh)', height: 'min(100cqw, 100cqh)' }}>
               {card.map((cell, idx) => (
-                <div key={idx} className={`aspect-square flex items-center justify-center rounded-lg border-2 text-center p-1 ${cell === 'FREE' ? 'bg-amber-200 border-amber-400 font-bold text-amber-900' : 'bg-white border-orange-100 text-gray-800'}`}>
-                  <span className="text-xs leading-tight">{cell}</span>
+                <div key={idx} className={`flex items-center justify-center rounded-lg border-2 text-center p-[4%] overflow-hidden ${cell === 'FREE' ? 'bg-amber-200 border-amber-400 font-bold text-amber-900' : 'bg-white border-orange-100 text-gray-800'}`}>
+                  <span className="leading-tight text-[2.6cqw]">{cell}</span>
                 </div>
               ))}
             </div>
