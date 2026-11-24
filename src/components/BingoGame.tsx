@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { Game, Team } from '@/lib/types'
 import { useStore } from '@/lib/store'
-import { generateBingoCard } from '@/lib/bingo'
+import { generateBingoCard, BINGO_LINES } from '@/lib/bingo'
 import Link from 'next/link'
 
 // Tailwind color → hex mapping for PDF
@@ -189,7 +189,122 @@ function exportCardsDirectToPDF(cards: string[][], gameName: string) {
   win.onload = () => { win.focus(); win.print() }
 }
 
-type Phase = 'home' | 'preview' | 'playing'
+type Phase = 'home' | 'preview' | 'playing' | 'scoring-example'
+
+const TILE_PT = 1
+const BINGO_PT = 10
+const FREE_IDX = 12
+// row 3 + top-left diagonal: 8 tiles, 2 bingo lines
+const EXAMPLE_MARKS = [0, 6, 10, 11, 13, 14, 18, 24]
+
+const LINE_SAMPLES: { label: string; line: number[] }[] = [
+  { label: 'แนวนอน', line: BINGO_LINES[1] },
+  { label: 'แนวตั้ง', line: BINGO_LINES[8] },
+  { label: 'แนวทแยง', line: BINGO_LINES[11] },
+]
+
+function MiniLine({ line }: { line: number[] }) {
+  return (
+    <div className="grid grid-cols-5 gap-0.5 w-16">
+      {Array.from({ length: 25 }, (_, i) => (
+        <div key={i} className={`aspect-square rounded-[2px] ${line.includes(i) ? 'bg-emerald-400' : i === FREE_IDX ? 'bg-yellow-200/60' : 'bg-white/20'}`} />
+      ))}
+    </div>
+  )
+}
+
+function ScoringExample({ card }: { card: string[] }) {
+  const [marked, setMarked] = useState<Set<number>>(() => new Set(EXAMPLE_MARKS))
+
+  const toggle = (i: number) => {
+    if (i === FREE_IDX) return
+    setMarked(prev => {
+      const next = new Set(prev)
+      if (next.has(i)) next.delete(i)
+      else next.add(i)
+      return next
+    })
+  }
+
+  const isOn = (i: number) => i === FREE_IDX || marked.has(i)
+  const lines = BINGO_LINES.filter(line => line.every(isOn))
+  const inLine = new Set(lines.flat())
+  const tileScore = marked.size * TILE_PT
+  const bingoScore = lines.length * BINGO_PT
+
+  return (
+    <div className="flex-1 flex gap-6 items-center justify-center min-h-0">
+      <div className="flex flex-col items-center gap-2 w-full max-w-lg">
+        <div className="grid grid-cols-5 gap-1 w-full">
+          {card.map((cell, i) => {
+            const free = i === FREE_IDX
+            const cls = inLine.has(i)
+              ? 'bg-emerald-500 border-emerald-300 text-white'
+              : free ? 'bg-yellow-200 border-yellow-400 text-yellow-800'
+              : marked.has(i) ? 'bg-sky-500 border-sky-300 text-white'
+              : 'bg-white/90 border-white/50 text-gray-800 hover:bg-white'
+            return (
+              <button key={i} onClick={() => toggle(i)}
+                className={`relative aspect-square flex items-center justify-center rounded-lg border-2 text-center p-1 transition-colors ${cls} ${free ? 'cursor-default font-bold' : ''}`}>
+                <span className="text-xs leading-tight">{cell}</span>
+                {marked.has(i) && (
+                  <span className="absolute top-0.5 right-1 text-[10px] font-bold opacity-80">+{TILE_PT}</span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+        <p className="text-white/60 text-sm">แตะช่องเพื่อลองทำเครื่องหมาย</p>
+      </div>
+
+      <div className="w-72 flex-shrink-0 flex flex-col gap-3">
+        <div className="bg-black/50 border border-white/15 rounded-2xl p-4 space-y-3">
+          <h2 className="text-white font-bold text-lg">กติกาการนับคะแนน</h2>
+          <div className="flex items-center gap-3">
+            <span className="w-8 h-8 rounded-lg bg-sky-500 flex-shrink-0" />
+            <span className="text-white/90 text-sm flex-1">1 ช่อง</span>
+            <span className="text-white font-bold">{TILE_PT} คะแนน</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="w-8 h-8 rounded-lg bg-emerald-500 flex-shrink-0" />
+            <span className="text-white/90 text-sm flex-1">บิงโก (5 ช่องเรียงกัน)</span>
+            <span className="text-white font-bold">{BINGO_PT} คะแนน</span>
+          </div>
+          <div className="flex justify-between pt-1">
+            {LINE_SAMPLES.map(s => (
+              <div key={s.label} className="flex flex-col items-center gap-1">
+                <MiniLine line={s.line} />
+                <span className="text-white/60 text-xs">{s.label}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-white/50 text-xs">ช่อง FREE นับรวมในแถวบิงโก แต่ไม่ได้คะแนนช่อง</p>
+        </div>
+
+        <div className="bg-black/50 border border-white/15 rounded-2xl p-4 space-y-2">
+          <div className="flex justify-between text-white/80 text-sm">
+            <span>ช่อง {marked.size} × {TILE_PT}</span>
+            <span className="font-semibold">{tileScore}</span>
+          </div>
+          <div className="flex justify-between text-white/80 text-sm">
+            <span>บิงโก {lines.length} × {BINGO_PT}</span>
+            <span className="font-semibold">{bingoScore}</span>
+          </div>
+          <div className="flex justify-between items-baseline border-t border-white/15 pt-2">
+            <span className="text-white font-bold">รวม</span>
+            <span className="text-emerald-400 font-extrabold text-3xl">{tileScore + bingoScore}</span>
+          </div>
+          <div className="flex gap-2 pt-1">
+            <button onClick={() => setMarked(new Set(EXAMPLE_MARKS))}
+              className="flex-1 py-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white text-sm rounded-lg transition-colors">ตัวอย่าง</button>
+            <button onClick={() => setMarked(new Set())}
+              className="flex-1 py-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white text-sm rounded-lg transition-colors">ล้าง</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function generateRandomCards(keywords: string[], count: number): string[][] {
   return Array.from({ length: count }, (_, i) =>
@@ -374,6 +489,9 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
               <button onClick={openPreview}
                 className="w-full py-5 bg-white/15 hover:bg-white/25 border-2 border-white/30 text-white font-bold text-2xl rounded-2xl transition-all"
               >🃏 แสดงตัวอย่างกระดาษ</button>
+              <button onClick={() => setPhase('scoring-example')}
+                className="w-full py-4 bg-white/15 hover:bg-white/25 border-2 border-white/30 text-white font-bold text-xl rounded-2xl transition-all"
+              >🏆 ตัวอย่างการนับคะแนน</button>
               <button onClick={startGame}
                 className="w-full py-5 bg-school-accent hover:bg-school-accent/80 text-white font-bold text-2xl rounded-2xl transition-all shadow-lg"
               >🎲 เริ่มเกม</button>
@@ -426,6 +544,26 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
           <button onClick={startGame}
             className="w-full py-3 bg-school-accent hover:bg-school-accent/80 text-white font-bold text-lg rounded-xl transition-colors"
           >🎲 เริ่มเกม</button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Scoring example phase ─────────────────────────────────────────────────
+  if (phase === 'scoring-example') {
+    return (
+      <div className={`h-screen flex flex-col overflow-hidden ${bgClass}`} style={bgStyle}>
+        <div className="absolute inset-0 bg-black/50" />
+        <div className="relative z-10 flex flex-col h-full p-4 gap-3">
+          <div className="flex items-center gap-2">
+            <button onClick={() => setPhase('home')} className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+              กลับ
+            </button>
+            <h1 className="text-white font-bold text-lg mx-auto">ตัวอย่างการนับคะแนน</h1>
+            <div className="w-[72px] flex-shrink-0" />
+          </div>
+          <ScoringExample card={generateBingoCard(keywords, 'scoring-example')} />
         </div>
       </div>
     )
