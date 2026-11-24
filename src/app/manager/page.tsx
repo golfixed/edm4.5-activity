@@ -82,12 +82,6 @@ function ScoresTab() {
     setLocalScores((prev) => ({ ...prev, [key(teamId, gameId)]: num }))
   }
 
-  const saveRow = (teamId: string) => {
-    const updated = scores.filter((s) => s.teamId !== teamId)
-    games.forEach((g) => updated.push({ teamId, gameId: g.id, points: localScores[key(teamId, g.id)] ?? 0 }))
-    setScores(updated)
-  }
-
   const saveAll = () => {
     const next: Score[] = []
     teams.forEach((t) => games.forEach((g) => next.push({ teamId: t.id, gameId: g.id, points: localScores[key(t.id, g.id)] ?? 0 })))
@@ -118,7 +112,6 @@ function ScoresTab() {
         {games.map((g) => (
           <span key={g.id} className="w-36 text-center text-xs font-bold uppercase tracking-wider text-orange-900/40 leading-tight">{g.name}</span>
         ))}
-        <span className="w-20 flex-shrink-0" />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -137,9 +130,6 @@ function ScoresTab() {
                 />
               </div>
             ))}
-            <div className="w-20 flex justify-end">
-              <button onClick={() => saveRow(team.id)} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-orange-700 border border-orange-200 hover:bg-orange-50 transition-colors">บันทึก</button>
-            </div>
           </div>
         ))}
       </div>
