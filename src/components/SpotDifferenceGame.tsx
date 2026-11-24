@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useStore } from '@/lib/store'
 import { Game, ImageSet } from '@/lib/types'
 import Link from 'next/link'
+import TeamSpinner from '@/components/TeamSpinner'
 
 interface Props {
   game: Game
@@ -298,6 +299,15 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Team random spinner: draws N teams and selects them */}
+          <div className="w-[clamp(18rem,28vw,24rem)] flex-shrink-0 flex flex-col p-5 overflow-hidden border-l border-orange-100">
+            <div className="flex items-baseline gap-2 mb-3 flex-shrink-0">
+              <h2 className="text-gray-900 text-base font-bold">สุ่มทีม</h2>
+              <span className="text-gray-500 text-xs">ทีมที่สุ่มได้จะถูกเลือกให้อัตโนมัติ</span>
+            </div>
+            <TeamSpinner teams={teams} onPicked={setSelectedTeamIds} />
           </div>
         </div>
 
