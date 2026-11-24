@@ -519,6 +519,11 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
           <div className="absolute inset-x-0 bottom-0 pt-16 px-5 pb-5 bg-gradient-to-t from-white/80 via-white/40 to-transparent">
             <div className="flex items-stretch justify-center gap-3 h-14">
               <div className="flex-shrink-0 flex items-center gap-2 bg-white/95 backdrop-blur border border-orange-200 shadow-md rounded-xl px-3">
+                <svg className="w-5 h-5 text-orange-700 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M8 3.5h8.5a2 2 0 0 1 2 2V17" />
+                  <rect x="5.5" y="6.5" width="10" height="14" rx="2" />
+                  <path d="M8.5 11h4M8.5 14.5h4" />
+                </svg>
                 <span className="text-gray-500 text-sm whitespace-nowrap">จำนวน</span>
                 <button onClick={() => setCardCount(c => Math.max(1, c - 1))}
                   className={`w-8 h-8 ${stepBtnCls}`}>{minusIcon}</button>
