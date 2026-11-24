@@ -575,15 +575,25 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
             <h1 className={`${titleCls} mx-auto`}>{game.icon} {game.name}</h1>
             <button
               onClick={() => exportCardsDirectToPDF(cards, game.name)}
-              className={`px-3 py-1.5 rounded-lg text-sm flex-shrink-0 ${outlineBtnCls}`}
-            >🖨️ Print PDF</button>
-            <button onClick={() => setPreviewIdx((i) => (i - 1 + cards.length) % cards.length)}
-              className={`px-3 py-1.5 rounded-lg text-sm flex-shrink-0 ${outlineBtnCls}`}>←</button>
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm flex-shrink-0 ${outlineBtnCls}`}
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M7 8V3.5h10V8" />
+                <rect x="3.5" y="8" width="17" height="8.5" rx="2" />
+                <rect x="7" y="13.5" width="10" height="7" rx="1" fill="white" />
+                <path d="M17 11h.01" strokeWidth={2.5} />
+              </svg>
+              Print PDF
+            </button>
+            <button onClick={() => setPreviewIdx((i) => (i - 1 + cards.length) % cards.length)} title="แผ่นก่อนหน้า"
+              className={`flex items-center justify-center w-9 h-[34px] rounded-lg flex-shrink-0 ${outlineBtnCls}`}>{backIcon}</button>
             <div className="bg-orange-50 border border-orange-200 rounded-lg px-3 py-1.5 text-orange-800 text-sm font-semibold whitespace-nowrap flex-shrink-0">
               แผ่น {previewIdx + 1} / {cards.length}
             </div>
-            <button onClick={() => setPreviewIdx((i) => (i + 1) % cards.length)}
-              className={`px-3 py-1.5 rounded-lg text-sm flex-shrink-0 ${outlineBtnCls}`}>→</button>
+            <button onClick={() => setPreviewIdx((i) => (i + 1) % cards.length)} title="แผ่นถัดไป"
+              className={`flex items-center justify-center w-9 h-[34px] rounded-lg flex-shrink-0 ${outlineBtnCls}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+            </button>
           </div>
 
         <div className="flex-1 min-h-0 flex flex-col p-4 gap-3">
