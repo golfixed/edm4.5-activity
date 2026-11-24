@@ -787,13 +787,8 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
                 onClick={drawKeyword}
                 className={`h-16 lg:h-auto lg:flex-1 lg:max-h-72 flex lg:flex-col items-center justify-center gap-2.5 lg:gap-3 font-bold text-xl lg:text-2xl rounded-xl lg:rounded-2xl ${primaryBtnCls}`}
               >
-                <svg className="w-6 h-6 lg:w-12 lg:h-12 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinejoin="round">
-                  <rect x="3.5" y="3.5" width="17" height="17" rx="3.5" />
-                  <circle cx="8.5" cy="8.5" r="1.4" fill="currentColor" stroke="none" />
-                  <circle cx="15.5" cy="8.5" r="1.4" fill="currentColor" stroke="none" />
-                  <circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none" />
-                  <circle cx="8.5" cy="15.5" r="1.4" fill="currentColor" stroke="none" />
-                  <circle cx="15.5" cy="15.5" r="1.4" fill="currentColor" stroke="none" />
+                <svg className="w-6 h-6 lg:w-12 lg:h-12 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z" />
                 </svg>
                 {calledKeywords.length === 0 ? 'เริ่ม Keyword แรก' : 'สุ่ม Keyword ถัดไป'}
               </button>
