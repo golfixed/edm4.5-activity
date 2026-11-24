@@ -208,24 +208,24 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
               <h2 className="text-white text-base font-bold">เลือกทีม</h2>
               <span className="text-gray-400 text-xs">{selectedTeamIds.length > 0 ? `${selectedTeamIds.length} ทีม` : 'ยังไม่ได้เลือก'}</span>
             </div>
-            <div className="grid grid-cols-2 gap-2 flex-1 overflow-y-auto content-start">
+            <div className="grid grid-cols-2 gap-3 flex-1 overflow-y-auto content-start">
               {teams.map((team) => {
                 const selected = selectedTeamIds.includes(team.id)
                 return (
                   <button
                     key={team.id}
                     onClick={() => toggleTeam(team.id)}
-                    className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border-2 transition-all font-medium text-sm
+                    className={`flex items-center gap-3 px-5 py-5 rounded-xl border-2 transition-all font-semibold text-lg
                       ${selected
                         ? 'border-white/50 bg-white/10 text-white'
                         : 'border-white/15 text-white/80 hover:border-white/35 hover:bg-white/5'}`}
                   >
-                    <span className={`w-3 h-3 rounded-full flex-shrink-0 ${team.color}`} />
+                    <span className={`w-4 h-4 rounded-full flex-shrink-0 ${team.color}`} />
                     <span className="flex flex-col items-start leading-tight min-w-0">
                       <span className="truncate">{team.name}</span>
-                      {team.captain && <span className="text-white/40 text-xs font-normal">({team.captain})</span>}
+                      {team.captain && <span className="text-white/40 text-sm font-normal">({team.captain})</span>}
                     </span>
-                    {selected && <span className="ml-auto text-white text-xs flex-shrink-0">✓</span>}
+                    {selected && <span className="ml-auto text-white text-base flex-shrink-0">✓</span>}
                   </button>
                 )
               })}
