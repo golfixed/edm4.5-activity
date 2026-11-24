@@ -499,31 +499,29 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
           </div>
 
           <div className={`relative flex-1 min-h-0 ${bgClass}`} style={bgStyle}>
-          <div className="absolute inset-0 bg-black/50" />
-          <div className="relative z-10 h-full flex flex-col items-center justify-center gap-8 px-8">
-            <div className="flex items-center gap-3 bg-white/10 border border-white/20 rounded-2xl px-6 py-3">
-              <span className="text-white text-lg">จำนวนกระดาษ</span>
-              <button onClick={() => setCardCount(c => Math.max(1, c - 1))}
-                className="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold text-lg transition-colors">−</button>
-              <span className="text-white font-extrabold text-3xl w-12 text-center">{cardCount}</span>
-              <button onClick={() => setCardCount(c => c + 1)}
-                className="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold text-lg transition-colors">+</button>
-              <span className="text-white/60 text-base">แผ่น</span>
-            </div>
-
-            <div className="flex flex-col gap-4 w-full max-w-sm">
+          <div className="absolute inset-x-0 bottom-0 pt-16 px-5 pb-5 bg-gradient-to-t from-black/85 via-black/60 to-transparent">
+            <div className="flex items-stretch gap-3">
+              <div className="flex-shrink-0 flex items-center gap-2 bg-black/40 backdrop-blur border border-white/20 rounded-xl px-3">
+                <span className="text-white/80 text-sm whitespace-nowrap">จำนวน</span>
+                <button onClick={() => setCardCount(c => Math.max(1, c - 1))}
+                  className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold transition-colors">−</button>
+                <span className="text-white font-extrabold text-2xl w-9 text-center tabular-nums">{cardCount}</span>
+                <button onClick={() => setCardCount(c => c + 1)}
+                  className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold transition-colors">+</button>
+                <span className="text-white/60 text-sm">แผ่น</span>
+              </div>
               <button onClick={openPreview}
-                className="w-full py-5 bg-white/15 hover:bg-white/25 border-2 border-white/30 text-white font-bold text-2xl rounded-2xl transition-all"
-              >🃏 แสดงตัวอย่างกระดาษ</button>
+                className="flex-shrink-0 px-4 bg-black/40 backdrop-blur hover:bg-white/15 border border-white/20 text-white font-semibold rounded-xl transition-colors whitespace-nowrap"
+              >🃏 ตัวอย่างกระดาษ</button>
               <button onClick={() => setPhase('scoring-example')}
-                className="w-full py-4 bg-white/15 hover:bg-white/25 border-2 border-white/30 text-white font-bold text-xl rounded-2xl transition-all"
-              >🏆 ตัวอย่างการนับคะแนน</button>
+                className="flex-shrink-0 px-4 bg-black/40 backdrop-blur hover:bg-white/15 border border-white/20 text-white font-semibold rounded-xl transition-colors whitespace-nowrap"
+              >🏆 การนับคะแนน</button>
+              <button onClick={startDemo} title="ทดสอบ Countdown (10 วิ)"
+                className="flex-shrink-0 px-4 bg-black/40 backdrop-blur hover:bg-white/15 border border-white/20 text-white/80 font-semibold rounded-xl transition-colors whitespace-nowrap"
+              >⏱ ทดสอบ</button>
               <button onClick={startGame}
-                className="w-full py-5 bg-school-accent hover:bg-school-accent/80 text-white font-bold text-2xl rounded-2xl transition-all shadow-lg"
+                className="flex-1 min-w-[160px] py-4 bg-school-accent hover:bg-school-accent/80 text-white font-bold text-2xl rounded-xl transition-all shadow-lg"
               >🎲 เริ่มเกม</button>
-              <button onClick={startDemo}
-                className="w-full py-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white/80 font-semibold text-lg rounded-2xl transition-all"
-              >⏱ ทดสอบ Countdown (10 วิ)</button>
             </div>
           </div>
         </div>
