@@ -27,6 +27,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { Game } from '@/lib/types'
 import { resolveIconColor } from '@/lib/iconColors'
 import { FirebaseStatus } from '@/lib/store'
+import FirebaseLoading from '@/components/FirebaseLoading'
 
 function adjustHex(hex: string, amount: number): string {
   const n = parseInt(hex.replace('#', ''), 16)
@@ -510,59 +511,7 @@ export default function Home() {
     }
   }
 
-  if (!isHydrated) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center select-none overflow-hidden"
-        style={{ background: wallpaperBg(wallpaperColor) }}>
-        <svg style={{ display: 'none' }}>
-          <filter id="glass-distortion" x="0%" y="0%" width="100%" height="100%" filterUnits="objectBoundingBox">
-            <feTurbulence type="fractalNoise" baseFrequency="0.01 0.01" numOctaves="1" seed="5" result="turbulence" />
-            <feComponentTransfer in="turbulence" result="mapped">
-              <feFuncR type="gamma" amplitude="1" exponent="10" offset="0.5" />
-              <feFuncG type="gamma" amplitude="0" exponent="1" offset="0" />
-              <feFuncB type="gamma" amplitude="0" exponent="1" offset="0.5" />
-            </feComponentTransfer>
-            <feGaussianBlur in="turbulence" stdDeviation="3" result="softMap" />
-            <feSpecularLighting in="softMap" surfaceScale="5" specularConstant="1" specularExponent="100" lightingColor="white" result="specLight">
-              <fePointLight x="-200" y="-200" z="300" />
-            </feSpecularLighting>
-            <feComposite in="specLight" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="litImage" />
-            <feDisplacementMap in="SourceGraphic" in2="softMap" scale="150" xChannelSelector="R" yChannelSelector="G" />
-          </filter>
-        </svg>
-        {/* Header skeleton */}
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, display: 'flex', justifyContent: 'center', padding: '40px 32px 16px' }}>
-          <div style={{ width: 180, height: 22, borderRadius: 8, background: 'rgba(0,0,0,0.10)', animation: 'pulse 1.5s ease-in-out infinite' }} />
-        </div>
-        {/* Game icon skeletons */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 96px)', gap: '2rem' }}>
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-              <div style={{ width: 76, height: 76, borderRadius: 18, background: 'rgba(0,0,0,0.10)', animation: `pulse 1.5s ease-in-out ${i * 0.1}s infinite` }} />
-              <div style={{ width: 56, height: 10, borderRadius: 5, background: 'rgba(0,0,0,0.08)', animation: `pulse 1.5s ease-in-out ${i * 0.1}s infinite` }} />
-            </div>
-          ))}
-        </div>
-        {/* Dock skeleton — same structure as real dock */}
-        <div className="fixed bottom-8 left-0 right-0 z-20 flex justify-center pointer-events-none">
-          <div className="pointer-events-auto relative overflow-hidden" style={{ borderRadius: '2rem', boxShadow: '0 4px 24px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.08)' }}>
-            <div style={{ position: 'absolute', inset: 0, zIndex: 0, backdropFilter: 'blur(20px)', filter: 'url(#glass-distortion)', borderRadius: '2rem', overflow: 'hidden' }} />
-            <div style={{ position: 'absolute', inset: 0, zIndex: 1, background: 'rgba(255,255,255,0.55)', borderRadius: '2rem' }} />
-            <div style={{ position: 'absolute', inset: 0, zIndex: 2, borderRadius: '2rem', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(0,0,0,0.06)', border: '1px solid rgba(255,255,255,0.6)' }} />
-            <div style={{ position: 'relative', zIndex: 3, display: 'flex', alignItems: 'center', gap: 16, padding: 16 }}>
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} style={{ width: 56, height: 56, borderRadius: 12, background: 'rgba(0,0,0,0.08)', animation: `pulse 1.5s ease-in-out ${i * 0.15}s infinite` }} />
-              ))}
-              <div style={{ width: 1, height: 40, background: 'rgba(0,0,0,0.15)', borderRadius: 1, flexShrink: 0 }} />
-              <div style={{ width: 56, height: 56, borderRadius: 12, background: 'rgba(0,0,0,0.06)' }} />
-              <div style={{ width: 56, height: 56, borderRadius: 12, background: 'rgba(0,0,0,0.06)' }} />
-            </div>
-          </div>
-        </div>
-        <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.45} }`}</style>
-      </div>
-    )
-  }
+  if (!isHydrated) return <FirebaseLoading />
 
   return (
     <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={onDragStart} onDragOver={onDragOver} onDragEnd={onDragEnd}>
