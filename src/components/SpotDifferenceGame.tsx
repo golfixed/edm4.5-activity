@@ -387,7 +387,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
           </div>
 
           {/* Teams */}
-          <div className="flex-1 flex flex-col p-5 overflow-hidden border-r border-orange-100">
+          <div className="flex-1 flex flex-col px-5 pt-5 overflow-hidden border-r border-orange-100">
             <div className="flex items-baseline gap-2 mb-3 flex-shrink-0">
               <h2 className="text-gray-900 text-base font-bold">เลือกทีม</h2>
               <span className="text-gray-500 text-xs">{selectedTeamIds.length > 0 ? `${selectedTeamIds.length} ทีม` : 'ยังไม่ได้เลือก'}</span>
@@ -397,7 +397,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                 <span className="ml-auto text-gray-400 text-xs">เล่นแล้ว {playedPoints.size} / {teams.length} ทีม</span>
               )}
             </div>
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(12rem,1fr))] gap-3 flex-1 overflow-y-auto content-start">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(12rem,1fr))] gap-3 flex-1 overflow-y-auto content-start pb-5">
               {teams.map((team) => {
                 const selected = selectedTeamIds.includes(team.id)
                 const played = playedPoints.get(team.id)
@@ -445,7 +445,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
           </div>
 
           {/* Sets */}
-          <div className="flex-1 flex flex-col p-5 overflow-hidden">
+          <div className="flex-1 flex flex-col px-5 pt-5 overflow-hidden">
             {sets.length > 0 && (
               <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
                 <div className="flex items-baseline gap-2 mb-3 flex-shrink-0">
@@ -455,7 +455,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                     <span className="ml-auto text-gray-400 text-xs">{availableSets.length === 0 ? 'ใช้ครบทุกชุดแล้ว' : `ใช้แล้ว ${sets.length - availableSets.length} / ${sets.length} ชุด`}</span>
                   )}
                 </div>
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-3 overflow-y-auto content-start">
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-3 min-h-0 overflow-y-auto content-start pb-5">
                   {sets.map((set) => {
                     const selected = selectedSetId === set.id
                     if (playedSetIds.has(set.id)) {
