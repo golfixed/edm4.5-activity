@@ -500,7 +500,7 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
 
           <div className={`relative flex-1 min-h-0 ${bgClass}`} style={bgStyle}>
           <div className="absolute inset-x-0 bottom-0 pt-16 px-5 pb-5 bg-gradient-to-t from-black/85 via-black/60 to-transparent">
-            <div className="flex items-stretch gap-3">
+            <div className="flex items-stretch justify-center gap-3 h-14">
               <div className="flex-shrink-0 flex items-center gap-2 bg-black/40 backdrop-blur border border-white/20 rounded-xl px-3">
                 <span className="text-white/80 text-sm whitespace-nowrap">จำนวน</span>
                 <button onClick={() => setCardCount(c => Math.max(1, c - 1))}
@@ -519,11 +519,11 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
               <button onClick={startDemo} title="ทดสอบ Countdown (10 วิ)"
                 className="flex-shrink-0 px-4 bg-black/40 backdrop-blur hover:bg-white/15 border border-white/20 text-white/80 font-semibold rounded-xl transition-colors whitespace-nowrap"
               >⏱ ทดสอบ</button>
-              <button onClick={startGame}
-                className="flex-1 min-w-[160px] py-4 bg-school-accent hover:bg-school-accent/80 text-white font-bold text-2xl rounded-xl transition-all shadow-lg"
-              >🎲 เริ่มเกม</button>
             </div>
           </div>
+          <button onClick={startGame}
+            className="absolute left-1/2 top-[40%] -translate-x-1/2 -translate-y-1/2 px-16 py-5 bg-school-accent hover:bg-school-accent/80 text-white font-bold text-3xl rounded-2xl transition-all shadow-xl whitespace-nowrap"
+          >🎲 เริ่มเกม</button>
         </div>
       </div>
     )
