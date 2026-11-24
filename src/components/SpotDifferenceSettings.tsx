@@ -31,7 +31,6 @@ const ICON = {
   move: <svg className="w-4 h-4" {...svgProps}><path d="M3 12h13M12 7l5 5-5 5M20 5v14" /></svg>,
   trash: <svg className="w-4 h-4" {...svgProps}><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 12.5h9l1-12.5M10 11v5M14 11v5" /></svg>,
   download: <svg className="w-4 h-4" {...svgProps} strokeWidth={2.25}><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M7 10l5 5 5-5M12 15V3" /></svg>,
-  chevronRight: <svg className="w-3.5 h-3.5" {...svgProps} strokeWidth={2.5}><path d="M9 5l7 7-7 7" /></svg>,
 }
 
 export default function SpotDifferenceSettings({ game, onClose }: Props) {
@@ -103,9 +102,7 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
         </button>
 
         <div className="flex items-center gap-1.5 flex-1 min-w-0">
-          <span className="text-gray-600 text-sm">ตั้งค่า</span>
-          <span className="text-gray-500">{ICON.chevronRight}</span>
-          <span className="text-gray-900 font-semibold truncate">{liveGame.name}</span>
+          <h1 className="text-gray-900 text-xl font-bold truncate">ตั้งค่าเกม</h1>
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
