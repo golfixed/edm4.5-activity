@@ -141,10 +141,19 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
   }, [currentIndex])
 
   const bonusDone = !!game.bonusRoundPlayed
-  const setBonusPlayed = (played: boolean) => {
+  const playedSetIds = new Set(game.playedSetIds ?? [])
+  const availableSets = sets.filter((st) => !playedSetIds.has(st.id))
+  const updateGame = (patch: Partial<typeof game>) => {
     const st = useStore.getState()
-    st.setGames(st.games.map((g) => (g.id === game.id ? { ...g, bonusRoundPlayed: played } : g)))
+    st.setGames(st.games.map((g) => (g.id === game.id ? { ...g, ...patch } : g)))
   }
+  const setBonusPlayed = (played: boolean) => updateGame({ bonusRoundPlayed: played })
+  // Scores were cleared (no team has played): every image set becomes playable again.
+  useEffect(() => {
+    if (isSynced && playedPoints.size === 0 && (game.playedSetIds?.length ?? 0) > 0) updateGame({ playedSetIds: [] })
+  }, [isSynced, playedPoints.size, game.playedSetIds?.length])
+  // A set selected here but marked played elsewhere (another device) gets deselected.
+  useEffect(() => { if (selectedSetId && playedSetIds.has(selectedSetId)) setSelectedSetId(null) }, [selectedSetId, game.playedSetIds])
   useEffect(() => { if (!allPlayed || bonusDone) setBonus(false) }, [allPlayed, bonusDone])
   // Scores were reset (not every team has played any more): allow a fresh bonus round later.
   useEffect(() => { if (isSynced && bonusDone && !allPlayed) setBonusPlayed(false) }, [isSynced, bonusDone, allPlayed])
@@ -163,14 +172,14 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
     setMenuOpen(false)
     const ok = await confirm({
       title: 'เริ่มเกมใหม่ตั้งแต่ต้น?',
-      message: `คะแนน ${game.name} ของทุกทีม (เล่นแล้ว ${playedPoints.size} ทีม) และรอบโบนัสจะถูกล้าง ทุกทีมจะกลับมาเล่นได้อีกครั้ง`,
+      message: `คะแนน ${game.name} ของทุกทีม (เล่นแล้ว ${playedPoints.size} ทีม), ชุดภาพที่ใช้ไปแล้ว และรอบโบนัสจะถูกล้าง ทุกทีมและทุกชุดจะกลับมาเล่นได้อีกครั้ง`,
       confirmLabel: 'ล้างและเริ่มใหม่',
       tone: 'danger',
     })
     if (!ok) return
     const st = useStore.getState()
     st.setScores(st.scores.filter((sc) => sc.gameId !== game.id))
-    if (bonusDone) setBonusPlayed(false)
+    updateGame({ bonusRoundPlayed: false, playedSetIds: [] })
     setBonus(false); setSelectedTeamIds([]); setSelectedSetId(null); setCurrentIndex(0); setPhase('setup')
   }
 
@@ -196,7 +205,10 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
         points: (bonus ? playedPoints.get(teamId) ?? 0 : 0) + (finalScores[teamId] ?? 0),
       })
     )
-    if (bonus) setBonusPlayed(true)
+    updateGame({
+      ...(bonus ? { bonusRoundPlayed: true } : {}),
+      ...(selectedSetId && !playedSetIds.has(selectedSetId) ? { playedSetIds: [...(game.playedSetIds ?? []), selectedSetId] } : {}),
+    })
     setBonus(false)
     setPhase('setup'); setSelectedTeamIds([]); setSelectedSetId(null); setCurrentIndex(0)
   }
@@ -292,7 +304,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
             </svg>
             <span className="flex flex-col">
               <span className="text-red-700 font-semibold text-sm">เริ่มเกมใหม่ตั้งแต่ต้น</span>
-              <span className="text-gray-500 text-xs mt-0.5">ล้างคะแนนเกมนี้ของทุกทีม และรอบโบนัส</span>
+              <span className="text-gray-500 text-xs mt-0.5">ล้างคะแนนเกมนี้ของทุกทีม ชุดภาพที่ใช้แล้ว และรอบโบนัส</span>
             </span>
           </button>
           </>}
@@ -315,7 +327,9 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
 
   // ── SETUP ─────────────────────────────────────────────────────────────────
   if (phase === 'setup') {
-    const startLabel = sets.length > 0 && !selectedSetId
+    const startLabel = sets.length > 0 && availableSets.length === 0
+      ? 'ใช้ชุดภาพครบทุกชุดแล้ว'
+      : sets.length > 0 && !selectedSetId
       ? 'เลือกชุดภาพก่อน'
       : selectedTeamIds.length === 0
       ? 'เลือกทีมก่อน'
@@ -436,11 +450,23 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
               <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
                 <div className="flex items-baseline gap-2 mb-3 flex-shrink-0">
                   <h2 className="text-gray-900 text-base font-bold">ชุดภาพ</h2>
-                  <span className="text-gray-500 text-xs">แต่ละรอบใช้คนละชุด</span>
+                  <span className="text-gray-500 text-xs">แต่ละชุดเล่นได้ครั้งเดียว</span>
+                  {playedSetIds.size > 0 && (
+                    <span className="ml-auto text-gray-400 text-xs">{availableSets.length === 0 ? 'ใช้ครบทุกชุดแล้ว' : `ใช้แล้ว ${sets.length - availableSets.length} / ${sets.length} ชุด`}</span>
+                  )}
                 </div>
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-3 overflow-y-auto content-start">
                   {sets.map((set) => {
                     const selected = selectedSetId === set.id
+                    if (playedSetIds.has(set.id)) {
+                      return (
+                        <div key={set.id} title="ชุดนี้เล่นไปแล้ว"
+                          className="flex flex-col items-start justify-center px-5 py-3 min-h-[76px] rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 text-left cursor-not-allowed select-none">
+                          <span className="font-semibold text-sm text-gray-400 line-through decoration-gray-300">{set.name}</span>
+                          <span className="text-gray-400 text-xs mt-0.5">เล่นแล้ว · {set.pairs.length} โจทย์</span>
+                        </div>
+                      )
+                    }
                     return (
                       <button
                         key={set.id}

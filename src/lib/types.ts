@@ -45,6 +45,7 @@ export interface Game {
   soundTick?: string | null
   soundTimeUp?: string | null
   auctionItems?: AuctionItem[]
+  playedSetIds?: string[] // Left or Right?: image sets already used in a saved round (each set plays once)
   bonusRoundPlayed?: boolean // Left or Right?: the all-teams bonus round has been saved (once per game)
 }
 
