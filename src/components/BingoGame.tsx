@@ -299,7 +299,7 @@ function ScoringExample({ card }: { card: string[] }) {
             <span className="text-gray-700 text-xl flex-1 leading-tight">บิงโก<br /><span className="text-base text-gray-500">5 ช่องเรียงกัน</span></span>
             <span className="text-gray-900 font-extrabold text-2xl [@media(max-height:760px)]:text-xl whitespace-nowrap">{BINGO_PT} คะแนน</span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-center gap-8 [@media(max-height:760px)]:gap-6">
             {LINE_SAMPLES.map(s => (
               <div key={s.label} className="flex flex-col items-center gap-2">
                 <MiniLine line={s.line} />
