@@ -743,9 +743,17 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
             <>
               <button
                 onClick={drawKeyword}
-                className={`h-16 font-bold text-xl rounded-xl ${primaryBtnCls}`}
+                className={`h-16 flex items-center justify-center gap-2.5 font-bold text-xl rounded-xl ${primaryBtnCls}`}
               >
-                {calledKeywords.length === 0 ? '🎲 เริ่ม Keyword แรก' : '🎲 สุ่ม Keyword ถัดไป'}
+                <svg className="w-6 h-6 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinejoin="round">
+                  <rect x="3.5" y="3.5" width="17" height="17" rx="3.5" />
+                  <circle cx="8.5" cy="8.5" r="1.4" fill="currentColor" stroke="none" />
+                  <circle cx="15.5" cy="8.5" r="1.4" fill="currentColor" stroke="none" />
+                  <circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none" />
+                  <circle cx="8.5" cy="15.5" r="1.4" fill="currentColor" stroke="none" />
+                  <circle cx="15.5" cy="15.5" r="1.4" fill="currentColor" stroke="none" />
+                </svg>
+                {calledKeywords.length === 0 ? 'เริ่ม Keyword แรก' : 'สุ่ม Keyword ถัดไป'}
               </button>
               {/* Countdown setting */}
               <div className="h-16 flex items-center justify-between gap-2 bg-white border border-orange-200 rounded-xl px-3">
@@ -772,12 +780,27 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
           <button
             onClick={undoLast}
             disabled={calledKeywords.length === 0}
-            className={`h-11 rounded-xl text-sm font-semibold disabled:opacity-30 ${outlineBtnCls}`}
-          >↩ ยกเลิกล่าสุด</button>
+            className={`h-11 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold disabled:opacity-30 ${outlineBtnCls}`}
+          >
+            <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 14 4 9l5-5" />
+              <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
+            </svg>
+            ยกเลิกล่าสุด
+          </button>
           <Link
             href="/admin"
-            className="h-11 flex items-center justify-center px-4 bg-red-700 hover:bg-red-800 text-white rounded-xl text-sm font-semibold transition-colors whitespace-nowrap shadow"
-          >🏁 จบเกม → ใส่คะแนน</Link>
+            className="h-11 flex items-center justify-center gap-2 px-4 bg-red-700 hover:bg-red-800 text-white rounded-xl text-sm font-semibold transition-colors whitespace-nowrap shadow"
+          >
+            <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 21V4M5 4h11l-2 4 2 4H5" />
+            </svg>
+            จบเกม
+            <svg className="w-4 h-4 flex-shrink-0 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+            ใส่คะแนน
+          </Link>
         </div>
       </div>
     </div>
