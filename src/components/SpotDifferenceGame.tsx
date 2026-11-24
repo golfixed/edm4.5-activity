@@ -268,7 +268,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
 
         {/* Bottom bar: timer + start */}
         <div className="flex-shrink-0 flex items-center gap-4 px-5 py-4 bg-neutral-700 border-t border-white/10">
-            <div className="flex-shrink-0 flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5">
+            <div className="flex-shrink-0 h-14 flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4">
               <span className="text-gray-400 text-sm">⏱</span>
               <span className="text-white/60 text-sm">เวลาต่อข้อ</span>
               <input
@@ -289,7 +289,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                 setPhase(pairs.length > 0 ? 'countdown' : 'scoring')
               }}
               disabled={!canStart}
-              className="flex-1 py-4 bg-white text-gray-900 font-bold text-lg rounded-xl hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              className="flex-1 h-14 bg-emerald-500 text-white font-bold text-lg rounded-xl hover:bg-emerald-400 transition-colors shadow-lg shadow-emerald-500/20 disabled:bg-white/10 disabled:text-white/40 disabled:shadow-none disabled:cursor-not-allowed"
             >
               {sets.length > 0 && !selectedSetId
                 ? 'เลือกชุดภาพก่อน'
