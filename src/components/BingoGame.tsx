@@ -714,7 +714,7 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
         <span className="text-orange-700 bg-orange-50 border border-orange-200 rounded-full px-3 py-1 text-sm font-semibold">เรียกไปแล้ว {calledKeywords.length} / {keywords.length}</span>
       </div>
 
-      <div className="flex-1 min-h-0 flex flex-col p-4 gap-3 overflow-hidden">
+      <div className="flex-1 min-h-0 flex flex-col lg:flex-row p-4 gap-3 overflow-hidden">
 
         {/* Called keywords */}
         <div className="flex-1 overflow-y-auto min-h-0 bg-white rounded-2xl p-3 border border-orange-100 shadow-sm">
@@ -736,16 +736,16 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
         </div>
 
         {/* Controls */}
-        <div className="flex-shrink-0 grid grid-cols-[1fr_auto] gap-2">
+        <div className="flex-shrink-0 grid grid-cols-[1fr_auto] gap-2 lg:flex lg:flex-col lg:w-80">
           {allCalled ? (
-            <div className="col-span-2 text-center py-4 text-2xl font-bold text-orange-600">🎉 เรียกครบทุก keyword แล้ว!</div>
+            <div className="col-span-2 text-center py-4 text-2xl font-bold text-orange-600 lg:flex-1 lg:flex lg:items-center lg:justify-center">🎉 เรียกครบทุก keyword แล้ว!</div>
           ) : (
             <>
               <button
                 onClick={drawKeyword}
-                className={`h-16 flex items-center justify-center gap-2.5 font-bold text-xl rounded-xl ${primaryBtnCls}`}
+                className={`h-16 lg:h-auto lg:flex-1 lg:max-h-72 flex lg:flex-col items-center justify-center gap-2.5 lg:gap-3 font-bold text-xl lg:text-2xl rounded-xl lg:rounded-2xl ${primaryBtnCls}`}
               >
-                <svg className="w-6 h-6 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinejoin="round">
+                <svg className="w-6 h-6 lg:w-12 lg:h-12 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinejoin="round">
                   <rect x="3.5" y="3.5" width="17" height="17" rx="3.5" />
                   <circle cx="8.5" cy="8.5" r="1.4" fill="currentColor" stroke="none" />
                   <circle cx="15.5" cy="8.5" r="1.4" fill="currentColor" stroke="none" />
@@ -780,7 +780,7 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
           <button
             onClick={undoLast}
             disabled={calledKeywords.length === 0}
-            className={`h-11 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold disabled:opacity-30 ${outlineBtnCls}`}
+            className={`h-11 lg:mt-auto flex items-center justify-center gap-2 rounded-xl text-sm font-semibold disabled:opacity-30 ${outlineBtnCls}`}
           >
             <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 14 4 9l5-5" />
