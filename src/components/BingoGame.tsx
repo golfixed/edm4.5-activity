@@ -738,7 +738,7 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
                 onClick={drawKeyword}
                 className={`flex-1 font-bold text-xl rounded-xl ${primaryBtnCls}`}
               >
-                🎲 สุ่ม Keyword ถัดไป
+                {calledKeywords.length === 0 ? '🎲 เริ่ม Keyword แรก' : '🎲 สุ่ม Keyword ถัดไป'}
               </button>
               {/* Countdown setting */}
               <div className="flex items-center gap-2 bg-white border border-orange-200 rounded-xl px-3 flex-shrink-0">
