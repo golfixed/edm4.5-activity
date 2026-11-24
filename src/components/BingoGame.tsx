@@ -213,6 +213,14 @@ function MiniLine({ line }: { line: number[] }) {
   )
 }
 
+const cellCenter = (i: number) => ({ x: (i % 5) + 0.5, y: Math.floor(i / 5) + 0.5 })
+
+function LineStroke({ line, width, stroke }: { line: number[]; width: number; stroke: string }) {
+  const a = cellCenter(line[0])
+  const b = cellCenter(line[line.length - 1])
+  return <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={stroke} strokeWidth={width} strokeLinecap="round" />
+}
+
 function ScoringExample({ card }: { card: string[] }) {
   const [marked, setMarked] = useState<Set<number>>(() => new Set(EXAMPLE_MARKS))
 
@@ -236,6 +244,7 @@ function ScoringExample({ card }: { card: string[] }) {
   return (
     <div className="flex-1 flex gap-6 items-center justify-center min-h-0">
       <div className="flex flex-col items-center gap-2 w-full max-w-lg">
+        <div className="relative w-full">
         <div className="grid grid-cols-5 gap-1 w-full">
           {card.map((cell, i) => {
             const free = i === FREE_IDX
@@ -254,6 +263,22 @@ function ScoringExample({ card }: { card: string[] }) {
               </button>
             )
           })}
+        </div>
+        <svg className="absolute inset-0 w-full h-full pointer-events-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]" viewBox="0 0 5 5" preserveAspectRatio="none">
+          <defs>
+            {lines.map((line, n) => (
+              <mask key={n} id={`bingo-line-${n}`} maskUnits="userSpaceOnUse" x="-1" y="-1" width="7" height="7">
+                <rect x="-1" y="-1" width="7" height="7" fill="white" />
+                <LineStroke line={line} width={0.74} stroke="black" />
+              </mask>
+            ))}
+          </defs>
+          {lines.map((line, n) => (
+            <g key={n} mask={`url(#bingo-line-${n})`}>
+              <LineStroke line={line} width={0.86} stroke="white" />
+            </g>
+          ))}
+        </svg>
         </div>
         <p className="text-white/60 text-sm">แตะช่องเพื่อลองทำเครื่องหมาย</p>
       </div>
@@ -553,9 +578,8 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
   // ── Scoring example phase ─────────────────────────────────────────────────
   if (phase === 'scoring-example') {
     return (
-      <div className={`h-screen flex flex-col overflow-hidden ${bgClass}`} style={bgStyle}>
-        <div className="absolute inset-0 bg-black/50" />
-        <div className="relative z-10 flex flex-col h-full p-4 gap-3">
+      <div className="h-screen flex flex-col overflow-hidden bg-neutral-900">
+        <div className="flex flex-col h-full p-4 gap-3">
           <div className="flex items-center gap-2">
             <button onClick={() => setPhase('home')} className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm flex-shrink-0">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
