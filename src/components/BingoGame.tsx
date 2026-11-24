@@ -596,10 +596,6 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
               ))}
             </div>
           </div>
-
-          <button onClick={startGame}
-            className={`w-full py-3 font-bold text-lg rounded-xl ${primaryBtnCls}`}
-          >🎲 เริ่มเกม</button>
         </div>
       </div>
     )
