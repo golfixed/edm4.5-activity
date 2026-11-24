@@ -148,37 +148,61 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
 
   const selectedTeams = teams.filter((t) => selectedTeamIds.includes(t.id))
 
-  // ── Shared topbar elements ─────────────────────────────────────────────────
+  // ── Shared theme (matches Human Bingo) ────────────────────────────────────
+  const headerCls = 'flex-shrink-0 flex items-center justify-between gap-3 px-6 py-4 bg-white border-b border-orange-100 shadow-sm'
+  const outlineBtnCls = 'bg-white hover:bg-orange-50 border border-orange-200 text-orange-700 transition-colors'
+  const primaryBtnCls = 'bg-gradient-to-b from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white shadow-[0_6px_20px_rgba(194,65,12,0.35)] transition-all'
+  const stepBtnCls = 'flex items-center justify-center rounded-full bg-orange-100 hover:bg-orange-200 text-orange-700 transition-colors flex-shrink-0'
+
+  const chevronLeft = <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+  const chevronRight = <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+  const minusIcon = <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round"><path d="M3.5 8h9" /></svg>
+  const plusIcon = <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round"><path d="M3.5 8h9M8 3.5v9" /></svg>
+  const clockIcon = (cls: string) => (
+    <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="13" r="8" />
+      <path d="M12 9v4l2.5 2.5M9.5 2.5h5M12 2.5V5" />
+    </svg>
+  )
+  const alarmIcon = (cls: string) => (
+    <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="13" r="7.5" />
+      <path d="M12 9.5V13l2.5 2M5 3.5 2.5 6M19 3.5 21.5 6M6.5 19.5 5 21M17.5 19.5 19 21" />
+    </svg>
+  )
+  const playIcon = <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z" /></svg>
+  const flagIcon = <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round"><path d="M5 21V4M5 4h11l-2 4 2 4H5" /></svg>
+  const arrowIcon = <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+  const eyeIcon = <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12s-3.5 6.5-9.5 6.5S2.5 12 2.5 12z" /><circle cx="12" cy="12" r="2.75" /></svg>
+
   const backBtn = (onClick: (e: React.MouseEvent) => void) => (
     <button onClick={onClick}
-      className="w-9 h-9 flex items-center justify-center border border-white/25 rounded-lg text-white hover:bg-white/10 transition-colors flex-shrink-0">
-      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-      </svg>
+      className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm flex-shrink-0 ${outlineBtnCls}`}>
+      {chevronLeft}กลับ
     </button>
   )
 
   const scaleControls = (
-    <div className="flex items-center border border-white/20 rounded-lg overflow-hidden flex-shrink-0">
+    <div className="flex items-center border border-orange-200 bg-white rounded-lg overflow-hidden flex-shrink-0">
       <button
         onClick={() => setUiScale(s => Math.max(0.75, +(s - 0.1).toFixed(1)))}
-        className="w-8 h-8 flex items-center justify-center text-white/60 hover:bg-white/10 transition-colors text-lg leading-none select-none"
+        className="w-8 h-8 flex items-center justify-center text-orange-700 hover:bg-orange-50 transition-colors"
         title="ลดขนาด"
-      >−</button>
-      <span className="text-white/40 text-xs w-10 text-center tabular-nums border-x border-white/15 h-8 flex items-center justify-center">
+      >{minusIcon}</button>
+      <span className="text-orange-800/60 text-xs w-11 text-center tabular-nums border-x border-orange-100 h-8 flex items-center justify-center">
         {Math.round(uiScale * 100)}%
       </span>
       <button
         onClick={() => setUiScale(s => Math.min(2.0, +(s + 0.1).toFixed(1)))}
-        className="w-8 h-8 flex items-center justify-center text-white/60 hover:bg-white/10 transition-colors text-lg leading-none select-none"
+        className="w-8 h-8 flex items-center justify-center text-orange-700 hover:bg-orange-50 transition-colors"
         title="เพิ่มขนาด"
-      >+</button>
+      >{plusIcon}</button>
     </div>
   )
 
   const settingsBtn = (
     <button onClick={onOpenSettings}
-      className="flex items-center gap-1.5 px-3 h-9 border border-white/25 rounded-lg text-white/80 hover:bg-white/10 transition-colors text-sm flex-shrink-0"
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm flex-shrink-0 ${outlineBtnCls}`}
       title="ตั้งค่าเกม">
       <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -189,20 +213,29 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
   )
 
   const checkIcon = (
-    <span className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center">
+    <span className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center">
       <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
         <path d="M3.5 8.5l3 3 6-7" />
       </svg>
     </span>
   )
 
+  const cardCls = (selected: boolean) => selected
+    ? 'border-orange-500 bg-orange-50 shadow-sm'
+    : 'border-orange-100 bg-white hover:border-orange-300'
+
   // ── SETUP ─────────────────────────────────────────────────────────────────
   if (phase === 'setup') {
+    const startLabel = sets.length > 0 && !selectedSetId
+      ? 'เลือกชุดภาพก่อน'
+      : selectedTeamIds.length === 0
+      ? 'เลือกทีมก่อน'
+      : pairs.length > 0 ? 'เริ่มเกม' : 'ข้ามไปใส่คะแนน'
     return (
-      <div className="h-screen bg-neutral-800 flex flex-col overflow-hidden" style={{ zoom: uiScale }}>
-        <div className="flex items-center justify-between gap-3 px-5 py-3 bg-neutral-700 border-b border-white/10 flex-shrink-0">
+      <div className="h-screen bg-orange-50 flex flex-col overflow-hidden" style={{ zoom: uiScale }}>
+        <div className={headerCls}>
           {backBtn(onBack ?? (() => {}))}
-          <h1 className="text-white text-xl font-bold flex-1 text-center">{game.name}</h1>
+          <h1 className="text-gray-900 text-xl font-bold flex-1 text-center">{game.name}</h1>
           <div className="flex items-center gap-2">
             {scaleControls}
             {settingsBtn}
@@ -211,10 +244,10 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
 
         <div className="flex-1 flex overflow-hidden">
           {/* Left: Teams */}
-          <div className="flex-1 flex flex-col p-5 overflow-hidden border-r border-white/10">
+          <div className="flex-1 flex flex-col p-5 overflow-hidden border-r border-orange-100">
             <div className="flex items-baseline gap-2 mb-3 flex-shrink-0">
-              <h2 className="text-white text-base font-bold">เลือกทีม</h2>
-              <span className="text-gray-400 text-xs">{selectedTeamIds.length > 0 ? `${selectedTeamIds.length} ทีม` : 'ยังไม่ได้เลือก'}</span>
+              <h2 className="text-gray-900 text-base font-bold">เลือกทีม</h2>
+              <span className="text-gray-500 text-xs">{selectedTeamIds.length > 0 ? `${selectedTeamIds.length} ทีม` : 'ยังไม่ได้เลือก'}</span>
             </div>
             <div className="grid grid-cols-2 gap-3 flex-1 overflow-y-auto content-start">
               {teams.map((team) => {
@@ -223,15 +256,12 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                   <button
                     key={team.id}
                     onClick={() => toggleTeam(team.id)}
-                    className={`flex items-center gap-3 px-5 py-3 min-h-[76px] rounded-xl border-2 transition-all font-semibold text-lg
-                      ${selected
-                        ? 'border-white/50 bg-white/10 text-white'
-                        : 'border-white/15 text-white/80 hover:border-white/35 hover:bg-white/5'}`}
+                    className={`flex items-center gap-3 px-5 py-3 min-h-[76px] rounded-xl border-2 transition-all font-semibold text-lg ${selected ? 'text-orange-900' : 'text-gray-800'} ${cardCls(selected)}`}
                   >
                     <span className={`w-4 h-4 rounded-full flex-shrink-0 ${team.color}`} />
                     <span className="flex flex-col items-start leading-tight min-w-0">
                       <span className="truncate">{team.name}</span>
-                      {team.captain && <span className="text-white/40 text-sm font-normal">({team.captain})</span>}
+                      {team.captain && <span className="text-gray-400 text-sm font-normal">({team.captain})</span>}
                     </span>
                     {selected && <span className="ml-auto flex-shrink-0">{checkIcon}</span>}
                   </button>
@@ -245,8 +275,8 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
             {sets.length > 0 && (
               <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
                 <div className="flex items-baseline gap-2 mb-3 flex-shrink-0">
-                  <h2 className="text-white text-base font-bold">ชุดภาพ</h2>
-                  <span className="text-gray-400 text-xs">แต่ละรอบใช้คนละชุด</span>
+                  <h2 className="text-gray-900 text-base font-bold">ชุดภาพ</h2>
+                  <span className="text-gray-500 text-xs">แต่ละรอบใช้คนละชุด</span>
                 </div>
                 <div className="grid grid-cols-2 gap-3 overflow-y-auto content-start">
                   {sets.map((set) => {
@@ -255,16 +285,13 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                       <button
                         key={set.id}
                         onClick={() => setSelectedSetId(selected ? null : set.id)}
-                        className={`flex flex-col items-start justify-center px-5 py-3 min-h-[76px] rounded-xl border-2 transition-all text-left
-                          ${selected
-                            ? 'border-white/50 bg-white/10'
-                            : 'border-white/15 hover:border-white/35 hover:bg-white/5'}`}
+                        className={`flex flex-col items-start justify-center px-5 py-3 min-h-[76px] rounded-xl border-2 transition-all text-left ${cardCls(selected)}`}
                       >
                         <div className="flex items-center gap-2 w-full">
-                          <span className="text-white font-semibold text-sm">{set.name}</span>
+                          <span className={`font-semibold text-sm ${selected ? 'text-orange-900' : 'text-gray-900'}`}>{set.name}</span>
                           {selected && <span className="ml-auto flex-shrink-0">{checkIcon}</span>}
                         </div>
-                        <span className="text-white/40 text-xs mt-0.5">{set.pairs.length} โจทย์</span>
+                        <span className="text-gray-500 text-xs mt-0.5">{set.pairs.length} โจทย์</span>
                       </button>
                     )
                   })}
@@ -275,19 +302,21 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
         </div>
 
         {/* Bottom bar: timer + start */}
-        <div className="flex-shrink-0 flex items-center gap-4 px-5 py-4 bg-neutral-700 border-t border-white/10">
-            <div className="flex-shrink-0 h-14 flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4">
-              <span className="text-gray-400 text-sm">⏱</span>
-              <span className="text-white/60 text-sm">เวลาต่อข้อ</span>
+        <div className="flex-shrink-0 flex items-center gap-4 px-5 py-4 bg-white border-t border-orange-100">
+            <div className="flex-shrink-0 h-14 flex items-center gap-2 bg-white border border-orange-200 rounded-xl px-3">
+              {clockIcon('w-6 h-6 text-orange-500 flex-shrink-0')}
+              <span className="text-gray-500 text-sm whitespace-nowrap">เวลาต่อข้อ</span>
+              <button onClick={() => setCustomTimer(t => Math.max(5, t - 5))} className={`w-8 h-8 ${stepBtnCls}`} title="ลดเวลา">{minusIcon}</button>
               <input
                 type="number"
                 min={5}
                 max={300}
                 value={customTimer}
                 onChange={(e) => setCustomTimer(Math.max(1, Number(e.target.value)))}
-                className="w-16 text-center bg-white/10 text-white font-bold rounded-lg px-2 py-1 text-sm border border-white/20 focus:outline-none focus:border-white/50"
+                className="w-12 text-center font-extrabold text-orange-600 text-xl tabular-nums focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
-              <span className="text-white/60 text-sm">วินาที</span>
+              <button onClick={() => setCustomTimer(t => Math.min(300, t + 5))} className={`w-8 h-8 ${stepBtnCls}`} title="เพิ่มเวลา">{plusIcon}</button>
+              <span className="text-gray-400 text-sm">วินาที</span>
             </div>
 
             <button
@@ -297,13 +326,10 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                 setPhase(pairs.length > 0 ? 'countdown' : 'scoring')
               }}
               disabled={!canStart}
-              className="flex-1 h-14 bg-emerald-500 text-white font-bold text-lg rounded-xl hover:bg-emerald-400 transition-colors shadow-lg shadow-emerald-500/20 disabled:bg-white/10 disabled:text-white/40 disabled:shadow-none disabled:cursor-not-allowed"
+              className={`flex-1 h-14 flex items-center justify-center gap-2 font-bold text-lg rounded-xl ${canStart ? primaryBtnCls : 'bg-orange-100 text-orange-300 cursor-not-allowed'}`}
             >
-              {sets.length > 0 && !selectedSetId
-                ? 'เลือกชุดภาพก่อน'
-                : selectedTeamIds.length === 0
-                ? 'เลือกทีมก่อน'
-                : pairs.length > 0 ? '▶ เริ่มเกม' : '▶ ข้ามไปใส่คะแนน'}
+              {canStart && playIcon}
+              {startLabel}
             </button>
         </div>
       </div>
@@ -313,21 +339,21 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
   // ── COUNTDOWN ─────────────────────────────────────────────────────────────
   if (phase === 'countdown') {
     return (
-      <div className="h-screen bg-neutral-800 flex flex-col items-center justify-center" style={{ zoom: uiScale }}>
-        <div className="text-white/40 text-xl mb-6 tracking-widest uppercase font-light">เตรียมพร้อม</div>
+      <div className="h-screen bg-orange-50 flex flex-col items-center justify-center" style={{ zoom: uiScale }}>
+        <div className="text-orange-900/40 text-xl mb-6 tracking-widest uppercase font-semibold">เตรียมพร้อม</div>
         <div
           key={countdownNum}
-          className="text-white font-black tabular-nums select-none"
+          className="font-black tabular-nums select-none bg-gradient-to-b from-orange-500 to-red-600 bg-clip-text text-transparent"
           style={{
             fontSize: 'clamp(160px, 40vw, 400px)',
             lineHeight: 1,
-            textShadow: '0 0 80px rgba(255,255,255,0.3), 0 8px 32px rgba(0,0,0,0.8)',
+            filter: 'drop-shadow(0 10px 30px rgba(194,65,12,0.35))',
             animation: 'countdownPop 0.4s cubic-bezier(0.36,0.07,0.19,0.97)',
           }}
         >
           {countdownNum}
         </div>
-        <div className="text-gray-400/60 text-lg mt-8">{game.name}</div>
+        <div className="text-orange-900/50 text-lg mt-8 font-medium">{game.name}</div>
         <style>{`
           @keyframes countdownPop {
             0%   { transform: scale(1.6); opacity: 0; }
@@ -345,52 +371,53 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
     const isImgChoice = (val?: string) => !!val && val.startsWith('data:image')
     const bothTextChoices = currentPair && !isImgChoice(currentPair.imageA) && !isImgChoice(currentPair.imageB)
     const showBigQuestion = !!currentPair?.questionImage && bothTextChoices
+    const timerTextCls = pct > 0.5 ? 'text-emerald-600' : pct > 0.2 ? 'text-amber-500' : 'text-red-600'
+    const meta = (
+      <>
+        {game.name}{selectedSet && <span className="ml-1.5">[{selectedSet.name}]</span>}
+        {' · '}ข้อที่ {currentIndex + 1} / {pairs.length}
+      </>
+    )
 
     return (
-      <div className="h-screen bg-neutral-800 flex flex-col overflow-hidden" style={{ zoom: uiScale }}>
-        <div className="flex items-center justify-between gap-3 px-5 py-3 bg-neutral-700 border-b border-white/10 flex-shrink-0">
+      <div className="h-screen bg-orange-50 flex flex-col overflow-hidden" style={{ zoom: uiScale }}>
+        <div className={headerCls}>
           {backBtn((e) => { e.preventDefault(); setPhase('setup') })}
           <div className="text-center flex-1 min-w-0 flex flex-col items-center justify-center">
             {!showBigQuestion && currentPair?.questionImage ? (
               <>
                 <img src={currentPair.questionImage} alt="คำถาม" className="max-h-14 max-w-xs object-contain rounded-lg" />
-                <span className="text-white/40 text-xs mt-0.5 truncate block">
-                  {game.name}{selectedSet && <span className="ml-1.5">[{selectedSet.name}]</span>}
-                  {' · '}ข้อที่ {currentIndex + 1} / {pairs.length}
-                </span>
+                <span className="text-gray-500 text-xs mt-0.5 truncate block">{meta}</span>
               </>
             ) : currentPair?.question ? (
               <>
-                <p className="text-white text-2xl font-bold leading-tight truncate">{currentPair.question}</p>
-                <span className="text-white/40 text-sm truncate block">
-                  {game.name}{selectedSet && <span className="ml-1.5">[{selectedSet.name}]</span>}
-                  {' · '}ข้อที่ {currentIndex + 1} / {pairs.length}
-                </span>
+                <p className="text-gray-900 text-2xl font-bold leading-tight truncate">{currentPair.question}</p>
+                <span className="text-gray-500 text-sm truncate block">{meta}</span>
               </>
             ) : (
               <>
-                <h1 className="text-white text-lg font-bold leading-tight truncate">{game.name}</h1>
-                <span className="text-gray-400 text-sm">
-                  {selectedSet && <span className="text-white/50 mr-2">[{selectedSet.name}]</span>}
+                <h1 className="text-gray-900 text-lg font-bold leading-tight truncate">{game.name}</h1>
+                <span className="text-gray-500 text-sm">
+                  {selectedSet && <span className="text-orange-700 mr-2">[{selectedSet.name}]</span>}
                   ข้อที่ {currentIndex + 1} / {pairs.length}
                 </span>
               </>
             )}
           </div>
           <div className="flex items-center gap-2">
-            <div className={`text-4xl font-bold tabular-nums flex-shrink-0 ${pct > 0.5 ? 'text-green-400' : pct > 0.2 ? 'text-yellow-400' : 'text-red-400'} ${timeLeft <= 5 && !revealed ? 'animate-pulse' : ''}`}>
-              {revealed ? '⏰' : timeLeft}
+            <div className={`flex items-center justify-center min-w-[3.5rem] text-4xl font-bold tabular-nums flex-shrink-0 ${revealed ? 'text-red-600' : timerTextCls} ${timeLeft <= 5 && !revealed ? 'animate-pulse' : ''}`}>
+              {revealed ? alarmIcon('w-9 h-9') : timeLeft}
             </div>
             {scaleControls}
           </div>
         </div>
 
-        <div className="h-1.5 bg-white/10 flex-shrink-0">
+        <div className="h-1.5 bg-orange-100 flex-shrink-0">
           <div className={`h-full transition-all duration-1000 ease-linear ${timerColor}`} style={{ width: `${pct * 100}%` }} />
         </div>
 
         {showBigQuestion && (
-          <div className="flex-1 flex items-center justify-center bg-black/30 border-b border-white/10 py-3 px-6 min-h-0 relative">
+          <div className="flex-1 flex items-center justify-center bg-white border-b border-orange-100 py-3 px-6 min-h-0 relative">
             <img
               src={revealed && currentPair!.revealImage ? currentPair!.revealImage : currentPair!.questionImage}
               alt={revealed && currentPair!.revealImage ? 'เฉลย' : 'คำถาม'}
@@ -398,23 +425,23 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
               draggable={false}
             />
             {revealed && currentPair!.revealImage && (
-              <span className="absolute top-2 right-3 text-amber-400 text-xs font-semibold tracking-wide bg-black/50 px-2 py-0.5 rounded-full">เฉลย</span>
+              <span className="absolute top-2 right-3 text-white text-xs font-bold tracking-wide bg-amber-500 px-2.5 py-0.5 rounded-full shadow">เฉลย</span>
             )}
           </div>
         )}
 
-        <div className={showBigQuestion ? 'flex-shrink-0 flex gap-4 px-4 pb-3 pt-2' : 'flex-1 flex gap-4 p-4 min-h-0'}
+        <div className={showBigQuestion ? 'flex-shrink-0 flex gap-4 px-4 pb-3 pt-3' : 'flex-1 flex gap-4 p-4 min-h-0'}
           style={showBigQuestion ? { height: 220 } : undefined}>
           {(['A', 'B'] as const).map((side) => {
             const imgSrc = side === 'A' ? currentPair?.imageA : currentPair?.imageB
             const isCorrect = correct === side
             return (
               <div key={side} className="flex-1 flex flex-col min-w-0 min-h-0">
-                <div className={`flex flex-col flex-1 min-h-0 transition-all duration-300 rounded-xl overflow-hidden ${
+                <div className={`flex flex-col flex-1 min-h-0 transition-all duration-300 rounded-2xl overflow-hidden bg-white border border-orange-100 shadow-sm ${
                   revealed && correct !== undefined
                     ? isCorrect
-                      ? 'ring-4 ring-green-400 shadow-[0_0_24px_4px_rgba(74,222,128,0.5)]'
-                      : 'ring-4 ring-red-400 shadow-[0_0_24px_4px_rgba(248,113,113,0.4)]'
+                      ? 'ring-4 ring-green-500 shadow-[0_0_24px_4px_rgba(34,197,94,0.35)]'
+                      : 'ring-4 ring-red-500 shadow-[0_0_24px_4px_rgba(239,68,68,0.3)]'
                     : ''
                 }`}>
                   {revealed && correct !== undefined && (
@@ -431,22 +458,22 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                       )}
                     </div>
                   )}
-                  <div className="relative bg-black/20 flex-1 min-h-0">
+                  <div className="relative flex-1 min-h-0">
                     {imgSrc && imgSrc.startsWith('data:image') ? (
                       <>
                         <img src={imgSrc} alt={side} className="w-full h-full object-contain block" draggable={false} />
                         {revealed && correct === undefined && (
                           <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                            <span className="text-white/60 text-sm">ยังไม่ได้ตั้งเฉลย</span>
+                            <span className="text-white/80 text-sm">ยังไม่ได้ตั้งเฉลย</span>
                           </div>
                         )}
                       </>
                     ) : imgSrc ? (
                       <div className="w-full h-full flex items-center justify-center p-6">
-                        <span className="text-white font-bold text-center leading-snug" style={{ fontSize: 'clamp(1.5rem, 5vw, 3.5rem)' }}>{imgSrc}</span>
+                        <span className="text-gray-900 font-bold text-center leading-snug" style={{ fontSize: 'clamp(1.5rem, 5vw, 3.5rem)' }}>{imgSrc}</span>
                       </div>
                     ) : (
-                      <div className="h-48 flex items-center justify-center"><span className="text-white/40">ไม่มีภาพ</span></div>
+                      <div className="h-48 flex items-center justify-center"><span className="text-gray-400">ไม่มีภาพ</span></div>
                     )}
                   </div>
                 </div>
@@ -455,39 +482,36 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
           })}
         </div>
 
-        <div className="bg-neutral-700/80 border-t border-white/10 px-6 py-4 flex items-center justify-between flex-shrink-0">
+        <div className="bg-white border-t border-orange-100 px-6 py-4 flex items-center justify-between flex-shrink-0">
           <button
             onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
             disabled={currentIndex === 0}
-            className="flex items-center gap-2 px-5 py-2 bg-white/10 border border-white/15 text-white rounded-lg hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed font-medium"
+            className={`flex items-center gap-2 px-5 py-2 rounded-lg font-semibold disabled:opacity-30 disabled:cursor-not-allowed ${outlineBtnCls}`}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
+            {chevronLeft}
             ก่อนหน้า
           </button>
 
           <div className="flex gap-1.5">
             {pairs.map((_, i) => (
               <button key={i} onClick={() => setCurrentIndex(i)}
-                className={`w-2.5 h-2.5 rounded-full transition-all ${i === currentIndex ? 'bg-white scale-125' : 'bg-white/25 hover:bg-white/50'}`} />
+                className={`w-2.5 h-2.5 rounded-full transition-all ${i === currentIndex ? 'bg-orange-500 scale-125' : 'bg-orange-200 hover:bg-orange-300'}`} />
             ))}
           </div>
 
           {revealed ? (
-            <button onClick={goNext} className="flex items-center gap-2 px-5 py-2 bg-white text-gray-900 font-bold rounded-lg hover:bg-gray-100 transition-colors">
-              {isLast ? 'จบเกม → ใส่คะแนน' : (
-                <>ข้อถัดไป <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg></>
-              )}
+            <button onClick={goNext} className={`flex items-center gap-2 px-5 py-2 font-bold rounded-lg ${primaryBtnCls}`}>
+              {isLast ? <>{flagIcon}จบเกม{arrowIcon}ใส่คะแนน</> : <>ข้อถัดไป{chevronRight}</>}
             </button>
           ) : (
             <div className="flex gap-2">
-              <button onClick={() => setRevealed(true)} className="px-4 py-2 bg-amber-500/80 border border-amber-400/30 text-white rounded-lg hover:bg-amber-500 text-sm font-medium">
+              <button onClick={() => setRevealed(true)} className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-white rounded-lg text-sm font-semibold shadow-sm transition-colors">
+                {eyeIcon}
                 เฉลยก่อนเวลา
               </button>
               {!isLast && (
-                <button onClick={goNext} className="flex items-center gap-2 px-5 py-2 bg-white/10 border border-white/15 text-white rounded-lg hover:bg-white/20 font-medium">
-                  ถัดไป <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                <button onClick={goNext} className={`flex items-center gap-2 px-5 py-2 rounded-lg font-semibold ${outlineBtnCls}`}>
+                  ถัดไป{chevronRight}
                 </button>
               )}
             </div>
@@ -499,40 +523,41 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
 
   // ── SCORING ───────────────────────────────────────────────────────────────
   return (
-    <div className="h-screen bg-neutral-800 flex flex-col overflow-hidden" style={{ zoom: uiScale }}>
-      <div className="flex items-center justify-between gap-3 px-5 py-3 bg-neutral-700 border-b border-white/10 flex-shrink-0">
+    <div className="h-screen bg-orange-50 flex flex-col overflow-hidden" style={{ zoom: uiScale }}>
+      <div className={headerCls}>
         {backBtn((e) => { e.preventDefault(); setPhase(pairs.length > 0 ? 'playing' : 'setup') })}
-        <h1 className="text-white text-xl font-bold flex-1 text-center">บันทึกคะแนน — {game.name}</h1>
+        <h1 className="text-gray-900 text-xl font-bold flex-1 text-center">บันทึกคะแนน — {game.name}</h1>
         <div className="flex items-center gap-2">
           {scaleControls}
           {settingsBtn}
         </div>
       </div>
       <div className="flex-1 flex items-center justify-center p-8 overflow-y-auto">
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 w-full max-w-md">
-          <h2 className="text-white text-2xl font-bold mb-2 text-center">ใส่คะแนนแต่ละทีม</h2>
-          <p className="text-gray-400 text-sm text-center mb-8">นับจากจำนวนผู้เล่นที่เหลือหรือคะแนนที่ได้</p>
+        <div className="bg-white border border-orange-100 shadow-sm rounded-3xl p-8 w-full max-w-md">
+          <h2 className="text-gray-900 text-2xl font-bold mb-2 text-center">ใส่คะแนนแต่ละทีม</h2>
+          <p className="text-gray-500 text-sm text-center mb-8">นับจากจำนวนผู้เล่นที่เหลือหรือคะแนนที่ได้</p>
           <div className="space-y-4 mb-8">
             {selectedTeams.map((team, rank) => (
               <div key={team.id} className="flex items-center gap-4">
-                <span className="text-white/40 text-sm w-6 text-right">{rank + 1}.</span>
+                <span className="text-gray-400 text-sm w-6 text-right">{rank + 1}.</span>
                 <span className={`w-5 h-5 rounded-full flex-shrink-0 ${team.color}`} />
-                <span className="text-white font-medium flex-1">
+                <span className="text-gray-900 font-medium flex-1">
                   {team.name}
-                  {team.captain && <span className="text-white/40 text-sm font-normal ml-1">({team.captain})</span>}
+                  {team.captain && <span className="text-gray-400 text-sm font-normal ml-1">({team.captain})</span>}
                 </span>
                 <input
                   type="number" min="0"
                   value={finalScores[team.id] ?? 0}
                   onChange={(e) => setFinalScores((prev) => ({ ...prev, [team.id]: parseInt(e.target.value) || 0 }))}
-                  className="w-24 px-3 py-2 rounded-lg bg-white/10 text-white text-center text-xl font-bold border border-white/20 focus:outline-none focus:border-white/50"
+                  className="w-24 px-3 py-2 rounded-lg bg-orange-50 text-orange-700 text-center text-xl font-bold border border-orange-200 focus:outline-none focus:border-orange-500"
                 />
-                <span className="text-gray-400 text-sm w-12">คะแนน</span>
+                <span className="text-gray-500 text-sm w-12">คะแนน</span>
               </div>
             ))}
           </div>
-          <button onClick={handleSave} className="w-full py-3 bg-white text-gray-900 font-bold text-lg rounded-xl hover:bg-gray-100 transition-colors">
-            บันทึกคะแนน ✓
+          <button onClick={handleSave} className={`w-full py-3 flex items-center justify-center gap-2 font-bold text-lg rounded-xl ${primaryBtnCls}`}>
+            <svg className="w-5 h-5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round"><path d="M3.5 8.5l3 3 6-7" /></svg>
+            บันทึกคะแนน
           </button>
         </div>
       </div>
