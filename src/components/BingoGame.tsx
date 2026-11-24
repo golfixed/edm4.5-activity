@@ -205,9 +205,9 @@ const LINE_SAMPLES: { label: string; line: number[] }[] = [
 
 function MiniLine({ line }: { line: number[] }) {
   return (
-    <div className="grid grid-cols-5 gap-0.5 w-16">
+    <div className="grid grid-cols-5 gap-[3px] w-24 [@media(max-height:760px)]:w-16">
       {Array.from({ length: 25 }, (_, i) => (
-        <div key={i} className={`aspect-square rounded-[2px] ${line.includes(i) ? 'bg-orange-500' : i === FREE_IDX ? 'bg-amber-300' : 'bg-orange-100'}`} />
+        <div key={i} className={`aspect-square rounded-[3px] ${line.includes(i) ? 'bg-orange-500' : i === FREE_IDX ? 'bg-amber-300' : 'bg-orange-100'}`} />
       ))}
     </div>
   )
@@ -242,89 +242,92 @@ function ScoringExample({ card }: { card: string[] }) {
   const bingoScore = lines.length * BINGO_PT
 
   return (
-    <div className="flex-1 flex gap-6 items-center justify-center min-h-0">
-      <div className="flex flex-col items-center gap-2 w-full max-w-lg">
-        <div className="relative w-full">
-        <div className="grid grid-cols-5 gap-1 w-full">
-          {card.map((cell, i) => {
-            const free = i === FREE_IDX
-            const cls = inLine.has(i)
-              ? 'bg-orange-500 border-orange-600 text-white'
-              : free ? 'bg-amber-200 border-amber-400 text-amber-900'
-              : marked.has(i) ? 'bg-orange-200 border-orange-300 text-orange-900'
-              : 'bg-white border-orange-100 text-gray-800 hover:border-orange-300'
-            return (
-              <button key={i} onClick={() => toggle(i)}
-                className={`relative aspect-square flex items-center justify-center rounded-lg border-2 text-center p-1 transition-colors ${cls} ${free ? 'cursor-default font-bold' : ''}`}>
-                <span className="text-xs leading-tight">{cell}</span>
-                {isOn(i) && (
-                  <span className="absolute top-1 right-1.5 text-base font-extrabold leading-none opacity-90">+{TILE_PT}</span>
-                )}
-              </button>
-            )
-          })}
+    <div className="flex-1 flex gap-6 min-h-0">
+      <div className="flex-1 min-w-0 flex flex-col items-center gap-2">
+        <div className="flex-1 min-h-0 w-full flex items-center justify-center [container-type:size]">
+          <div className="relative [container-type:inline-size]"
+            style={{ width: 'min(100cqw, 100cqh)', height: 'min(100cqw, 100cqh)' }}>
+            <div className="grid grid-cols-5 grid-rows-5 gap-[1%] w-full h-full">
+              {card.map((cell, i) => {
+                const free = i === FREE_IDX
+                const cls = inLine.has(i)
+                  ? 'bg-orange-500 border-orange-600 text-white'
+                  : free ? 'bg-amber-200 border-amber-400 text-amber-900'
+                  : marked.has(i) ? 'bg-orange-200 border-orange-300 text-orange-900'
+                  : 'bg-white border-orange-100 text-gray-800 hover:border-orange-300'
+                return (
+                  <button key={i} onClick={() => toggle(i)}
+                    className={`relative flex items-center justify-center rounded-xl border-2 text-center p-[6%] overflow-hidden transition-colors ${cls} ${free ? 'cursor-default font-bold' : 'font-medium'}`}>
+                    <span className="leading-tight text-[2.6cqw]">{cell}</span>
+                    {isOn(i) && (
+                      <span className="absolute top-[4%] right-[6%] text-[3.2cqw] font-extrabold leading-none opacity-90">+{TILE_PT}</span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+            <svg className="absolute inset-0 w-full h-full pointer-events-none drop-shadow-[0_2px_3px_rgba(124,45,18,0.35)]" viewBox="0 0 5 5" preserveAspectRatio="none">
+              <defs>
+                {lines.map((line, n) => (
+                  <mask key={n} id={`bingo-line-${n}`} maskUnits="userSpaceOnUse" x="-1" y="-1" width="7" height="7">
+                    <rect x="-1" y="-1" width="7" height="7" fill="white" />
+                    <LineStroke line={line} width={0.74} stroke="black" />
+                  </mask>
+                ))}
+              </defs>
+              {lines.map((line, n) => (
+                <g key={n} mask={`url(#bingo-line-${n})`}>
+                  <LineStroke line={line} width={0.86} stroke="#7c2d12" />
+                </g>
+              ))}
+            </svg>
+          </div>
         </div>
-        <svg className="absolute inset-0 w-full h-full pointer-events-none drop-shadow-[0_2px_3px_rgba(124,45,18,0.35)]" viewBox="0 0 5 5" preserveAspectRatio="none">
-          <defs>
-            {lines.map((line, n) => (
-              <mask key={n} id={`bingo-line-${n}`} maskUnits="userSpaceOnUse" x="-1" y="-1" width="7" height="7">
-                <rect x="-1" y="-1" width="7" height="7" fill="white" />
-                <LineStroke line={line} width={0.74} stroke="black" />
-              </mask>
-            ))}
-          </defs>
-          {lines.map((line, n) => (
-            <g key={n} mask={`url(#bingo-line-${n})`}>
-              <LineStroke line={line} width={0.86} stroke="#7c2d12" />
-            </g>
-          ))}
-        </svg>
-        </div>
-        <p className="text-orange-900/50 text-sm">แตะช่องเพื่อลองทำเครื่องหมาย</p>
+        <p className="text-orange-900/50 text-base flex-shrink-0">แตะช่องเพื่อลองทำเครื่องหมาย</p>
       </div>
 
-      <div className="w-72 flex-shrink-0 flex flex-col gap-3">
-        <div className="bg-white border border-orange-100 shadow-sm rounded-2xl p-4 space-y-3">
-          <h2 className="text-gray-900 font-bold text-lg">กติกาการนับคะแนน</h2>
-          <div className="flex items-center gap-3">
-            <span className="w-8 h-8 rounded-lg bg-orange-200 border-2 border-orange-300 flex-shrink-0" />
-            <span className="text-gray-700 text-sm flex-1">1 ช่อง</span>
-            <span className="text-gray-900 font-bold">{TILE_PT} คะแนน</span>
+      <div className="w-[clamp(20rem,32vw,30rem)] flex-shrink-0 flex flex-col gap-4 min-h-0">
+        <div className="flex-1 min-h-0 bg-white border border-orange-100 shadow-sm rounded-3xl p-6 [@media(max-height:760px)]:p-4 flex flex-col justify-around gap-4 [@media(max-height:760px)]:gap-2">
+          <h2 className="text-gray-900 font-extrabold text-3xl [@media(max-height:760px)]:text-2xl">กติกาการนับคะแนน</h2>
+          <div className="flex items-center gap-4">
+            <span className="w-12 h-12 [@media(max-height:760px)]:w-9 [@media(max-height:760px)]:h-9 rounded-xl bg-orange-200 border-2 border-orange-300 flex-shrink-0" />
+            <span className="text-gray-700 text-xl flex-1">1 ช่อง</span>
+            <span className="text-gray-900 font-extrabold text-2xl [@media(max-height:760px)]:text-xl whitespace-nowrap">{TILE_PT} คะแนน</span>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="w-8 h-8 rounded-lg bg-orange-500 border-2 border-orange-600 flex-shrink-0" />
-            <span className="text-gray-700 text-sm flex-1">บิงโก (5 ช่องเรียงกัน)</span>
-            <span className="text-gray-900 font-bold">{BINGO_PT} คะแนน</span>
+          <div className="flex items-center gap-4">
+            <span className="w-12 h-12 [@media(max-height:760px)]:w-9 [@media(max-height:760px)]:h-9 rounded-xl bg-orange-500 border-2 border-orange-600 flex-shrink-0" />
+            <span className="text-gray-700 text-xl flex-1 leading-tight">บิงโก<br /><span className="text-base text-gray-500">5 ช่องเรียงกัน</span></span>
+            <span className="text-gray-900 font-extrabold text-2xl [@media(max-height:760px)]:text-xl whitespace-nowrap">{BINGO_PT} คะแนน</span>
           </div>
-          <div className="flex justify-between pt-1">
+          <div className="flex justify-between">
             {LINE_SAMPLES.map(s => (
-              <div key={s.label} className="flex flex-col items-center gap-1">
+              <div key={s.label} className="flex flex-col items-center gap-2">
                 <MiniLine line={s.line} />
-                <span className="text-gray-500 text-xs">{s.label}</span>
+                <span className="text-gray-600 text-base font-medium">{s.label}</span>
               </div>
             ))}
           </div>
-          <p className="text-gray-400 text-xs">ช่อง FREE ได้คะแนนเสมอ และนับรวมในแถวบิงโก</p>
+          <p className="text-gray-500 text-base">ช่อง FREE ได้คะแนนเสมอ และนับรวมในแถวบิงโก</p>
         </div>
 
-        <div className="bg-white border border-orange-100 shadow-sm rounded-2xl p-4 space-y-2">
-          <div className="flex justify-between text-gray-600 text-sm">
+        <div className="flex-shrink-0 bg-white border border-orange-100 shadow-sm rounded-3xl p-6 [@media(max-height:760px)]:p-4 space-y-3 [@media(max-height:760px)]:space-y-1.5">
+          <div className="flex justify-between text-gray-600 text-xl">
             <span>ช่อง {tileCount} × {TILE_PT}</span>
-            <span className="font-semibold">{tileScore}</span>
+            <span className="font-bold">{tileScore}</span>
           </div>
-          <div className="flex justify-between text-gray-600 text-sm">
+          <div className="flex justify-between text-gray-600 text-xl">
             <span>บิงโก {lines.length} × {BINGO_PT}</span>
-            <span className="font-semibold">{bingoScore}</span>
+            <span className="font-bold">{bingoScore}</span>
           </div>
-          <div className="flex justify-between items-baseline border-t border-orange-100 pt-2">
-            <span className="text-gray-900 font-bold">รวม</span>
-            <span className="text-orange-600 font-extrabold text-3xl">{tileScore + bingoScore}</span>
+          <div className="flex justify-between items-center border-t-2 border-orange-100 pt-3">
+            <span className="text-gray-900 font-extrabold text-3xl">รวม</span>
+            <span className="text-orange-600 font-black text-7xl [@media(max-height:760px)]:text-5xl leading-none tabular-nums">{tileScore + bingoScore}</span>
           </div>
-          <div className="flex gap-2 pt-1">
+          <div className="flex gap-3 pt-1">
             <button onClick={() => setMarked(new Set(EXAMPLE_MARKS))}
-              className="flex-1 py-1.5 bg-white hover:bg-orange-50 border border-orange-200 text-orange-700 font-semibold text-sm rounded-lg transition-colors">ตัวอย่าง</button>
+              className="flex-1 py-3 [@media(max-height:760px)]:py-2 bg-white hover:bg-orange-50 border border-orange-200 text-orange-700 font-bold text-lg rounded-xl transition-colors">ตัวอย่าง</button>
             <button onClick={() => setMarked(new Set())}
-              className="flex-1 py-1.5 bg-white hover:bg-orange-50 border border-orange-200 text-orange-700 font-semibold text-sm rounded-lg transition-colors">ล้าง</button>
+              className="flex-1 py-3 [@media(max-height:760px)]:py-2 bg-white hover:bg-orange-50 border border-orange-200 text-orange-700 font-bold text-lg rounded-xl transition-colors">ล้าง</button>
           </div>
         </div>
       </div>
