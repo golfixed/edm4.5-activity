@@ -535,9 +535,8 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
   if (phase === 'preview') {
     const card = cards[previewIdx] ?? []
     return (
-      <div className={`h-screen flex flex-col overflow-hidden ${bgClass}`} style={bgStyle}>
-        <div className="absolute inset-0 bg-black/40" />
-        <div className="relative z-10 flex flex-col h-full p-4 gap-3">
+      <div className="h-screen flex flex-col overflow-hidden bg-neutral-900">
+        <div className="flex flex-col h-full p-4 gap-3">
           <div className="flex items-center gap-2">
             <button onClick={() => setPhase('home')} className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm flex-shrink-0">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
