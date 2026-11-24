@@ -215,7 +215,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                   <button
                     key={team.id}
                     onClick={() => toggleTeam(team.id)}
-                    className={`flex items-center gap-3 px-5 py-5 rounded-xl border-2 transition-all font-semibold text-lg
+                    className={`flex items-center gap-3 px-5 py-3 min-h-[76px] rounded-xl border-2 transition-all font-semibold text-lg
                       ${selected
                         ? 'border-white/50 bg-white/10 text-white'
                         : 'border-white/15 text-white/80 hover:border-white/35 hover:bg-white/5'}`}
@@ -240,14 +240,14 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                   <h2 className="text-white text-base font-bold">ชุดภาพ</h2>
                   <span className="text-gray-400 text-xs">แต่ละรอบใช้คนละชุด</span>
                 </div>
-                <div className="grid grid-cols-2 gap-2 overflow-y-auto content-start">
+                <div className="grid grid-cols-2 gap-3 overflow-y-auto content-start">
                   {sets.map((set) => {
                     const selected = selectedSetId === set.id
                     return (
                       <button
                         key={set.id}
                         onClick={() => setSelectedSetId(selected ? null : set.id)}
-                        className={`flex flex-col items-start px-4 py-3 rounded-xl border-2 transition-all text-left
+                        className={`flex flex-col items-start justify-center px-5 py-3 min-h-[76px] rounded-xl border-2 transition-all text-left
                           ${selected
                             ? 'border-white/50 bg-white/10'
                             : 'border-white/15 hover:border-white/35 hover:bg-white/5'}`}
