@@ -8,6 +8,7 @@ import SpotDifferenceSettings from '@/components/SpotDifferenceSettings'
 import PhysicalGame from '@/components/PhysicalGame'
 import BingoGame from '@/components/BingoGame'
 import GameSettings from '@/components/GameSettings'
+import FirebaseLoading from '@/components/FirebaseLoading'
 import Link from 'next/link'
 
 export default function GamePage({ params }: { params: { id: string } }) {
@@ -26,13 +27,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
     router.push('/')
   }, [closing, router, game])
 
-  if (!isHydrated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-10 h-10 rounded-full border-4 border-gray-200 border-t-gray-500 animate-spin" />
-      </div>
-    )
-  }
+  if (!isHydrated) return <FirebaseLoading />
 
   if (!game) {
     return (
