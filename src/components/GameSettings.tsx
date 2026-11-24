@@ -5,6 +5,7 @@ import { useStore } from '@/lib/store'
 import { Game, ImagePair, ImageSet, AuctionItem } from '@/lib/types'
 import { ICON_COLORS, resolveIconColor, darkenHex } from '@/lib/iconColors'
 import { compressImage } from '@/lib/compressImage'
+import { useConfirm } from '@/components/ConfirmDialog'
 
 interface Props {
   game: Game
@@ -14,6 +15,7 @@ interface Props {
 
 export default function GameSettings({ game: savedGame, onClose, identityOnly }: Props) {
   const { games, setGames } = useStore()
+  const confirm = useConfirm()
   // edits stay local until saved, so dragging the colour picker doesn't write to Firebase on every tick
   const [game, setGame] = useState<Game>(savedGame)
   const [dirty, setDirty] = useState(false)
@@ -28,8 +30,8 @@ export default function GameSettings({ game: savedGame, onClose, identityOnly }:
     onClose()
   }
 
-  const close = () => {
-    if (dirty && !window.confirm('ยังไม่ได้บันทึก ต้องการปิดโดยไม่บันทึกใช่ไหม?')) return
+  const close = async () => {
+    if (dirty && !await confirm({ title: 'ปิดโดยไม่บันทึก?', message: 'การเปลี่ยนแปลงที่ยังไม่ได้บันทึกจะหายไป', confirmLabel: 'ปิดโดยไม่บันทึก', cancelLabel: 'กลับไปแก้ไข', tone: 'danger' })) return
     onClose()
   }
 

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Sarabun } from 'next/font/google'
 import './globals.css'
 import FirebaseProvider from '@/components/FirebaseProvider'
+import { ConfirmProvider } from '@/components/ConfirmDialog'
 
 const sarabun = Sarabun({
   subsets: ['thai', 'latin'],
@@ -23,7 +24,9 @@ export default function RootLayout({
     <html lang="th">
       <body className={`${sarabun.className} min-h-screen`}>
         <FirebaseProvider>
-          {children}
+          <ConfirmProvider>
+            {children}
+          </ConfirmProvider>
         </FirebaseProvider>
       </body>
     </html>

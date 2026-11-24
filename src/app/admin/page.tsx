@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStore, defaultTeams, defaultGames, defaultRankBonuses } from '@/lib/store'
 import { writeState } from '@/lib/useFirebaseSync'
+import { useConfirm } from '@/components/ConfirmDialog'
 
 function adjustHex(hex: string, amount: number): string {
   const n = parseInt(hex.replace('#', ''), 16)
@@ -70,6 +71,7 @@ export default function AdminPage() {
 
 function SettingsTab() {
   const store = useStore()
+  const confirm = useConfirm()
   const { rankBonuses, setRankBonuses, wallpaperColor, setWallpaperColor } = store
   const bonuses = rankBonuses ?? [10, 8, 7, 6, 5]
   const [importStatus, setImportStatus] = useState<'idle' | 'ok' | 'err'>('idle')
@@ -140,8 +142,8 @@ function SettingsTab() {
         <h2 className="text-base font-bold text-gray-900 mb-1">ข้อมูลตั้งต้น</h2>
         <p className="text-gray-400 text-sm mb-4">ล้างข้อมูลทั้งหมดและโหลดข้อมูลตัวอย่างเพื่อเริ่มต้นใหม่</p>
         <button
-          onClick={() => {
-            if (!confirm('โหลดข้อมูลตั้งต้น? ข้อมูลปัจจุบันทั้งหมดจะถูกแทนที่')) return
+          onClick={async () => {
+            if (!await confirm({ title: 'โหลดข้อมูลตั้งต้น?', message: 'ทีม เกม คะแนน และการตั้งค่าทั้งหมดจะถูกแทนที่ด้วยข้อมูลตัวอย่าง', confirmLabel: 'โหลดข้อมูลตั้งต้น', tone: 'danger' })) return
             store.setTeams(defaultTeams); store.setGames(defaultGames); store.setScores([])
             store.setRankBonuses(defaultRankBonuses); store.setAppTitle('Active Fun Games')
             store.setDockGameIds([]); store.setGameOrder([]); store.setWallpaperColor('#cacdd8')

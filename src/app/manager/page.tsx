@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStore, TEAM_COLORS_LIST } from '@/lib/store'
 import { Score } from '@/lib/types'
+import { useConfirm } from '@/components/ConfirmDialog'
 
 type Tab = 'scores' | 'teams'
 
@@ -47,6 +48,7 @@ export default function ManagerPage() {
 /* ── Scores Tab ─────────────────────────────────────────────────────── */
 function ScoresTab() {
   const { teams, games, scores, setScores, resetScores } = useStore()
+  const confirm = useConfirm()
   const [localScores, setLocalScores] = useState<Record<string, number>>(() => {
     const map: Record<string, number> = {}
     scores.forEach((s) => { map[`${s.teamId}-${s.gameId}`] = s.points })
@@ -72,8 +74,8 @@ function ScoresTab() {
     setScores(next)
   }
 
-  const handleReset = () => {
-    if (confirm('รีเซ็ตคะแนนทั้งหมด?')) {
+  const handleReset = async () => {
+    if (await confirm({ title: 'รีเซ็ตคะแนนทั้งหมด?', message: 'คะแนนของทุกทีมในทุกเกมจะถูกล้าง', confirmLabel: 'รีเซ็ตคะแนน', tone: 'danger' })) {
       resetScores()
       setLocalScores({})
     }
@@ -135,11 +137,13 @@ function ScoresTab() {
 /* ── Teams Tab ──────────────────────────────────────────────────────── */
 function TeamsTab() {
   const { teams, setTeams } = useStore()
+  const confirm = useConfirm()
 
   const updateName = (id: string, name: string) => setTeams(teams.map((t) => (t.id === id ? { ...t, name } : t)))
   const updateCaptain = (id: string, captain: string) => setTeams(teams.map((t) => (t.id === id ? { ...t, captain } : t)))
-  const deleteTeam = (id: string) => {
-    if (confirm('ลบทีมนี้?')) setTeams(teams.filter((t) => t.id !== id))
+  const deleteTeam = async (id: string) => {
+    const team = teams.find(t => t.id === id)
+    if (await confirm({ title: `ลบ ${team?.name ?? 'ทีมนี้'}?`, confirmLabel: 'ลบทีม', tone: 'danger' })) setTeams(teams.filter((t) => t.id !== id))
   }
   const addTeam = () => {
     const newId = String(Date.now())

@@ -6,6 +6,7 @@ import { Game, ImageSet, ImagePair } from '@/lib/types'
 import { compressImage } from '@/lib/compressImage'
 import { resolveIconColor } from '@/lib/iconColors'
 import GameSettings from './GameSettings'
+import { useConfirm } from '@/components/ConfirmDialog'
 
 interface Props {
   game: Game
@@ -35,6 +36,7 @@ const ICON = {
 
 export default function SpotDifferenceSettings({ game, onClose }: Props) {
   const { games, setGames } = useStore()
+  const confirm = useConfirm()
   const [selectedSetId, setSelectedSetId] = useState<string | null>(
     () => game.imageSets?.[0]?.id ?? null
   )
@@ -63,7 +65,9 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
     setNewSetName('')
   }
 
-  const deleteSet = (id: string) => {
+  const deleteSet = async (id: string) => {
+    const set = sets.find(s => s.id === id)
+    if (!await confirm({ title: `ลบชุด "${set?.name}"?`, message: `โจทย์ ${set?.pairs.length ?? 0} ข้อในชุดนี้จะถูกลบด้วย`, confirmLabel: 'ลบชุดภาพ', tone: 'danger' })) return
     const next = sets.filter(s => s.id !== id)
     updateGame({ imageSets: next })
     if (selectedSetId === id) setSelectedSetId(next[0]?.id ?? null)
@@ -341,6 +345,7 @@ interface PairsEditorProps {
   onMovePair?: (pairId: string, targetSetId: string) => void
 }
 function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: PairsEditorProps) {
+  const confirm = useConfirm()
   const [pendingA, setPendingA] = useState<string | null>(null)
   const [pendingAMode, setPendingAMode] = useState<'image' | 'text'>('image')
   const [pendingAText, setPendingAText] = useState('')
@@ -536,7 +541,9 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
                 )}
               </div>
             )}
-            <button onClick={() => onChange(pairs.filter(p => p.id !== pair.id))} title="ลบโจทย์นี้"
+            <button onClick={async () => {
+                if (await confirm({ title: `ลบโจทย์ข้อ ${i + 1}?`, message: pair.label ? `"${pair.label}"` : undefined, confirmLabel: 'ลบโจทย์', tone: 'danger' })) onChange(pairs.filter(p => p.id !== pair.id))
+              }} title="ลบโจทย์นี้"
               className="flex items-center gap-1.5 h-10 px-3 rounded-lg border border-red-200 bg-white hover:bg-red-50 text-red-500 text-sm font-medium transition-colors flex-shrink-0">
               {ICON.trash}ลบ
             </button>

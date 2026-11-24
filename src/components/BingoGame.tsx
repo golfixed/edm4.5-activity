@@ -5,6 +5,7 @@ import { Game, Team } from '@/lib/types'
 import { useStore } from '@/lib/store'
 import { generateBingoCard, BINGO_LINES } from '@/lib/bingo'
 import Link from 'next/link'
+import { useConfirm } from '@/components/ConfirmDialog'
 
 // Tailwind color → hex mapping for PDF
 const COLOR_HEX: Record<string, string> = {
@@ -356,6 +357,7 @@ function generateRandomCards(keywords: string[], count: number): string[][] {
 
 export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game; onBack?: (e: React.MouseEvent) => void; onOpenSettings?: () => void }) {
   const { teams } = useStore()
+  const confirm = useConfirm()
   const keywords = game.bingoKeywords ?? []
 
   const [phase, setPhase] = useState<Phase>('home')
@@ -451,8 +453,8 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
 
   const startGame = () => setPhase('playing')
 
-  const restartGame = () => {
-    if (!window.confirm(`ล้าง keyword ที่เรียกไปแล้ว ${calledKeywords.length} คำ และเริ่มเกมใหม่ทั้งหมด?`)) return
+  const restartGame = async () => {
+    if (!await confirm({ title: 'เริ่มเกมใหม่ทั้งหมด?', message: `keyword ที่เรียกไปแล้ว ${calledKeywords.length} คำจะถูกล้าง`, confirmLabel: 'เริ่มใหม่', tone: 'danger' })) return
     setCalledKeywords([])
     setPhase('playing')
   }
