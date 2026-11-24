@@ -244,7 +244,16 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
         </div>
 
         <div className="flex-1 flex overflow-hidden">
-          {/* Left: Teams */}
+          {/* Team random spinner: draws N teams and selects them */}
+          <div className="w-[clamp(18rem,28vw,24rem)] flex-shrink-0 flex flex-col p-5 overflow-hidden border-r border-orange-100">
+            <div className="flex items-baseline gap-2 mb-3 flex-shrink-0">
+              <h2 className="text-gray-900 text-base font-bold">สุ่มทีม</h2>
+              <span className="text-gray-500 text-xs">ทีมที่สุ่มได้จะถูกเลือกให้อัตโนมัติ</span>
+            </div>
+            <TeamSpinner teams={teams} onPicked={setSelectedTeamIds} />
+          </div>
+
+          {/* Teams */}
           <div className="flex-1 flex flex-col p-5 overflow-hidden border-r border-orange-100">
             <div className="flex items-baseline gap-2 mb-3 flex-shrink-0">
               <h2 className="text-gray-900 text-base font-bold">เลือกทีม</h2>
@@ -271,7 +280,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
             </div>
           </div>
 
-          {/* Right: Sets */}
+          {/* Sets */}
           <div className="flex-1 flex flex-col p-5 overflow-hidden">
             {sets.length > 0 && (
               <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
@@ -301,14 +310,6 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
             )}
           </div>
 
-          {/* Team random spinner: draws N teams and selects them */}
-          <div className="w-[clamp(18rem,28vw,24rem)] flex-shrink-0 flex flex-col p-5 overflow-hidden border-l border-orange-100">
-            <div className="flex items-baseline gap-2 mb-3 flex-shrink-0">
-              <h2 className="text-gray-900 text-base font-bold">สุ่มทีม</h2>
-              <span className="text-gray-500 text-xs">ทีมที่สุ่มได้จะถูกเลือกให้อัตโนมัติ</span>
-            </div>
-            <TeamSpinner teams={teams} onPicked={setSelectedTeamIds} />
-          </div>
         </div>
 
         {/* Bottom bar: timer + start */}
