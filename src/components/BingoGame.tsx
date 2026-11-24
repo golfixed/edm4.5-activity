@@ -658,9 +658,13 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
         >
           {/* หมดเวลา banner */}
           {timeUp && (
-            <div className={`text-white font-black tracking-widest mb-4 transition-opacity ${flash ? 'opacity-100' : 'opacity-80'}`}
+            <div className={`flex items-center gap-[0.3em] text-white font-black tracking-widest mb-4 transition-opacity ${flash ? 'opacity-100' : 'opacity-80'}`}
               style={{ fontSize: 'clamp(2rem, 6vw, 5rem)' }}>
-              ⏰ หมดเวลา!
+              <svg className="w-[1em] h-[1em] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="13" r="7.5" />
+                <path d="M12 9.5V13l2.5 2M5 3.5 2.5 6M19 3.5 21.5 6M6.5 19.5 5 21M17.5 19.5 19 21" />
+              </svg>
+              หมดเวลา!
             </div>
           )}
 
@@ -695,8 +699,11 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
             </div>
           )}
 
-          <div className={`text-xl ${timeUp ? 'text-white/70' : 'text-gray-400'}`}>
-            แตะเพื่อถัดไป →
+          <div className={`flex items-center gap-2 text-xl ${timeUp ? 'text-white/70' : 'text-gray-400'}`}>
+            แตะเพื่อถัดไป
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
           </div>
         </div>
       )}
