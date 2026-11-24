@@ -5,6 +5,7 @@ import { useStore } from '@/lib/store'
 import { Game, ImageSet } from '@/lib/types'
 import Link from 'next/link'
 import TeamSpinner from '@/components/TeamSpinner'
+import { useConfirm } from '@/components/ConfirmDialog'
 
 interface Props {
   game: Game
@@ -36,6 +37,9 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
   // Bonus round: once every team has played, all teams play together and the
   // bonus is added on top of each team's recorded score.
   const [bonus, setBonus] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const confirm = useConfirm()
 
   const selectedSet = sets.find((s) => s.id === selectedSetId) ?? null
   const pairs = selectedSet?.pairs ?? []
@@ -144,6 +148,31 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
   // Scores were reset (not every team has played any more): allow a fresh bonus round later.
   useEffect(() => { if (isSynced && bonusDone && !allPlayed) setBonusPlayed(false) }, [isSynced, bonusDone, allPlayed])
 
+  useEffect(() => {
+    if (!menuOpen) return
+    const close = (e: PointerEvent) => { if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false) }
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(false) }
+    document.addEventListener('pointerdown', close)
+    document.addEventListener('keydown', esc)
+    return () => { document.removeEventListener('pointerdown', close); document.removeEventListener('keydown', esc) }
+  }, [menuOpen])
+
+  // Clears every team's score for this game and the bonus round, back to a fresh start.
+  const resetGame = async () => {
+    setMenuOpen(false)
+    const ok = await confirm({
+      title: 'เริ่มเกมใหม่ตั้งแต่ต้น?',
+      message: `คะแนน ${game.name} ของทุกทีม (เล่นแล้ว ${playedPoints.size} ทีม) และรอบโบนัสจะถูกล้าง ทุกทีมจะกลับมาเล่นได้อีกครั้ง`,
+      confirmLabel: 'ล้างและเริ่มใหม่',
+      tone: 'danger',
+    })
+    if (!ok) return
+    const st = useStore.getState()
+    st.setScores(st.scores.filter((sc) => sc.gameId !== game.id))
+    if (bonusDone) setBonusPlayed(false)
+    setBonus(false); setSelectedTeamIds([]); setSelectedSetId(null); setCurrentIndex(0); setPhase('setup')
+  }
+
   const startBonus = () => { setBonus(true); setSelectedTeamIds(teams.map((t) => t.id)) }
   const cancelBonus = () => { setBonus(false); setSelectedTeamIds([]) }
 
@@ -237,6 +266,32 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
     </button>
   )
 
+  const moreMenu = (
+    <div ref={menuRef} className="relative flex-shrink-0">
+      <button
+        onClick={() => setMenuOpen((o) => !o)}
+        className={`w-8 h-8 flex items-center justify-center rounded-lg ${outlineBtnCls} ${menuOpen ? 'bg-orange-50' : ''}`}
+        title="เพิ่มเติม" aria-haspopup="menu" aria-expanded={menuOpen}
+      >
+        <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor"><circle cx="3" cy="8" r="1.5" /><circle cx="8" cy="8" r="1.5" /><circle cx="13" cy="8" r="1.5" /></svg>
+      </button>
+      {menuOpen && (
+        <div role="menu" className="absolute right-0 top-full mt-2 w-72 z-50 bg-white border border-orange-100 rounded-xl shadow-lg p-1.5">
+          <button role="menuitem" onClick={resetGame}
+            className="w-full flex items-start gap-3 px-3 py-2.5 rounded-lg text-left hover:bg-red-50 transition-colors">
+            <svg className="w-5 h-5 mt-0.5 text-red-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5" />
+            </svg>
+            <span className="flex flex-col">
+              <span className="text-red-700 font-semibold text-sm">เริ่มเกมใหม่ตั้งแต่ต้น</span>
+              <span className="text-gray-500 text-xs mt-0.5">ล้างคะแนนเกมนี้ของทุกทีม และรอบโบนัส</span>
+            </span>
+          </button>
+        </div>
+      )}
+    </div>
+  )
+
   const checkIcon = (
     <span className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center">
       <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
@@ -264,6 +319,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
           <div className="flex items-center gap-2">
             {scaleControls}
             {settingsBtn}
+            {moreMenu}
           </div>
         </div>
 
