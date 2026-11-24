@@ -232,10 +232,10 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
             </div>
           </div>
 
-          {/* Right: Sets + timer + start */}
+          {/* Right: Sets */}
           <div className="flex-1 flex flex-col p-5 overflow-hidden">
             {sets.length > 0 && (
-              <div className="flex-1 min-h-0 flex flex-col overflow-hidden mb-4">
+              <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
                 <div className="flex items-baseline gap-2 mb-3 flex-shrink-0">
                   <h2 className="text-white text-base font-bold">ชุดภาพ</h2>
                   <span className="text-gray-400 text-xs">แต่ละรอบใช้คนละชุด</span>
@@ -263,9 +263,12 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                 </div>
               </div>
             )}
+          </div>
+        </div>
 
-            {/* Timer */}
-            <div className="flex-shrink-0 flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 mb-4">
+        {/* Bottom bar: timer + start */}
+        <div className="flex-shrink-0 flex items-center gap-4 px-5 py-4 bg-neutral-700 border-t border-white/10">
+            <div className="flex-shrink-0 flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5">
               <span className="text-gray-400 text-sm">⏱</span>
               <span className="text-white/60 text-sm">เวลาต่อข้อ</span>
               <input
@@ -286,15 +289,14 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                 setPhase(pairs.length > 0 ? 'countdown' : 'scoring')
               }}
               disabled={!canStart}
-              className="flex-shrink-0 w-full py-4 bg-white text-gray-900 font-bold text-lg rounded-xl hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              className="flex-1 py-4 bg-white text-gray-900 font-bold text-lg rounded-xl hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               {sets.length > 0 && !selectedSetId
-                ? '← เลือกชุดภาพก่อน'
+                ? 'เลือกชุดภาพก่อน'
                 : selectedTeamIds.length === 0
-                ? '← เลือกทีมก่อน'
+                ? 'เลือกทีมก่อน'
                 : pairs.length > 0 ? '▶ เริ่มเกม' : '▶ ข้ามไปใส่คะแนน'}
             </button>
-          </div>
         </div>
       </div>
     )
