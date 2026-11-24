@@ -572,7 +572,7 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
       <div className="h-screen flex flex-col overflow-hidden bg-orange-50">
           <div className={headerCls}>
             <button onClick={() => setPhase('home')} className={backBtnCls}>{backIcon}กลับ</button>
-            <h1 className={`${titleCls} mx-auto`}>{game.icon} {game.name}</h1>
+            <h1 className={`${titleCls} mx-auto`}>ตัวอย่างกระดาษ</h1>
             <button
               onClick={() => exportCardsDirectToPDF(cards, game.name)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm flex-shrink-0 ${outlineBtnCls}`}
