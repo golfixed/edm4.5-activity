@@ -15,7 +15,10 @@ interface Props {
 type Phase = 'setup' | 'countdown' | 'playing' | 'scoring'
 
 export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Props) {
-  const { teams, addScore } = useStore()
+  const { teams, scores, addScore } = useStore()
+  // Teams with a saved score for this game have already played and can't be picked again.
+  const playedPoints = new Map(scores.filter((sc) => sc.gameId === game.id).map((sc) => [sc.teamId, sc.points]))
+  const availableTeams = teams.filter((t) => !playedPoints.has(t.id))
   const sets = game.imageSets ?? []
   const timerSeconds = game.timerSeconds ?? 30
 
@@ -129,7 +132,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
   }, [currentIndex])
 
   const toggleTeam = (id: string) =>
-    setSelectedTeamIds((prev) =>
+    !playedPoints.has(id) && setSelectedTeamIds((prev) =>
       prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
     )
 
@@ -250,7 +253,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
               <h2 className="text-gray-900 text-base font-bold">สุ่มทีม</h2>
               <span className="text-gray-500 text-xs">ทีมที่สุ่มได้จะถูกเลือกให้อัตโนมัติ</span>
             </div>
-            <TeamSpinner teams={teams} onPicked={setSelectedTeamIds} />
+            <TeamSpinner teams={availableTeams} onPicked={setSelectedTeamIds} />
           </div>
 
           {/* Teams */}
@@ -258,10 +261,26 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
             <div className="flex items-baseline gap-2 mb-3 flex-shrink-0">
               <h2 className="text-gray-900 text-base font-bold">เลือกทีม</h2>
               <span className="text-gray-500 text-xs">{selectedTeamIds.length > 0 ? `${selectedTeamIds.length} ทีม` : 'ยังไม่ได้เลือก'}</span>
+              {playedPoints.size > 0 && (
+                <span className="ml-auto text-gray-400 text-xs">เล่นแล้ว {playedPoints.size} / {teams.length} ทีม</span>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-3 flex-1 overflow-y-auto content-start">
               {teams.map((team) => {
                 const selected = selectedTeamIds.includes(team.id)
+                const played = playedPoints.get(team.id)
+                if (played !== undefined) {
+                  return (
+                    <div key={team.id} title="ทีมนี้เล่นเกมนี้และบันทึกคะแนนแล้ว"
+                      className="flex items-center gap-3 px-5 py-3 min-h-[76px] rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 font-semibold text-lg text-gray-400 cursor-not-allowed select-none">
+                      <span className={`w-4 h-4 rounded-full flex-shrink-0 opacity-40 ${team.color}`} />
+                      <span className="flex flex-col items-start leading-tight min-w-0">
+                        <span className="truncate line-through decoration-gray-300">{team.name}</span>
+                        <span className="text-xs font-medium">เล่นแล้ว · {played} คะแนน</span>
+                      </span>
+                    </div>
+                  )
+                }
                 return (
                   <button
                     key={team.id}

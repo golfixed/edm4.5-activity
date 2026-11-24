@@ -197,7 +197,7 @@ export default function TeamSpinner({ teams, onPicked }: { teams: Team[]; onPick
         <svg className={`w-5 h-5 ${spinning ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round">
           <path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v4.5h-4.5" />
         </svg>
-        {spinning ? 'กำลังสุ่ม…' : picked.length > 0 ? `สุ่มใหม่ ${count} ทีม` : `สุ่ม ${count} ทีม`}
+        {teams.length === 0 ? 'ทุกทีมเล่นแล้ว' : spinning ? 'กำลังสุ่ม…' : picked.length > 0 ? `สุ่มใหม่ ${count} ทีม` : `สุ่ม ${count} ทีม`}
       </button>
     </div>
   )
