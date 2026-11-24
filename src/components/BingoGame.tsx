@@ -690,24 +690,28 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
           {allCalled ? (
             <div className="text-center py-4 text-2xl font-bold text-orange-600">🎉 เรียกครบทุก keyword แล้ว!</div>
           ) : (
-            <div className="flex gap-2 items-center">
+            <div className="flex gap-2 items-stretch h-16">
               <button
                 onClick={drawKeyword}
-                className={`flex-1 py-4 font-bold text-xl rounded-xl ${primaryBtnCls}`}
+                className={`flex-1 font-bold text-xl rounded-xl ${primaryBtnCls}`}
               >
                 🎲 สุ่ม Keyword ถัดไป
               </button>
               {/* Countdown setting */}
-              <div className="flex items-center gap-1 bg-white border border-orange-200 rounded-xl px-3 py-2 flex-shrink-0">
+              <div className="flex items-center gap-2 bg-white border border-orange-200 rounded-xl px-3 flex-shrink-0">
                 <span className="text-gray-500 text-sm">⏱</span>
+                <button onClick={() => setCountdownSeconds(s => Math.max(0, s - 5))}
+                  className="w-9 h-9 rounded-full bg-orange-100 hover:bg-orange-200 text-orange-700 font-bold text-lg transition-colors">−</button>
                 <input
                   type="number"
                   min="0"
                   max="300"
                   value={countdownSeconds}
-                  onChange={(e) => setCountdownSeconds(parseInt(e.target.value) || 0)}
-                  className="w-14 text-center font-bold text-gray-700 focus:outline-none text-lg"
+                  onChange={(e) => setCountdownSeconds(Math.min(300, Math.max(0, parseInt(e.target.value) || 0)))}
+                  className="w-12 text-center font-extrabold text-orange-600 focus:outline-none text-2xl tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
+                <button onClick={() => setCountdownSeconds(s => Math.min(300, s + 5))}
+                  className="w-9 h-9 rounded-full bg-orange-100 hover:bg-orange-200 text-orange-700 font-bold text-lg transition-colors">+</button>
                 <span className="text-gray-400 text-sm">วิ</span>
               </div>
             </div>
