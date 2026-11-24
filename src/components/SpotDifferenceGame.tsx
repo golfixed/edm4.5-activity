@@ -254,19 +254,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
     </div>
   )
 
-  const settingsBtn = (
-    <button onClick={onOpenSettings}
-      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm flex-shrink-0 ${outlineBtnCls}`}
-      title="ตั้งค่าเกม">
-      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-      ตั้งค่า
-    </button>
-  )
-
-  const moreMenu = (
+  const moreMenu = (withReset: boolean) => (
     <div ref={menuRef} className="relative flex-shrink-0">
       <button
         onClick={() => setMenuOpen((o) => !o)}
@@ -277,6 +265,25 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
       </button>
       {menuOpen && (
         <div role="menu" className="absolute right-0 top-full mt-2 w-72 z-50 bg-white border border-orange-100 rounded-xl shadow-lg p-1.5">
+          <div className="flex items-center justify-between gap-3 px-3 py-2">
+            <span className="flex items-center gap-3 text-gray-700 text-sm font-semibold">
+              <svg className="w-5 h-5 text-orange-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="6.5" /><path d="M20.5 20.5 16 16M8.5 11h5M11 8.5v5" />
+              </svg>
+              ขนาดหน้าจอ
+            </span>
+            {scaleControls}
+          </div>
+          <button role="menuitem" onClick={() => { setMenuOpen(false); onOpenSettings?.() }}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-gray-700 text-sm font-semibold hover:bg-orange-50 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            ตั้งค่าเกม
+          </button>
+          {withReset && <>
+          <div className="my-1 border-t border-orange-100" />
           <button role="menuitem" onClick={resetGame}
             className="w-full flex items-start gap-3 px-3 py-2.5 rounded-lg text-left hover:bg-red-50 transition-colors">
             <svg className="w-5 h-5 mt-0.5 text-red-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round">
@@ -287,6 +294,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
               <span className="text-gray-500 text-xs mt-0.5">ล้างคะแนนเกมนี้ของทุกทีม และรอบโบนัส</span>
             </span>
           </button>
+          </>}
         </div>
       )}
     </div>
@@ -317,9 +325,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
           {backBtn(onBack ?? (() => {}))}
           <h1 className="text-gray-900 text-xl font-bold flex-1 text-center">{game.name}</h1>
           <div className="flex items-center gap-2">
-            {scaleControls}
-            {settingsBtn}
-            {moreMenu}
+            {moreMenu(true)}
           </div>
         </div>
 
@@ -682,8 +688,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
         {backBtn((e) => { e.preventDefault(); setPhase(pairs.length > 0 ? 'playing' : 'setup') })}
         <h1 className="text-gray-900 text-xl font-bold flex-1 text-center">บันทึกคะแนน — {game.name}</h1>
         <div className="flex items-center gap-2">
-          {scaleControls}
-          {settingsBtn}
+          {moreMenu(false)}
         </div>
       </div>
       {/* Card fits the screen: title and save button stay put, the team list scrolls inside */}
