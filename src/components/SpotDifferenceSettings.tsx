@@ -117,15 +117,23 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
           </button>
 
           {/* Timer */}
-          <div className="flex items-center gap-1.5 border border-orange-200 rounded-lg px-3 h-9">
+          <div className="flex items-center gap-1.5 border border-orange-200 bg-white rounded-lg pl-2.5 pr-1 h-9" title="เวลาเริ่มต้นต่อข้อ">
             {ICON.clock('w-4 h-4 text-orange-500')}
+            <span className="text-gray-600 text-xs whitespace-nowrap mr-0.5">วิ/ข้อ</span>
+            <button onClick={() => updateGame({ timerSeconds: Math.max(1, (liveGame.timerSeconds ?? 10) - 1) })}
+              className="w-7 h-7 flex items-center justify-center rounded-full bg-orange-100 hover:bg-orange-200 text-orange-700 transition-colors" title="ลดเวลา">
+              {ICON.minus}
+            </button>
             <input
-              type="number" min={5} max={300}
+              type="number" min={1} max={300}
               value={liveGame.timerSeconds ?? 10}
-              onChange={e => updateGame({ timerSeconds: parseInt(e.target.value) || 10 })}
-              className="w-10 text-center bg-transparent text-gray-900 font-bold text-sm focus:outline-none"
+              onChange={e => updateGame({ timerSeconds: Math.min(300, Math.max(1, parseInt(e.target.value) || 10)) })}
+              className="w-9 text-center bg-transparent text-orange-600 font-extrabold focus:outline-none tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
-            <span className="text-gray-500 text-xs">วิ/ข้อ</span>
+            <button onClick={() => updateGame({ timerSeconds: Math.min(300, (liveGame.timerSeconds ?? 10) + 1) })}
+              className="w-7 h-7 flex items-center justify-center rounded-full bg-orange-100 hover:bg-orange-200 text-orange-700 transition-colors" title="เพิ่มเวลา">
+              {ICON.plus()}
+            </button>
           </div>
 
           {/* Sounds */}
