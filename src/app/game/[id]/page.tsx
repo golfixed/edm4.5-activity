@@ -9,6 +9,8 @@ import PhysicalGame from '@/components/PhysicalGame'
 import BingoGame from '@/components/BingoGame'
 import GameSettings from '@/components/GameSettings'
 import FirebaseLoading from '@/components/FirebaseLoading'
+import GameIcon from '@/components/GameIcon'
+import { resolveIconColor } from '@/lib/iconColors'
 import { useGameAssets } from '@/lib/useFirebaseSync'
 import Link from 'next/link'
 
@@ -30,7 +32,15 @@ export default function GamePage({ params }: { params: { id: string } }) {
   }, [closing, router, game])
 
   if (!isHydrated) return <FirebaseLoading />
-  if (game && !assetsReady) return <FirebaseLoading label="กำลังโหลดภาพและเสียงของเกม…" />
+  if (game && !assetsReady) {
+    return (
+      <FirebaseLoading
+        icon={<GameIcon game={game} size="lg" />}
+        accent={resolveIconColor(game.iconColor, game.colorIdx ?? null)}
+        label={`กำลังโหลดข้อมูล ${game.name}…`}
+      />
+    )
+  }
 
   if (!game) {
     return (

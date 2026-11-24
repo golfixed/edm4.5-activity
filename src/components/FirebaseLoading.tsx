@@ -23,7 +23,15 @@ function FirebaseFlame() {
   return <FirebaseMark className="w-16 h-16 animate-[fb-bob_1.6s_ease-in-out_infinite]" />
 }
 
-export default function FirebaseLoading({ label }: { label?: string }) {
+/**
+ * Full-screen loading state. Pass `icon` (e.g. the app's own icon) to show which app's data is
+ * loading in place of the Firebase flame, and `accent` to tint the progress bar to match.
+ */
+export default function FirebaseLoading({ label, icon, accent }: {
+  label?: string
+  icon?: React.ReactNode
+  accent?: { from: string; to: string }
+}) {
   const status = useStore(s => s.firebaseStatus)
   const offline = status === 'disconnected'
 
@@ -33,9 +41,17 @@ export default function FirebaseLoading({ label }: { label?: string }) {
         @keyframes fb-slide { 0% { transform: translateX(-100%) } 100% { transform: translateX(300%) } }
         @keyframes fb-bob { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
       `}</style>
-      <FirebaseFlame />
-      <div className="w-56 h-1.5 rounded-full bg-orange-100 overflow-hidden">
-        <div className={`h-full w-1/3 rounded-full animate-[fb-slide_1.2s_ease-in-out_infinite] ${offline ? 'bg-red-400' : 'bg-gradient-to-r from-amber-400 to-orange-500'}`} />
+      {icon
+        ? <div className="animate-[fb-bob_1.6s_ease-in-out_infinite]">{icon}</div>
+        : <FirebaseFlame />}
+      <div
+        className={`w-56 h-1.5 rounded-full overflow-hidden ${accent ? '' : 'bg-orange-100'}`}
+        style={accent && !offline ? { background: `${accent.from}26` } : undefined}
+      >
+        <div
+          className={`h-full w-1/3 rounded-full animate-[fb-slide_1.2s_ease-in-out_infinite] ${offline ? 'bg-red-400' : accent ? '' : 'bg-gradient-to-r from-amber-400 to-orange-500'}`}
+          style={accent && !offline ? { background: `linear-gradient(to right, ${accent.from}, ${accent.to})` } : undefined}
+        />
       </div>
       <p className={`text-sm font-medium ${offline ? 'text-red-500' : 'text-gray-500'}`}>{label && !offline ? label : STATUS_TEXT[status]}</p>
     </div>
