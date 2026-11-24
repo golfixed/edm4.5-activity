@@ -19,6 +19,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
   // Teams with a saved score for this game have already played and can't be picked again.
   const playedPoints = new Map(scores.filter((sc) => sc.gameId === game.id).map((sc) => [sc.teamId, sc.points]))
   const availableTeams = teams.filter((t) => !playedPoints.has(t.id))
+  const allPlayed = teams.length > 0 && availableTeams.length === 0
   const sets = game.imageSets ?? []
   const timerSeconds = game.timerSeconds ?? 30
 
@@ -32,6 +33,9 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
   const [finalScores, setFinalScores] = useState<Record<string, number>>({})
   const [countdownNum, setCountdownNum] = useState(3)
   const [uiScale, setUiScale] = useState(1.0)
+  // Bonus round: once every team has played, all teams play together and the
+  // bonus is added on top of each team's recorded score.
+  const [bonus, setBonus] = useState(false)
 
   const selectedSet = sets.find((s) => s.id === selectedSetId) ?? null
   const pairs = selectedSet?.pairs ?? []
@@ -131,6 +135,11 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
     setRevealed(false); startTickLoop()
   }, [currentIndex])
 
+  useEffect(() => { if (!allPlayed) setBonus(false) }, [allPlayed])
+
+  const startBonus = () => { setBonus(true); setSelectedTeamIds(teams.map((t) => t.id)) }
+  const cancelBonus = () => { setBonus(false); setSelectedTeamIds([]) }
+
   const toggleTeam = (id: string) =>
     !playedPoints.has(id) && setSelectedTeamIds((prev) =>
       prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
@@ -145,8 +154,12 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
 
   const handleSave = () => {
     selectedTeamIds.forEach((teamId) =>
-      addScore({ teamId, gameId: game.id, points: finalScores[teamId] ?? 0 })
+      addScore({
+        teamId, gameId: game.id,
+        points: (bonus ? playedPoints.get(teamId) ?? 0 : 0) + (finalScores[teamId] ?? 0),
+      })
     )
+    setBonus(false)
     setPhase('setup'); setSelectedTeamIds([]); setSelectedSetId(null); setCurrentIndex(0)
   }
 
@@ -249,11 +262,39 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
         <div className="flex-1 flex overflow-hidden">
           {/* Team random spinner: draws N teams and selects them */}
           <div className="w-[clamp(18rem,28vw,24rem)] flex-shrink-0 flex flex-col p-5 overflow-hidden border-r border-orange-100">
-            <div className="flex items-baseline gap-2 mb-3 flex-shrink-0">
-              <h2 className="text-gray-900 text-base font-bold">สุ่มทีม</h2>
-              <span className="text-gray-500 text-xs">ทีมที่สุ่มได้จะถูกเลือกให้อัตโนมัติ</span>
-            </div>
-            <TeamSpinner teams={availableTeams} onPicked={setSelectedTeamIds} />
+            {allPlayed ? (
+              <>
+                <div className="flex items-baseline gap-2 mb-3 flex-shrink-0">
+                  <h2 className="text-gray-900 text-base font-bold">รอบโบนัส</h2>
+                  <span className="text-gray-500 text-xs">ทุกทีมเล่นครบแล้ว</span>
+                </div>
+                <div className={`flex-1 min-h-0 rounded-2xl border-2 flex flex-col items-center justify-center gap-4 px-6 text-center transition-colors ${bonus ? 'border-orange-500 bg-white shadow-[0_6px_20px_rgba(194,65,12,0.18)]' : 'border-orange-100 bg-white'}`}>
+                  <span className="w-16 h-16 rounded-2xl bg-gradient-to-b from-amber-400 to-orange-500 text-white flex items-center justify-center shadow-md">
+                    <svg className="w-9 h-9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.8l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.6l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z" /></svg>
+                  </span>
+                  <h3 className="text-gray-900 font-extrabold text-2xl">{bonus ? 'พร้อมเล่นรอบโบนัส' : 'รอบโบนัส'}</h3>
+                  <p className="text-gray-500 text-sm leading-relaxed">ทุกทีมเล่นพร้อมกัน<br />คะแนนที่ได้จะบวกเพิ่มจากคะแนนเดิม</p>
+                </div>
+                {bonus ? (
+                  <button onClick={cancelBonus} className={`mt-3 flex-shrink-0 h-14 flex items-center justify-center gap-2 font-semibold rounded-xl ${outlineBtnCls}`}>
+                    ยกเลิกรอบโบนัส
+                  </button>
+                ) : (
+                  <button onClick={startBonus} className={`mt-3 flex-shrink-0 h-14 flex items-center justify-center gap-2 font-bold text-lg rounded-xl ${primaryBtnCls}`}>
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.8l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.6l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z" /></svg>
+                    เล่นรอบโบนัส ({teams.length} ทีม)
+                  </button>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="flex items-baseline gap-2 mb-3 flex-shrink-0">
+                  <h2 className="text-gray-900 text-base font-bold">สุ่มทีม</h2>
+                  <span className="text-gray-500 text-xs">ทีมที่สุ่มได้จะถูกเลือกให้อัตโนมัติ</span>
+                </div>
+                <TeamSpinner teams={availableTeams} onPicked={setSelectedTeamIds} />
+              </>
+            )}
           </div>
 
           {/* Teams */}
@@ -261,7 +302,9 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
             <div className="flex items-baseline gap-2 mb-3 flex-shrink-0">
               <h2 className="text-gray-900 text-base font-bold">เลือกทีม</h2>
               <span className="text-gray-500 text-xs">{selectedTeamIds.length > 0 ? `${selectedTeamIds.length} ทีม` : 'ยังไม่ได้เลือก'}</span>
-              {playedPoints.size > 0 && (
+              {bonus ? (
+                <span className="ml-auto text-orange-600 text-xs font-semibold">รอบโบนัส · ทุกทีม</span>
+              ) : playedPoints.size > 0 && (
                 <span className="ml-auto text-gray-400 text-xs">เล่นแล้ว {playedPoints.size} / {teams.length} ทีม</span>
               )}
             </div>
@@ -269,6 +312,19 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
               {teams.map((team) => {
                 const selected = selectedTeamIds.includes(team.id)
                 const played = playedPoints.get(team.id)
+                if (played !== undefined && bonus) {
+                  return (
+                    <div key={team.id}
+                      className="flex items-center gap-3 px-5 py-3 min-h-[76px] rounded-xl border-2 border-orange-500 bg-orange-50 shadow-sm font-semibold text-lg text-orange-900 select-none">
+                      <span className={`w-4 h-4 rounded-full flex-shrink-0 ${team.color}`} />
+                      <span className="flex flex-col items-start leading-tight min-w-0">
+                        <span className="truncate">{team.name}</span>
+                        <span className="text-xs font-medium text-orange-700/70">คะแนนเดิม {played} + โบนัส</span>
+                      </span>
+                      <span className="ml-auto flex-shrink-0">{checkIcon}</span>
+                    </div>
+                  )
+                }
                 if (played !== undefined) {
                   return (
                     <div key={team.id} title="ทีมนี้เล่นเกมนี้และบันทึกคะแนนแล้ว"
@@ -383,7 +439,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
         >
           {countdownNum}
         </div>
-        <div className="text-orange-900/50 text-lg mt-8 font-medium">{game.name}</div>
+        <div className="text-orange-900/50 text-lg mt-8 font-medium">{game.name}{bonus && ' · รอบโบนัส'}</div>
         <style>{`
           @keyframes countdownPop {
             0%   { transform: scale(1.6); opacity: 0; }
@@ -563,9 +619,9 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
         </div>
       </div>
       <div className="flex-1 flex items-center justify-center p-8 overflow-y-auto">
-        <div className="bg-white border border-orange-100 shadow-sm rounded-3xl p-8 w-full max-w-md">
-          <h2 className="text-gray-900 text-2xl font-bold mb-2 text-center">ใส่คะแนนแต่ละทีม</h2>
-          <p className="text-gray-500 text-sm text-center mb-8">นับจากจำนวนผู้เล่นที่เหลือหรือคะแนนที่ได้</p>
+        <div className={`bg-white border border-orange-100 shadow-sm rounded-3xl p-8 w-full ${bonus ? 'max-w-xl' : 'max-w-md'}`}>
+          <h2 className="text-gray-900 text-2xl font-bold mb-2 text-center">{bonus ? 'คะแนนรอบโบนัส' : 'ใส่คะแนนแต่ละทีม'}</h2>
+          <p className="text-gray-500 text-sm text-center mb-8">{bonus ? 'คะแนนโบนัสจะบวกเพิ่มจากคะแนนเดิมของแต่ละทีม' : 'นับจากจำนวนผู้เล่นที่เหลือหรือคะแนนที่ได้'}</p>
           <div className="space-y-4 mb-8">
             {selectedTeams.map((team, rank) => (
               <div key={team.id} className="flex items-center gap-4">
@@ -575,6 +631,9 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                   {team.name}
                   {team.captain && <span className="text-gray-400 text-sm font-normal ml-1">({team.captain})</span>}
                 </span>
+                {bonus && (
+                  <span className="text-gray-400 text-sm whitespace-nowrap tabular-nums">เดิม {playedPoints.get(team.id) ?? 0} +</span>
+                )}
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                   <button
                     onClick={() => setFinalScores((prev) => ({ ...prev, [team.id]: Math.max(0, (prev[team.id] ?? 0) - 1) }))}
@@ -593,7 +652,11 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                     className={`w-10 h-10 ${stepBtnCls}`} title="เพิ่มคะแนน"
                   >{plusIcon}</button>
                 </div>
-                <span className="text-gray-500 text-sm w-12">คะแนน</span>
+                {bonus ? (
+                  <span className="text-gray-500 text-sm w-16 text-right tabular-nums">= <b className="text-gray-900 text-base">{(playedPoints.get(team.id) ?? 0) + (finalScores[team.id] ?? 0)}</b></span>
+                ) : (
+                  <span className="text-gray-500 text-sm w-12">คะแนน</span>
+                )}
               </div>
             ))}
           </div>
