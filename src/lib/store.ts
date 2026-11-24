@@ -58,7 +58,7 @@ export const useStore = create<Store>()((set) => ({
   scores: [],
   activeGameId: null,
   rankBonuses: defaultRankBonuses,
-  appTitle: 'Active Fun Games (EDM 4.5)',
+  appTitle: 'Active Fun Games',
   appTitleSize: 20,
   dockGameIds: [],
   gameOrder: [],

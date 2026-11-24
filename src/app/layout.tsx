@@ -10,7 +10,7 @@ const sarabun = Sarabun({
 })
 
 export const metadata: Metadata = {
-  title: 'EDM 4.5 Active Fun Games',
+  title: 'Active Fun Games',
   description: 'Internal school activity scoring app',
 }
 

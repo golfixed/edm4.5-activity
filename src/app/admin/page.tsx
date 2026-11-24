@@ -143,7 +143,7 @@ function SettingsTab() {
           onClick={() => {
             if (!confirm('โหลดข้อมูลตั้งต้น? ข้อมูลปัจจุบันทั้งหมดจะถูกแทนที่')) return
             store.setTeams(defaultTeams); store.setGames(defaultGames); store.setScores([])
-            store.setRankBonuses(defaultRankBonuses); store.setAppTitle('Active Fun Games (EDM 4.5)')
+            store.setRankBonuses(defaultRankBonuses); store.setAppTitle('Active Fun Games')
             store.setDockGameIds([]); store.setGameOrder([]); store.setWallpaperColor('#cacdd8')
           }}
           className="px-4 py-2 rounded-lg border-2 border-dashed border-gray-200 text-gray-400 text-sm font-medium hover:border-red-300 hover:text-red-500 transition-all"
