@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStore, getTotalScore, getRankedTeams, getGameRank, getGameRankPoints } from '@/lib/store'
 import { GameState, Team, Game } from '@/lib/types'
@@ -134,10 +134,10 @@ const RANK_BADGE: Record<number, string> = {
   2: 'bg-orange-200 text-orange-900',
 }
 
-const PODIUM: Record<number, { emoji: string; height: string; block: string; number: string; label: string }> = {
-  1: { emoji: '👑', height: 'h-44', block: 'bg-gradient-to-b from-orange-500 to-red-600 border-red-600 shadow-[0_10px_30px_rgba(194,65,12,0.35)]', number: 'text-white text-6xl', label: 'text-white/80' },
-  2: { emoji: '🥈', height: 'h-32', block: 'bg-gradient-to-b from-orange-200 to-orange-300 border-orange-300', number: 'text-orange-950 text-5xl', label: 'text-orange-900/60' },
-  3: { emoji: '🥉', height: 'h-24', block: 'bg-gradient-to-b from-orange-100 to-orange-200 border-orange-200', number: 'text-orange-900 text-5xl', label: 'text-orange-900/50' },
+const PODIUM: Record<number, { height: string; block: string; number: string; label: string }> = {
+  1: { height: 'h-44', block: 'bg-gradient-to-b from-orange-500 to-red-600 border-red-600 shadow-[0_10px_30px_rgba(194,65,12,0.35)]', number: 'text-white text-6xl', label: 'text-white/80' },
+  2: { height: 'h-32', block: 'bg-gradient-to-b from-orange-200 to-orange-300 border-orange-300', number: 'text-orange-950 text-5xl', label: 'text-orange-900/60' },
+  3: { height: 'h-24', block: 'bg-gradient-to-b from-orange-100 to-orange-200 border-orange-200', number: 'text-orange-900 text-5xl', label: 'text-orange-900/50' },
 }
 
 function PodiumCard({ state, team, games, rank }: { state: GameState; team: Team; games: Game[]; rank: number }) {
@@ -146,7 +146,7 @@ function PodiumCard({ state, team, games, rank }: { state: GameState; team: Team
   const p = PODIUM[rank]
   return (
     <div className="flex flex-col items-center gap-2 flex-1 max-w-xs">
-      <span style={{ fontSize: isFirst ? '2.75rem' : '2rem' }}>{p.emoji}</span>
+      {isFirst ? <CrownGlyph className="w-16 h-14 drop-shadow-[0_4px_10px_rgba(194,65,12,0.35)]" /> : <MedalGlyph rank={rank} className="w-10 h-14 drop-shadow-[0_3px_6px_rgba(194,65,12,0.25)]" />}
       <div className="flex items-center gap-2">
         <span className={`rounded-full flex-shrink-0 ${team.color}`} style={{ width: isFirst ? 16 : 12, height: isFirst ? 16 : 12 }} />
         <span className="font-extrabold text-gray-900" style={{ fontSize: isFirst ? '1.5rem' : '1.1rem' }}>{team.name}</span>
@@ -169,5 +169,65 @@ function PodiumCard({ state, team, games, rank }: { state: GameState; team: Team
         <span className={`text-sm font-semibold mt-1 ${p.label}`}>คะแนน</span>
       </div>
     </div>
+  )
+}
+
+/** Crown for 1st place: orange→red gradient body with cream jewels. */
+function CrownGlyph({ className }: { className?: string }) {
+  const id = useId()
+  return (
+    <svg className={className} viewBox="0 0 64 56" aria-label="อันดับ 1">
+      <defs>
+        <linearGradient id={`${id}-body`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#fb923c" />
+          <stop offset="1" stopColor="#dc2626" />
+        </linearGradient>
+        <linearGradient id={`${id}-band`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ea580c" />
+          <stop offset="1" stopColor="#b91c1c" />
+        </linearGradient>
+      </defs>
+      {/* points */}
+      <path d="M6 18 L18 32 L32 8 L46 32 L58 18 L54 44 H10 Z" fill={`url(#${id}-body)`} stroke="#9a3412" strokeWidth="1.5" strokeLinejoin="round" />
+      {/* highlight */}
+      <path d="M14 26 L19 33 L32 13 L28 33 Z" fill="#fff" opacity="0.22" />
+      {/* tip pearls */}
+      <circle cx="6" cy="17" r="4" fill="#fff7ed" stroke="#9a3412" strokeWidth="1.5" />
+      <circle cx="32" cy="7" r="4.5" fill="#fff7ed" stroke="#9a3412" strokeWidth="1.5" />
+      <circle cx="58" cy="17" r="4" fill="#fff7ed" stroke="#9a3412" strokeWidth="1.5" />
+      {/* band */}
+      <rect x="9" y="43" width="46" height="9" rx="3" fill={`url(#${id}-band)`} stroke="#9a3412" strokeWidth="1.5" />
+      <circle cx="20" cy="47.5" r="2" fill="#fed7aa" />
+      <circle cx="32" cy="47.5" r="2.6" fill="#fff7ed" />
+      <circle cx="44" cy="47.5" r="2" fill="#fed7aa" />
+      {/* center jewel */}
+      <path d="M32 26 L36 31 L32 36 L28 31 Z" fill="#fff7ed" stroke="#9a3412" strokeWidth="1.2" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+/** Ribboned medal with the rank number, in two orange tones (2nd deeper than 3rd). */
+function MedalGlyph({ rank, className }: { rank: number; className?: string }) {
+  const id = useId()
+  const tone = rank === 2
+    ? { from: '#fdba74', to: '#f97316', ring: '#c2410c', text: '#7c2d12', ribbonA: '#fb923c', ribbonB: '#ea580c' }
+    : { from: '#fed7aa', to: '#fdba74', ring: '#ea580c', text: '#9a3412', ribbonA: '#fdba74', ribbonB: '#f97316' }
+  return (
+    <svg className={className} viewBox="0 0 40 56" aria-label={`อันดับ ${rank}`}>
+      <defs>
+        <linearGradient id={`${id}-disc`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor={tone.from} />
+          <stop offset="1" stopColor={tone.to} />
+        </linearGradient>
+      </defs>
+      {/* ribbon */}
+      <path d="M8 2 H17 L24 22 H15 Z" fill={tone.ribbonA} stroke={tone.ring} strokeWidth="1.2" strokeLinejoin="round" />
+      <path d="M32 2 H23 L16 22 H25 Z" fill={tone.ribbonB} stroke={tone.ring} strokeWidth="1.2" strokeLinejoin="round" />
+      {/* disc */}
+      <circle cx="20" cy="36" r="17" fill={`url(#${id}-disc)`} stroke={tone.ring} strokeWidth="1.5" />
+      <circle cx="20" cy="36" r="12.5" fill="none" stroke="#fff" strokeOpacity="0.55" strokeWidth="1.5" />
+      <path d="M9 30 A12 12 0 0 1 20 22" fill="none" stroke="#fff" strokeOpacity="0.6" strokeWidth="2" strokeLinecap="round" />
+      <text x="20" y="42" textAnchor="middle" fontSize="17" fontWeight="900" fill={tone.text} fontFamily="inherit">{rank}</text>
+    </svg>
   )
 }
