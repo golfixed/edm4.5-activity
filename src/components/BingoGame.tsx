@@ -193,7 +193,7 @@ function exportCardsDirectToPDF(cards: string[][], gameName: string) {
 type Phase = 'home' | 'preview' | 'playing' | 'scoring-example'
 
 const TILE_PT = 1
-const BINGO_PT = 10
+const BINGO_PT = 5
 const FREE_IDX = 12
 // row 3 + top-left diagonal: 8 tiles, 2 bingo lines
 const EXAMPLE_MARKS = [0, 6, 10, 11, 13, 14, 18, 24]
