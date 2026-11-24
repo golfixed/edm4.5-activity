@@ -635,164 +635,156 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
       })}
 
       {/* Add new pair form */}
-      <div className="border border-dashed border-orange-200 rounded-xl p-4 mt-3">
-        <div className="flex items-center justify-between mb-3">
-          <p className="flex items-center gap-1.5 text-orange-700 text-xs font-semibold">{ICON.plus('w-3.5 h-3.5')}เพิ่มโจทย์ใหม่</p>
-          <label className="flex items-center gap-1.5 px-3 py-1 bg-orange-50 hover:bg-orange-100 border border-orange-100 rounded-lg text-gray-600 text-xs cursor-pointer transition-colors">
-            {ICON.folder}<span>นำเข้าหลายรูป</span>
-            <input type="file" accept="image/*" multiple hidden onChange={e => { if (e.target.files?.length) handleBulkUpload(e.target.files) }} />
-          </label>
-        </div>
-
-        <div className="flex items-start gap-4">
-          {/* Slot A */}
-          <div className="flex flex-col items-center gap-1.5">
-            <div className="flex items-center gap-1">
-              <span className="text-gray-500 text-xs">{pendingAMode === 'text' ? 'ข้อความ' : 'ภาพ'} A</span>
-              <div className="flex border border-orange-100 rounded overflow-hidden">
-                <button onClick={() => { setPendingAMode('text'); setPendingA(null) }}
-                  className={`px-1.5 py-0.5 text-[10px] leading-none transition-colors ${pendingAMode === 'text' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-orange-50'}`}>T</button>
-                <button onClick={() => { setPendingAMode('image'); setPendingAText('') }}
-                  className={`px-1.5 py-0.5 text-[10px] leading-none transition-colors ${pendingAMode === 'image' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-orange-50'}`}>{ICON.image()}</button>
+      {(() => {
+        const segBtn = (active: boolean) => `flex items-center gap-1.5 px-3 h-9 text-sm font-medium transition-colors ${active ? 'bg-orange-500 text-white' : 'bg-white text-gray-600 hover:bg-orange-50'}`
+        const valA = pendingAMode === 'text' ? pendingAText : pendingA
+        const valB = pendingBMode === 'text' ? pendingBText : pendingB
+        const missing = [!valA && 'ตัวเลือก A', !valB && 'ตัวเลือก B'].filter(Boolean)
+        const slot = (label: string, value: string | null, set: (v: string | null) => void, tone: 'orange' | 'amber') => (
+          <div className="flex flex-col gap-1.5">
+            <span className={`text-sm font-semibold ${tone === 'amber' ? 'text-amber-700' : 'text-gray-700'}`}>{label}</span>
+            {value ? (
+              <div className="flex items-center gap-3">
+                <img src={value} alt={label} className={`h-24 w-40 rounded-lg object-contain bg-white border ${tone === 'amber' ? 'border-amber-200' : 'border-orange-100'}`} />
+                <div className="flex flex-col gap-1.5">
+                  <label className="flex items-center gap-1.5 h-9 px-3 rounded-lg border border-orange-200 bg-white hover:bg-orange-50 text-orange-700 text-sm font-medium cursor-pointer transition-colors">
+                    {ICON.image('w-4 h-4')}เปลี่ยนรูป
+                    <input type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) compressImage(f, 900, 0.72).then(set) }} />
+                  </label>
+                  <button onClick={() => set(null)}
+                    className="flex items-center gap-1.5 h-9 px-3 rounded-lg border border-red-200 bg-white hover:bg-red-50 text-red-500 text-sm font-medium transition-colors">
+                    {ICON.trash}ลบรูป
+                  </button>
+                </div>
               </div>
-            </div>
-            {pendingAMode === 'text' ? (
-              <textarea
-                value={pendingAText}
-                onChange={e => setPendingAText(e.target.value)}
-                placeholder="พิมพ์ข้อความ..."
-                className="w-24 h-16 rounded-lg border-2 border-orange-200 bg-white text-gray-700 text-sm p-1.5 resize-none focus:outline-none focus:border-orange-400 placeholder-gray-400"
-              />
             ) : (
               <label className="cursor-pointer">
-                {pendingA ? (
-                  <img src={pendingA} className="w-24 h-16 object-cover rounded-lg border-2 border-orange-300" />
-                ) : (
-                  <div className="w-24 h-16 rounded-lg border-2 border-dashed border-orange-200 flex items-center justify-center hover:border-orange-300 transition-colors bg-white text-gray-500">{ICON.plus('w-6 h-6')}</div>
-                )}
-                <input type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) readFile(f, setPendingA) }} />
+                <div className={`h-24 w-40 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-colors ${tone === 'amber' ? 'border-amber-300 hover:border-amber-400 bg-amber-50/40 text-amber-600' : 'border-orange-200 hover:border-orange-300 bg-orange-50/40 text-gray-600'}`}>
+                  {ICON.plus('w-5 h-5')}
+                  <span className="text-sm">อัพโหลดรูป</span>
+                </div>
+                <input type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) compressImage(f, 900, 0.72).then(set) }} />
               </label>
             )}
           </div>
-
-          <div className="text-gray-500 text-sm pt-9">vs</div>
-
-          {/* Slot B */}
-          <div className="flex flex-col items-center gap-1.5">
-            <div className="flex items-center gap-1">
-              <span className="text-gray-500 text-xs">{pendingBMode === 'text' ? 'ข้อความ' : 'ภาพ'} B</span>
-              <div className="flex border border-orange-100 rounded overflow-hidden">
-                <button onClick={() => { setPendingBMode('text'); setPendingB(null) }}
-                  className={`px-1.5 py-0.5 text-[10px] leading-none transition-colors ${pendingBMode === 'text' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-orange-50'}`}>T</button>
-                <button onClick={() => { setPendingBMode('image'); setPendingBText('') }}
-                  className={`px-1.5 py-0.5 text-[10px] leading-none transition-colors ${pendingBMode === 'image' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-orange-50'}`}>{ICON.image()}</button>
-              </div>
-            </div>
-            {pendingBMode === 'text' ? (
-              <textarea
-                value={pendingBText}
-                onChange={e => setPendingBText(e.target.value)}
-                placeholder="พิมพ์ข้อความ..."
-                className="w-24 h-16 rounded-lg border-2 border-orange-200 bg-white text-gray-700 text-sm p-1.5 resize-none focus:outline-none focus:border-orange-400 placeholder-gray-400"
+        )
+        const choices = [
+          { side: 'A' as const, mode: pendingAMode, setMode: setPendingAMode, img: pendingA, setImg: setPendingA, text: pendingAText, setText: setPendingAText },
+          { side: 'B' as const, mode: pendingBMode, setMode: setPendingBMode, img: pendingB, setImg: setPendingB, text: pendingBText, setText: setPendingBText },
+        ]
+        return (
+          <div className="bg-white/70 border-2 border-dashed border-orange-300 rounded-2xl">
+            {/* Header */}
+            <div className="flex items-center gap-2.5 px-4 py-3 border-b border-dashed border-orange-200">
+              <span className="w-9 h-9 rounded-lg bg-orange-500 text-white flex items-center justify-center flex-shrink-0">{ICON.plus('w-5 h-5')}</span>
+              <span className="font-bold text-gray-900 flex-shrink-0">เพิ่มโจทย์ใหม่</span>
+              <input
+                value={pendingLabel}
+                onChange={e => setPendingLabel(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && addPair()}
+                placeholder="ชื่อโจทย์ (ไม่บังคับ)"
+                className="flex-1 min-w-0 h-10 px-3 rounded-lg border border-orange-200 bg-white text-gray-900 font-semibold placeholder-gray-400 placeholder:font-normal focus:outline-none focus:border-orange-400"
               />
-            ) : (
-              <label className="cursor-pointer">
-                {pendingB ? (
-                  <img src={pendingB} className="w-24 h-16 object-cover rounded-lg border-2 border-orange-300" />
-                ) : (
-                  <div className="w-24 h-16 rounded-lg border-2 border-dashed border-orange-200 flex items-center justify-center hover:border-orange-300 transition-colors bg-white text-gray-500">{ICON.plus('w-6 h-6')}</div>
-                )}
-                <input type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) readFile(f, setPendingB) }} />
+              <label title="เลือกหลายรูปพร้อมกัน — จับคู่เป็น A, B ตามลำดับ"
+                className="flex items-center gap-1.5 h-10 px-3 rounded-lg border border-orange-200 bg-white hover:bg-orange-50 text-orange-700 text-sm font-medium cursor-pointer transition-colors flex-shrink-0">
+                {ICON.folder}นำเข้าหลายรูป
+                <input type="file" accept="image/*" multiple hidden onChange={e => { if (e.target.files?.length) handleBulkUpload(e.target.files) }} />
               </label>
-            )}
-          </div>
+            </div>
 
-          {/* Label + question + correct + add */}
-          <div className="flex-1 flex flex-col gap-2 pt-6 min-w-0">
-            <input
-              value={pendingLabel}
-              onChange={e => setPendingLabel(e.target.value)}
-              placeholder="ชื่ออ้างอิง (ไม่บังคับ)"
-              onKeyDown={e => e.key === 'Enter' && addPair()}
-              className="w-full px-3 py-1.5 bg-white border border-orange-100 rounded-lg text-gray-600 text-sm placeholder-gray-400 focus:outline-none focus:border-orange-400"
-            />
-            <div className="flex items-center gap-2">
-              <div className="flex border border-orange-100 rounded-md overflow-hidden flex-shrink-0">
-                <button onClick={() => { setPendingQMode('text'); setPendingQuestionImage(null) }}
-                  className={`px-2 py-1 text-xs transition-colors ${pendingQMode === 'text' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-orange-50'}`}
-                  title="คำถามข้อความ">T</button>
-                <button onClick={() => { setPendingQMode('image'); setPendingQuestion('') }}
-                  className={`px-2 py-1 text-xs transition-colors ${pendingQMode === 'image' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-orange-50'}`}
-                  title="คำถามภาพ">{ICON.image()}</button>
+            {/* Choices */}
+            <div className="grid grid-cols-2 gap-4 p-4">
+              {choices.map(c => {
+                const isCorrect = pendingCorrect === c.side
+                return (
+                  <div key={c.side} className={`flex flex-col gap-3 p-3 rounded-xl border-2 bg-white transition-colors ${isCorrect ? 'border-green-500' : 'border-orange-100'}`}>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="flex items-center gap-2 font-bold text-gray-900">
+                        <span className={`w-7 h-7 rounded-full flex items-center justify-center text-sm ${isCorrect ? 'bg-green-500 text-white' : 'bg-orange-100 text-orange-700'}`}>{c.side}</span>
+                        ตัวเลือก {c.side}
+                      </span>
+                      <div className="flex rounded-lg border border-orange-200 overflow-hidden">
+                        <button onClick={() => { c.setMode('text'); c.setImg(null) }} className={segBtn(c.mode === 'text')}>{ICON.text()}ข้อความ</button>
+                        <button onClick={() => { c.setMode('image'); c.setText('') }} className={`${segBtn(c.mode === 'image')} border-l border-orange-200`}>{ICON.image('w-4 h-4')}รูปภาพ</button>
+                      </div>
+                    </div>
+
+                    <div className="relative group h-36 rounded-lg overflow-hidden bg-orange-50/50 border border-orange-100">
+                      {c.mode === 'text' ? (
+                        <textarea
+                          value={c.text}
+                          onChange={e => c.setText(e.target.value)}
+                          className="w-full h-full bg-transparent p-3 text-center text-lg font-semibold text-gray-900 leading-snug resize-none focus:outline-none placeholder-gray-400 placeholder:font-normal placeholder:text-base"
+                          placeholder="พิมพ์ข้อความตัวเลือก..."
+                        />
+                      ) : (
+                        <label className="absolute inset-0 cursor-pointer">
+                          {c.img ? (
+                            <>
+                              <img src={c.img} alt={c.side} className="w-full h-full object-contain" />
+                              <span className="absolute bottom-2 right-2 flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-black/60 text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                                {ICON.image('w-4 h-4')}เปลี่ยนรูป
+                              </span>
+                            </>
+                          ) : (
+                            <span className="w-full h-full flex flex-col items-center justify-center gap-1.5 text-gray-600 border-2 border-dashed border-orange-200 rounded-lg hover:border-orange-300 transition-colors">
+                              {ICON.plus('w-6 h-6')}
+                              <span className="text-sm">คลิกเพื่ออัพโหลดรูป</span>
+                            </span>
+                          )}
+                          <input type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) readFile(f, c.setImg) }} />
+                        </label>
+                      )}
+                    </div>
+
+                    <button onClick={() => setPendingCorrect(c.side)}
+                      className={`h-10 rounded-lg flex items-center justify-center gap-2 text-sm font-bold transition-colors ${isCorrect ? 'bg-green-500 text-white shadow-sm' : 'bg-white border border-orange-200 text-gray-600 hover:border-green-400 hover:text-green-700'}`}>
+                      {ICON.check('w-4 h-4')}{isCorrect ? 'คำตอบที่ถูก' : 'ตั้งเป็นคำตอบที่ถูก'}
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Question */}
+            <div className="px-4 pb-4 flex flex-col gap-2.5">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm font-bold text-gray-900">คำถามที่แสดงระหว่างเล่น <span className="font-normal text-gray-500">(ไม่บังคับ)</span></span>
+                <div className="flex rounded-lg border border-orange-200 overflow-hidden">
+                  <button onClick={() => { setPendingQMode('text'); setPendingQuestionImage(null); setPendingRevealImage(null) }} className={segBtn(pendingQMode === 'text')}>{ICON.text()}ข้อความ</button>
+                  <button onClick={() => { setPendingQMode('image'); setPendingQuestion('') }} className={`${segBtn(pendingQMode === 'image')} border-l border-orange-200`}>{ICON.image('w-4 h-4')}รูปภาพ</button>
+                </div>
               </div>
               {pendingQMode === 'image' ? (
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  {pendingQuestionImage ? (
-                    <img src={pendingQuestionImage} alt="Q" className="h-8 max-w-[120px] rounded object-contain bg-white" />
-                  ) : (
-                    <span className="text-gray-500 text-xs">ยังไม่มีภาพ</span>
-                  )}
-                  <label className="text-gray-600 hover:text-gray-700 text-xs cursor-pointer transition-colors">
-                    {pendingQuestionImage ? 'เปลี่ยน' : '+ อัพโหลด'}
-                    <input type="file" accept="image/*" hidden onChange={e => {
-                      const f = e.target.files?.[0]
-                      if (f) compressImage(f, 900, 0.72).then(setPendingQuestionImage)
-                    }} />
-                  </label>
-                  {pendingQuestionImage && (
-                    <button onClick={() => setPendingQuestionImage(null)}
-                      className="text-red-300 hover:text-red-500 text-xs transition-colors">{ICON.x}</button>
-                  )}
-                  {/* reveal image for new pair */}
-                  <div className="flex items-center gap-1.5 ml-3 pl-3 border-l border-orange-100">
-                    <span className="text-amber-600 text-xs flex-shrink-0">เฉลย</span>
-                    {pendingRevealImage ? (
-                      <img src={pendingRevealImage} alt="เฉลย" className="h-8 max-w-[80px] rounded object-contain bg-white" />
-                    ) : (
-                      <span className="text-gray-500 text-xs">—</span>
-                    )}
-                    <label className="text-gray-600 hover:text-gray-700 text-xs cursor-pointer transition-colors">
-                      {pendingRevealImage ? 'เปลี่ยน' : '+ เพิ่ม'}
-                      <input type="file" accept="image/*" hidden onChange={e => {
-                        const f = e.target.files?.[0]
-                        if (f) compressImage(f, 900, 0.72).then(setPendingRevealImage)
-                      }} />
-                    </label>
-                    {pendingRevealImage && (
-                      <button onClick={() => setPendingRevealImage(null)}
-                        className="text-red-300 hover:text-red-500 text-xs transition-colors">{ICON.x}</button>
-                    )}
-                  </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {slot('รูปโจทย์', pendingQuestionImage, setPendingQuestionImage, 'orange')}
+                  {slot('รูปเฉลย (แสดงเมื่อหมดเวลา)', pendingRevealImage, setPendingRevealImage, 'amber')}
                 </div>
               ) : (
                 <input
                   value={pendingQuestion}
                   onChange={e => setPendingQuestion(e.target.value)}
-                  placeholder="คำถาม/บริบท เช่น 'ลูกค้า Jobthai' — แสดงใหญ่ระหว่างเล่น"
                   onKeyDown={e => e.key === 'Enter' && addPair()}
-                  className="flex-1 px-3 py-1.5 bg-white border border-orange-100 rounded-lg text-gray-700 text-sm font-medium placeholder-gray-400 focus:outline-none focus:border-orange-400"
+                  className="w-full h-11 px-3 rounded-lg border border-orange-200 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-400"
+                  placeholder="เช่น 'ลูกค้า Jobthai' — แสดงตัวใหญ่ระหว่างเล่น"
                 />
               )}
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-gray-500 text-xs">เฉลย:</span>
-              {(['A', 'B'] as const).map(side => (
-                <button key={side} onClick={() => setPendingCorrect(side)}
-                  className={`w-10 h-8 rounded-lg text-sm font-bold transition-all ${
-                    pendingCorrect === side ? 'bg-green-500 text-white' : 'bg-orange-50 text-gray-500 hover:bg-orange-100'
-                  }`}>{side}</button>
-              ))}
-              <button onClick={addPair} disabled={!(pendingAMode === 'text' ? pendingAText : pendingA) || !(pendingBMode === 'text' ? pendingBText : pendingB)}
-                className="ml-auto flex items-center gap-1.5 px-5 py-1.5 bg-gradient-to-b from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white rounded-lg text-sm font-bold shadow-[0_4px_14px_rgba(194,65,12,0.3)] transition-all disabled:opacity-30 disabled:shadow-none disabled:cursor-not-allowed">
-                {ICON.plus()}เพิ่ม
+
+            {/* Add */}
+            <div className="px-4 pb-4">
+              <button onClick={addPair} disabled={missing.length > 0}
+                className="w-full h-12 flex items-center justify-center gap-2 rounded-xl font-bold text-white bg-gradient-to-b from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 shadow-[0_6px_20px_rgba(194,65,12,0.3)] transition-all disabled:from-orange-100 disabled:to-orange-100 disabled:text-orange-700 disabled:shadow-none disabled:cursor-not-allowed">
+                {ICON.plus('w-5 h-5')}
+                {missing.length > 0 ? `ใส่${missing.join(' และ ')} ก่อน` : 'เพิ่มโจทย์'}
               </button>
             </div>
           </div>
-        </div>
-      </div>
+        )
+      })()}
 
       {pairs.length === 0 && (
-        <p className="text-gray-500 text-xs text-center py-4">ยังไม่มีโจทย์ — เพิ่มรูปด้านบน</p>
+        <p className="text-gray-500 text-sm text-center py-2">ยังไม่มีโจทย์ — เพิ่มโจทย์แรกด้านบน</p>
       )}
     </div>
   )
