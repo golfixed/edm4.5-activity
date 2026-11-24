@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useStore } from '@/lib/store'
 import { Game, ImageSet, ImagePair } from '@/lib/types'
 import { compressImage } from '@/lib/compressImage'
+import { resolveIconColor } from '@/lib/iconColors'
+import GameSettings from './GameSettings'
 
 interface Props {
   game: Game
@@ -35,6 +37,7 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
   )
   const [newSetName, setNewSetName] = useState('')
   const [showSounds, setShowSounds] = useState(false)
+  const [showIdentity, setShowIdentity] = useState(false)
   const [uiScale, setUiScale] = useState(1.0)
   const [setDragIndex, setSetDragIndex] = useState<number | null>(null)
   const [setDropIndex, setSetDropIndex] = useState<number | null>(null)
@@ -46,6 +49,7 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
   const sets = liveGame.imageSets ?? []
   const selectedSet = sets.find(s => s.id === selectedSetId) ?? null
   const totalPairs = sets.reduce((sum, s) => sum + s.pairs.length, 0)
+  const iconColor = resolveIconColor(liveGame.iconColor, liveGame.colorIdx ?? null)
   const soundsSet = [liveGame.soundStart, liveGame.soundTick, liveGame.soundTimeUp].filter(Boolean).length
 
   const addSet = () => {
@@ -101,6 +105,16 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Name & icon */}
+          <button onClick={() => setShowIdentity(true)} title="แก้ไขชื่อเกมและไอคอน"
+            className="flex items-center gap-2 pl-1.5 pr-3 h-9 bg-white hover:bg-orange-50 border border-orange-200 text-orange-700 rounded-lg text-sm transition-colors">
+            <span className="w-6 h-6 rounded-md flex items-center justify-center text-sm leading-none"
+              style={{ background: `linear-gradient(145deg, ${iconColor.from}, ${iconColor.to})` }}>
+              {liveGame.icon ?? '🎮'}
+            </span>
+            ชื่อและไอคอน
+          </button>
+
           {/* Timer */}
           <div className="flex items-center gap-1.5 border border-orange-200 rounded-lg px-3 h-9">
             {ICON.clock('w-4 h-4 text-orange-500')}
@@ -303,6 +317,8 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
         </div>
 
       </div>
+
+      {showIdentity && <GameSettings game={liveGame} onClose={() => setShowIdentity(false)} identityOnly />}
     </div>
   )
 }

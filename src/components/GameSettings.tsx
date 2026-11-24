@@ -9,9 +9,10 @@ import { compressImage } from '@/lib/compressImage'
 interface Props {
   game: Game
   onClose: () => void
+  identityOnly?: boolean
 }
 
-export default function GameSettings({ game, onClose }: Props) {
+export default function GameSettings({ game, onClose, identityOnly }: Props) {
   const { games, setGames } = useStore()
 
   const updateGame = (partial: Partial<Game>) => {
@@ -114,7 +115,7 @@ export default function GameSettings({ game, onClose }: Props) {
           </Section>
 
           {/* Spot-difference settings */}
-          {game.type === 'spot-difference' && (
+          {!identityOnly && game.type === 'spot-difference' && (
             <>
               <Section title="⏱ ตั้งเวลา">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -137,7 +138,7 @@ export default function GameSettings({ game, onClose }: Props) {
           )}
 
           {/* Physical game settings */}
-          {game.type === 'physical' && (
+          {!identityOnly && game.type === 'physical' && (
             <>
               <Section title="🖼 ภาพพื้นหลัง">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -158,7 +159,7 @@ export default function GameSettings({ game, onClose }: Props) {
           )}
 
           {/* Bingo settings */}
-          {game.type === 'human-bingo' && (
+          {!identityOnly && game.type === 'human-bingo' && (
             <>
               <Section title="🖼 ภาพพื้นหลัง">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
