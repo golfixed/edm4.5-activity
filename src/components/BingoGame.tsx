@@ -258,7 +258,7 @@ function ScoringExample({ card }: { card: string[] }) {
                 className={`relative aspect-square flex items-center justify-center rounded-lg border-2 text-center p-1 transition-colors ${cls} ${free ? 'cursor-default font-bold' : ''}`}>
                 <span className="text-xs leading-tight">{cell}</span>
                 {isOn(i) && (
-                  <span className="absolute top-0.5 right-1 text-[10px] font-bold opacity-80">+{TILE_PT}</span>
+                  <span className="absolute top-1 right-1.5 text-base font-extrabold leading-none opacity-90">+{TILE_PT}</span>
                 )}
               </button>
             )
