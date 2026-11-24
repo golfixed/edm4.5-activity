@@ -116,7 +116,7 @@ function ScoresTab() {
         <span className="w-4 flex-shrink-0" />
         <span className="flex-1 text-xs font-bold uppercase tracking-wider text-orange-900/40">ทีม</span>
         {games.map((g) => (
-          <span key={g.id} className="w-24 text-center text-xs font-bold uppercase tracking-wider text-orange-900/40">{g.name}</span>
+          <span key={g.id} className="w-36 text-center text-xs font-bold uppercase tracking-wider text-orange-900/40 leading-tight">{g.name}</span>
         ))}
         <span className="w-20 flex-shrink-0" />
       </div>
@@ -127,7 +127,7 @@ function ScoresTab() {
             <span className={`w-3.5 h-3.5 rounded-full flex-shrink-0 ${team.color}`} />
             <span className="flex-1 font-bold text-gray-900 text-lg">{team.name}</span>
             {games.map((g) => (
-              <div key={g.id} className="w-24 flex justify-center">
+              <div key={g.id} className="w-36 flex justify-center">
                 <input
                   type="number" min="0"
                   value={localScores[key(team.id, g.id)] ?? ''}
