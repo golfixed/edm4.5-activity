@@ -718,14 +718,21 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
 
         {/* Called keywords */}
         <div className="flex-1 overflow-y-auto min-h-0 bg-white rounded-2xl p-3 border border-orange-100 shadow-sm">
-          <div className="flex flex-wrap gap-2 content-start">
-            {calledKeywords.length === 0
-              ? <p className="text-gray-400 text-sm">ยังไม่มี keyword ที่เรียก</p>
-              : calledKeywords.map((kw, i) => (
+          {calledKeywords.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center gap-3 text-center">
+              <svg className="w-16 h-16 text-orange-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3.5 12.6V5a1.5 1.5 0 0 1 1.5-1.5h7.6a1.5 1.5 0 0 1 1.06.44l6.9 6.9a1.5 1.5 0 0 1 0 2.12l-7.6 7.6a1.5 1.5 0 0 1-2.12 0l-6.9-6.9A1.5 1.5 0 0 1 3.5 12.6z" />
+                <circle cx="8" cy="8" r="1.5" />
+              </svg>
+              <p className="text-gray-400 text-lg">ยังไม่มี keyword ที่เรียก</p>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2 content-start">
+              {calledKeywords.map((kw, i) => (
                 <span key={i} className="bg-orange-100 text-orange-800 border border-orange-300 px-4 py-1.5 rounded-full font-medium" style={{ fontSize: '24px' }}>{kw}</span>
-              ))
-            }
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Controls */}
