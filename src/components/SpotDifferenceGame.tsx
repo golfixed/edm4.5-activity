@@ -188,6 +188,14 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
     </button>
   )
 
+  const checkIcon = (
+    <span className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center">
+      <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3.5 8.5l3 3 6-7" />
+      </svg>
+    </span>
+  )
+
   // ── SETUP ─────────────────────────────────────────────────────────────────
   if (phase === 'setup') {
     return (
@@ -225,7 +233,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                       <span className="truncate">{team.name}</span>
                       {team.captain && <span className="text-white/40 text-sm font-normal">({team.captain})</span>}
                     </span>
-                    {selected && <span className="ml-auto text-white text-base flex-shrink-0">✓</span>}
+                    {selected && <span className="ml-auto flex-shrink-0">{checkIcon}</span>}
                   </button>
                 )
               })}
@@ -254,7 +262,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                       >
                         <div className="flex items-center gap-2 w-full">
                           <span className="text-white font-semibold text-sm">{set.name}</span>
-                          {selected && <span className="ml-auto text-white text-sm">✓</span>}
+                          {selected && <span className="ml-auto flex-shrink-0">{checkIcon}</span>}
                         </div>
                         <span className="text-white/40 text-xs mt-0.5">{set.pairs.length} โจทย์</span>
                       </button>
