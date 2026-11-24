@@ -11,7 +11,7 @@ import GameSettings from '@/components/GameSettings'
 import Link from 'next/link'
 
 export default function GamePage({ params }: { params: { id: string } }) {
-  const { games } = useStore()
+  const { games, isHydrated } = useStore()
   const router = useRouter()
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [closing, setClosing] = useState(false) // prevents double-tap
@@ -25,6 +25,14 @@ export default function GamePage({ params }: { params: { id: string } }) {
     try { sessionStorage.setItem('returnFromGame', game?.id ?? '') } catch {}
     router.push('/')
   }, [closing, router, game])
+
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-10 h-10 rounded-full border-4 border-gray-200 border-t-gray-500 animate-spin" />
+      </div>
+    )
+  }
 
   if (!game) {
     return (
