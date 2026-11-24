@@ -27,6 +27,10 @@ const ICON = {
   speaker: <svg className="w-4 h-4" {...svgProps}><path d="M11 5 6 9H3v6h3l5 4V5z" /><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13" /></svg>,
   image: (cls = 'w-3 h-3') => <svg className={cls} {...svgProps}><rect x="3" y="4" width="18" height="16" rx="2.5" /><circle cx="9" cy="10" r="1.75" /><path d="m21 16-5-5-9 9" /></svg>,
   folder: <svg className="w-3.5 h-3.5" {...svgProps}><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H9l2 2.5h7.5A2.5 2.5 0 0 1 21 10v7.5a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z" /></svg>,
+  text: (cls = 'w-4 h-4') => <svg className={cls} {...svgProps} strokeWidth={2.25}><path d="M5 6V4.5h14V6M12 4.5v15M9 19.5h6" /></svg>,
+  move: <svg className="w-4 h-4" {...svgProps}><path d="M3 12h13M12 7l5 5-5 5M20 5v14" /></svg>,
+  trash: <svg className="w-4 h-4" {...svgProps}><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 12.5h9l1-12.5M10 11v5M14 11v5" /></svg>,
+  download: <svg className="w-4 h-4" {...svgProps} strokeWidth={2.25}><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M7 10l5 5 5-5M12 15V3" /></svg>,
   chevronRight: <svg className="w-3.5 h-3.5" {...svgProps} strokeWidth={2.5}><path d="M9 5l7 7-7 7" /></svg>,
 }
 
@@ -418,284 +422,211 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
   const handleDragEnd = () => { setDragIndex(null); setDropIndex(null) }
 
   return (
-    <div className="p-4 space-y-1.5">
+    <div className="p-5 space-y-4 max-w-4xl mx-auto">
 
       {/* Existing pairs */}
       {pairs.map((pair, i) => {
         const dragCls = dragIndex === i ? 'opacity-30 border-orange-100'
           : dropIndex === i && dragIndex !== null ? 'border-orange-400 bg-orange-50'
           : 'border-orange-100 hover:border-orange-200'
+        const updatePair = (patch: Partial<ImagePair>) => onChange(pairs.map(p => p.id === pair.id ? { ...p, ...patch } : p))
+        const canMove = !!onMovePair && !!sets && sets.some(s => s.id !== currentSetId)
+        const segBtn = (active: boolean) => `flex items-center gap-1.5 px-3 h-9 text-sm font-medium transition-colors ${active ? 'bg-orange-500 text-white' : 'bg-white text-gray-600 hover:bg-orange-50'}`
+        const imageSlot = (label: string, value: string | undefined, set: (v: string | undefined) => void, tone: 'orange' | 'amber') => (
+          <div className="flex flex-col gap-1.5">
+            <span className={`text-sm font-semibold ${tone === 'amber' ? 'text-amber-700' : 'text-gray-700'}`}>{label}</span>
+            {value ? (
+              <div className="flex items-center gap-3">
+                <img src={value} alt={label} className={`h-24 w-40 rounded-lg object-contain bg-white border ${tone === 'amber' ? 'border-amber-200' : 'border-orange-100'}`} />
+                <div className="flex flex-col gap-1.5">
+                  <label className="flex items-center gap-1.5 h-9 px-3 rounded-lg border border-orange-200 bg-white hover:bg-orange-50 text-orange-700 text-sm font-medium cursor-pointer transition-colors">
+                    {ICON.image('w-4 h-4')}เปลี่ยนรูป
+                    <input type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) compressImage(f, 900, 0.72).then(set) }} />
+                  </label>
+                  <button onClick={() => set(undefined)}
+                    className="flex items-center gap-1.5 h-9 px-3 rounded-lg border border-red-200 bg-white hover:bg-red-50 text-red-500 text-sm font-medium transition-colors">
+                    {ICON.trash}ลบรูป
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <label className="cursor-pointer">
+                <div className={`h-24 w-40 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-colors ${tone === 'amber' ? 'border-amber-300 hover:border-amber-400 bg-amber-50/40 text-amber-600' : 'border-orange-200 hover:border-orange-300 bg-orange-50/40 text-gray-600'}`}>
+                  {ICON.plus('w-5 h-5')}
+                  <span className="text-sm">อัพโหลดรูป</span>
+                </div>
+                <input type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) compressImage(f, 900, 0.72).then(set) }} />
+              </label>
+            )}
+          </div>
+        )
         return (
         <div key={pair.id}
           onDragOver={e => handleDragOver(e, i)}
           onDrop={() => handleDrop(i)}
           onDragEnd={handleDragEnd}
-          className={`flex flex-col bg-white border rounded-xl transition-all overflow-hidden ${dragCls}`}
+          className={`bg-white border-2 rounded-2xl shadow-sm transition-all ${dragCls}`}
         >
-          {/* ── Main row ─────────────────────────────────── */}
-          <div className="flex items-stretch gap-0">
-
-            {/* Drag + number */}
-            <div
-              draggable
-              onDragStart={() => handleDragStart(i)}
-              className="flex flex-col items-center justify-center gap-1 px-2 py-3 flex-shrink-0 border-r border-orange-100 cursor-grab active:cursor-grabbing"
-            >
-              <div className="text-gray-500 hover:text-gray-600 select-none" title="ลากเพื่อเรียงลำดับ">
-                <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="currentColor">
-                  <circle cx="5" cy="4" r="1.2"/><circle cx="11" cy="4" r="1.2"/>
-                  <circle cx="5" cy="8" r="1.2"/><circle cx="11" cy="8" r="1.2"/>
-                  <circle cx="5" cy="12" r="1.2"/><circle cx="11" cy="12" r="1.2"/>
-                </svg>
-              </div>
-              <span className="text-gray-500 text-xs font-mono leading-none">{i + 1}</span>
+          {/* ── Header: number, name, timer, actions ───────── */}
+          <div className="flex items-center gap-2.5 px-4 py-3 border-b border-orange-100">
+            <div draggable onDragStart={() => handleDragStart(i)}
+              className="flex items-center gap-1.5 cursor-grab active:cursor-grabbing select-none flex-shrink-0" title="ลากเพื่อเรียงลำดับ">
+              <svg className="w-4 h-4 text-gray-400" viewBox="0 0 16 16" fill="currentColor">
+                <circle cx="5" cy="4" r="1.2"/><circle cx="11" cy="4" r="1.2"/>
+                <circle cx="5" cy="8" r="1.2"/><circle cx="11" cy="8" r="1.2"/>
+                <circle cx="5" cy="12" r="1.2"/><circle cx="11" cy="12" r="1.2"/>
+              </svg>
+              <span className="min-w-[2.25rem] h-9 px-2 rounded-lg bg-orange-100 text-orange-700 font-bold flex items-center justify-center tabular-nums">{i + 1}</span>
             </div>
-
-            {/* Choices */}
-            <div className="flex items-center gap-2 px-3 py-3 flex-shrink-0">
-              {(['A', 'B'] as const).map((side, idx) => {
-                const key = side === 'A' ? 'imageA' : 'imageB'
-                const val = pair[key]
-                const groupCls = side === 'A' ? 'group/imgA' : 'group/imgB'
-                const hoverCls = side === 'A' ? 'group-hover/imgA:opacity-100' : 'group-hover/imgB:opacity-100'
-                const badgeCls = pair.correctImage === side ? 'bg-green-500 text-white' : 'bg-white text-gray-500 border border-orange-200'
-                return (
-                  <div key={side} className="flex items-center gap-2">
-                    {idx === 1 && <span className="text-gray-500 text-xs self-center">vs</span>}
-                    <div className="flex flex-col items-center gap-1">
-                      <div className={`relative ${groupCls}`}>
-                        {isImg(val) ? (
-                          <>
-                            <img src={val} alt={side} className="w-20 h-14 object-cover rounded-lg" />
-                            <span className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center shadow ${badgeCls}`}>{side}</span>
-                            <button
-                              onClick={() => downloadImage(val, `${(pair.label ?? 'pair').replace(/\s+/g, '_')}_${side}.jpg`)}
-                              title={`ดาวน์โหลด ${side}`}
-                              className={`absolute inset-0 flex items-center justify-center rounded-lg bg-black/50 opacity-0 ${hoverCls} transition-opacity`}>
-                              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
-                              </svg>
-                            </button>
-                          </>
-                        ) : (
-                          <div className="w-20 h-14 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center px-1 relative">
-                            <textarea
-                              value={val || ''}
-                              onChange={e => onChange(pairs.map(p => p.id === pair.id ? { ...p, [key]: e.target.value } : p))}
-                              className="w-full h-full bg-transparent text-gray-700 text-xs text-center leading-tight resize-none focus:outline-none placeholder-gray-400 py-1"
-                              placeholder="พิมพ์..."
-                            />
-                            <span className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center shadow pointer-events-none ${badgeCls}`}>{side}</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex border border-orange-100 rounded overflow-hidden">
-                        <button
-                          onClick={() => {
-                            if (isImg(val)) onChange(pairs.map(p => p.id === pair.id ? { ...p, [key]: '' } : p))
-                          }}
-                          className={`px-1.5 py-0.5 text-[10px] leading-none transition-colors ${!isImg(val) ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-orange-50'}`}
-                          title="ข้อความ">T</button>
-                        <label className={`px-1.5 py-0.5 text-[10px] leading-none cursor-pointer transition-colors ${isImg(val) ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-orange-50'}`} title="ภาพ">
-                          {ICON.image()}
-                          <input type="file" accept="image/*" hidden onChange={e => {
-                            const f = e.target.files?.[0]
-                            if (f) compressImage(f, 900, 0.72).then(img =>
-                              onChange(pairs.map(p => p.id === pair.id ? { ...p, [key]: img } : p))
-                            )
-                          }} />
-                        </label>
-                      </div>
+            <input
+              value={pair.label ?? ''}
+              onChange={e => updatePair({ label: e.target.value })}
+              className="flex-1 min-w-0 h-10 px-3 rounded-lg border border-orange-200 bg-white text-gray-900 font-semibold placeholder-gray-400 focus:outline-none focus:border-orange-400"
+              placeholder="ชื่อโจทย์ (ไว้อ้างอิง)"
+            />
+            <label className="flex items-center gap-1.5 h-10 px-3 rounded-lg border border-orange-200 bg-white flex-shrink-0 cursor-text" title="เวลาเฉพาะข้อนี้ — เว้นว่างเพื่อใช้เวลาเริ่มต้นของเกม">
+              {ICON.clock('w-4 h-4 text-orange-500')}
+              <input
+                type="number" min={1} max={300}
+                value={pair.timerSeconds ?? ''}
+                onChange={e => updatePair({ timerSeconds: e.target.value === '' ? undefined : parseInt(e.target.value) || undefined })}
+                className="w-10 text-center bg-transparent text-gray-900 font-semibold focus:outline-none tabular-nums placeholder-gray-400 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                placeholder="—"
+              />
+              <span className="text-gray-600 text-sm">วินาที</span>
+            </label>
+            {canMove && (
+              <div className="relative flex-shrink-0">
+                <button
+                  onClick={e => {
+                    if (moveDropdownPairId === pair.id) {
+                      setMoveDropdownPairId(null); setDropdownPos(null)
+                    } else {
+                      const r = (e.currentTarget as HTMLButtonElement).getBoundingClientRect()
+                      setDropdownPos({ top: r.bottom + 4, right: window.innerWidth - r.right })
+                      setMoveDropdownPairId(pair.id)
+                    }
+                  }}
+                  title="ย้ายไปชุดอื่น"
+                  className="flex items-center gap-1.5 h-10 px-3 rounded-lg border border-orange-200 bg-white hover:bg-orange-50 text-orange-700 text-sm font-medium transition-colors">
+                  {ICON.move}ย้ายชุด
+                </button>
+                {moveDropdownPairId === pair.id && dropdownPos && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => { setMoveDropdownPairId(null); setDropdownPos(null) }} />
+                    <div
+                      className="fixed z-50 bg-white border border-orange-100 rounded-xl shadow-2xl min-w-[160px] py-1 overflow-hidden"
+                      style={{ top: dropdownPos.top, right: dropdownPos.right }}
+                    >
+                      <p className="text-gray-500 text-xs font-semibold px-3 py-1.5">ย้ายไปชุด</p>
+                      {sets!.filter(s => s.id !== currentSetId).map(s => (
+                        <button key={s.id}
+                          onClick={() => { onMovePair!(pair.id, s.id); setMoveDropdownPairId(null); setDropdownPos(null) }}
+                          className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-gray-900 transition-colors truncate">
+                          {s.name}
+                        </button>
+                      ))}
                     </div>
-                  </div>
-                )
-              })}
-            </div>
-
-            {/* Meta (flex-1) */}
-            <div className="flex-1 flex flex-col justify-center gap-2 px-3 py-3 min-w-0 border-l border-orange-100">
-              {/* Row 1: label + move + delete */}
-              <div className="flex items-center gap-2">
-                <input
-                  value={pair.label ?? ''}
-                  onChange={e => onChange(pairs.map(p => p.id === pair.id ? { ...p, label: e.target.value } : p))}
-                  className="flex-1 bg-white border border-orange-100 rounded-lg px-2.5 py-1.5 text-gray-600 text-sm placeholder-gray-400 focus:outline-none focus:border-orange-400 focus:bg-white min-w-0"
-                  placeholder="ชื่อโจทย์..."
-                />
-                {onMovePair && sets && sets.filter(s => s.id !== currentSetId).length > 0 && (
-                  <div className="relative flex-shrink-0">
-                    <button
-                      onClick={e => {
-                        if (moveDropdownPairId === pair.id) {
-                          setMoveDropdownPairId(null); setDropdownPos(null)
-                        } else {
-                          const r = (e.currentTarget as HTMLButtonElement).getBoundingClientRect()
-                          setDropdownPos({ top: r.bottom + 4, right: window.innerWidth - r.right })
-                          setMoveDropdownPairId(pair.id)
-                        }
-                      }}
-                      title="ย้ายไปชุดอื่น"
-                      className="w-7 h-7 flex items-center justify-center text-orange-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors text-sm">
-                      <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M2 8h10M9 5l3 3-3 3" />
-                        <path d="M13 3v10" strokeWidth={1.5} />
-                      </svg>
-                    </button>
-                    {moveDropdownPairId === pair.id && dropdownPos && (
-                      <>
-                        <div className="fixed inset-0 z-40" onClick={() => { setMoveDropdownPairId(null); setDropdownPos(null) }} />
-                        <div
-                          className="fixed z-50 bg-white border border-orange-100 rounded-xl shadow-2xl min-w-[140px] py-1 overflow-hidden"
-                          style={{ top: dropdownPos.top, right: dropdownPos.right }}
-                        >
-                          <p className="text-gray-500 text-[10px] font-semibold uppercase tracking-wider px-3 py-1.5">ย้ายไปชุด</p>
-                          {sets.filter(s => s.id !== currentSetId).map(s => (
-                            <button key={s.id}
-                              onClick={() => { onMovePair(pair.id, s.id); setMoveDropdownPairId(null); setDropdownPos(null) }}
-                              className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-orange-50 hover:text-gray-900 transition-colors truncate">
-                              {s.name}
-                            </button>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
+                  </>
                 )}
-                <button onClick={() => onChange(pairs.filter(p => p.id !== pair.id))}
-                  className="w-7 h-7 flex items-center justify-center text-red-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0">{ICON.x}</button>
               </div>
-              {/* Row 2: timer + correct answer */}
-              <div className="flex items-center gap-3 flex-wrap">
-                <div className="flex items-center gap-1.5 border border-orange-100 rounded-lg px-2.5 h-8 flex-shrink-0">
-                  {ICON.clock('w-3.5 h-3.5 text-orange-500')}
-                  <input
-                    type="number" min={1} max={300}
-                    value={pair.timerSeconds ?? ''}
-                    onChange={e => {
-                      const v = e.target.value === '' ? undefined : parseInt(e.target.value) || undefined
-                      onChange(pairs.map(p => p.id === pair.id ? { ...p, timerSeconds: v } : p))
-                    }}
-                    className="w-10 text-center bg-transparent text-gray-600 text-sm focus:outline-none tabular-nums"
-                    placeholder="—"
-                  />
-                  <span className="text-gray-500 text-xs">วิ</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-gray-500 text-xs font-medium">เฉลย</span>
-                  {(['A', 'B'] as const).map(side => (
-                    <button key={side}
-                      onClick={() => onChange(pairs.map(p => p.id === pair.id ? { ...p, correctImage: side } : p))}
-                      className={`w-9 h-8 rounded-lg text-xs font-bold transition-all ${
-                        pair.correctImage === side
-                          ? 'bg-green-500 text-white shadow-sm'
-                          : 'bg-orange-50 text-gray-500 hover:bg-orange-100 hover:text-gray-600'
-                      }`}>{side}</button>
-                  ))}
-                </div>
-              </div>
-            </div>
+            )}
+            <button onClick={() => onChange(pairs.filter(p => p.id !== pair.id))} title="ลบโจทย์นี้"
+              className="flex items-center gap-1.5 h-10 px-3 rounded-lg border border-red-200 bg-white hover:bg-red-50 text-red-500 text-sm font-medium transition-colors flex-shrink-0">
+              {ICON.trash}ลบ
+            </button>
           </div>
 
-          {/* ── Question / reveal row ─────────────────────── */}
-          <div className="flex items-start gap-3 px-3 py-2.5 border-t border-orange-100 bg-white">
-            {/* text / image question toggle */}
-            <div className="flex border border-orange-100 rounded-md overflow-hidden flex-shrink-0 mt-0.5">
-              <button
-                onClick={() => {
-                  setImageModePairIds(s => { const n = new Set(s); n.delete(pair.id); return n })
-                  onChange(pairs.map(p => p.id === pair.id ? { ...p, questionImage: undefined } : p))
-                }}
-                className={`px-2 py-1 text-xs transition-colors ${!isImageMode(pair) ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-orange-50'}`}
-                title="คำถามข้อความ">T</button>
-              <button
-                onClick={() => {
-                  setImageModePairIds(s => { const n = new Set(s); n.add(pair.id); return n })
-                  onChange(pairs.map(p => p.id === pair.id ? { ...p, question: undefined } : p))
-                }}
-                className={`px-2 py-1 text-xs transition-colors ${isImageMode(pair) ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-orange-50'}`}
-                title="คำถามภาพ">{ICON.image()}</button>
+          {/* ── Choices A / B ─────────────────────────────── */}
+          <div className="grid grid-cols-2 gap-4 p-4">
+            {(['A', 'B'] as const).map(side => {
+              const key = side === 'A' ? 'imageA' : 'imageB'
+              const val = pair[key]
+              const isCorrect = pair.correctImage === side
+              return (
+                <div key={side} className={`flex flex-col gap-3 p-3 rounded-xl border-2 transition-colors ${isCorrect ? 'border-green-500 bg-green-50/40' : 'border-orange-100'}`}>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-2 font-bold text-gray-900">
+                      <span className={`w-7 h-7 rounded-full flex items-center justify-center text-sm ${isCorrect ? 'bg-green-500 text-white' : 'bg-orange-100 text-orange-700'}`}>{side}</span>
+                      ตัวเลือก {side}
+                    </span>
+                    <div className="flex rounded-lg border border-orange-200 overflow-hidden">
+                      <button onClick={() => { if (isImg(val)) updatePair({ [key]: '' }) }} className={segBtn(!isImg(val))}>
+                        {ICON.text()}ข้อความ
+                      </button>
+                      <label className={`${segBtn(isImg(val))} border-l border-orange-200 cursor-pointer`}>
+                        {ICON.image('w-4 h-4')}รูปภาพ
+                        <input type="file" accept="image/*" hidden onChange={e => {
+                          const f = e.target.files?.[0]
+                          if (f) compressImage(f, 900, 0.72).then(img => updatePair({ [key]: img }))
+                        }} />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="relative group h-36 rounded-lg overflow-hidden bg-orange-50/50 border border-orange-100">
+                    {isImg(val) ? (
+                      <>
+                        <img src={val} alt={side} className="w-full h-full object-contain" />
+                        <button
+                          onClick={() => downloadImage(val, `${(pair.label ?? 'pair').replace(/\s+/g, '_')}_${side}.jpg`)}
+                          className="absolute bottom-2 right-2 flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-black/60 text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                          {ICON.download}ดาวน์โหลด
+                        </button>
+                      </>
+                    ) : (
+                      <textarea
+                        value={val || ''}
+                        onChange={e => updatePair({ [key]: e.target.value })}
+                        className="w-full h-full bg-transparent p-3 text-center text-lg font-semibold text-gray-900 leading-snug resize-none focus:outline-none placeholder-gray-400 placeholder:font-normal placeholder:text-base"
+                        placeholder="พิมพ์ข้อความตัวเลือก..."
+                      />
+                    )}
+                  </div>
+
+                  <button onClick={() => updatePair({ correctImage: side })}
+                    className={`h-10 rounded-lg flex items-center justify-center gap-2 text-sm font-bold transition-colors ${isCorrect ? 'bg-green-500 text-white shadow-sm' : 'bg-white border border-orange-200 text-gray-600 hover:border-green-400 hover:text-green-700'}`}>
+                    {ICON.check('w-4 h-4')}{isCorrect ? 'คำตอบที่ถูก' : 'ตั้งเป็นคำตอบที่ถูก'}
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* ── Question shown during play ────────────────── */}
+          <div className="px-4 pb-4 flex flex-col gap-2.5">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm font-bold text-gray-900">คำถามที่แสดงระหว่างเล่น <span className="font-normal text-gray-500">(ไม่บังคับ)</span></span>
+              <div className="flex rounded-lg border border-orange-200 overflow-hidden">
+                <button
+                  onClick={() => {
+                    setImageModePairIds(s => { const n = new Set(s); n.delete(pair.id); return n })
+                    updatePair({ questionImage: undefined })
+                  }}
+                  className={segBtn(!isImageMode(pair))}>
+                  {ICON.text()}ข้อความ
+                </button>
+                <button
+                  onClick={() => {
+                    setImageModePairIds(s => { const n = new Set(s); n.add(pair.id); return n })
+                    updatePair({ question: undefined })
+                  }}
+                  className={`${segBtn(isImageMode(pair))} border-l border-orange-200`}>
+                  {ICON.image('w-4 h-4')}รูปภาพ
+                </button>
+              </div>
             </div>
-
             {isImageMode(pair) ? (
-              <div className="flex gap-4 flex-1 min-w-0">
-                {/* Question image slot */}
-                <div className="flex flex-col gap-1">
-                  <span className="text-gray-500 text-[10px] font-semibold uppercase tracking-wider">โจทย์</span>
-                  {pair.questionImage ? (
-                    <>
-                      <img src={pair.questionImage} alt="Q" className="h-14 max-w-[140px] rounded-lg object-contain bg-white border border-orange-100" />
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <label className="text-gray-600 hover:text-gray-700 text-xs cursor-pointer transition-colors">
-                          เปลี่ยน
-                          <input type="file" accept="image/*" hidden onChange={e => {
-                            const f = e.target.files?.[0]
-                            if (f) compressImage(f, 900, 0.72).then(img =>
-                              onChange(pairs.map(p => p.id === pair.id ? { ...p, questionImage: img } : p))
-                            )
-                          }} />
-                        </label>
-                        <button onClick={() => onChange(pairs.map(p => p.id === pair.id ? { ...p, questionImage: undefined } : p))}
-                          className="text-red-300 hover:text-red-500 text-xs transition-colors">{ICON.x}</button>
-                      </div>
-                    </>
-                  ) : (
-                    <label className="cursor-pointer">
-                      <div className="h-14 w-24 rounded-lg border-2 border-dashed border-orange-200 flex flex-col items-center justify-center hover:border-orange-300 bg-orange-50/40 text-gray-500 transition-colors gap-0.5">
-                        {ICON.plus('w-5 h-5')}
-                        <span className="text-[10px]">อัพโหลด</span>
-                      </div>
-                      <input type="file" accept="image/*" hidden onChange={e => {
-                        const f = e.target.files?.[0]
-                        if (f) compressImage(f, 900, 0.72).then(img =>
-                          onChange(pairs.map(p => p.id === pair.id ? { ...p, questionImage: img } : p))
-                        )
-                      }} />
-                    </label>
-                  )}
-                </div>
-
-                {/* Reveal image slot */}
-                <div className="flex flex-col gap-1">
-                  <span className="text-amber-600 text-[10px] font-semibold uppercase tracking-wider">เฉลย</span>
-                  {pair.revealImage ? (
-                    <>
-                      <img src={pair.revealImage} alt="เฉลย" className="h-14 max-w-[140px] rounded-lg object-contain bg-white border border-amber-200" />
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <label className="text-amber-600 hover:text-amber-700 text-xs cursor-pointer transition-colors">
-                          เปลี่ยน
-                          <input type="file" accept="image/*" hidden onChange={e => {
-                            const f = e.target.files?.[0]
-                            if (f) compressImage(f, 900, 0.72).then(img =>
-                              onChange(pairs.map(p => p.id === pair.id ? { ...p, revealImage: img } : p))
-                            )
-                          }} />
-                        </label>
-                        <button onClick={() => onChange(pairs.map(p => p.id === pair.id ? { ...p, revealImage: undefined } : p))}
-                          className="text-red-300 hover:text-red-500 text-xs transition-colors">{ICON.x}</button>
-                      </div>
-                    </>
-                  ) : (
-                    <label className="cursor-pointer">
-                      <div className="h-14 w-24 rounded-lg border-2 border-dashed border-amber-300 flex flex-col items-center justify-center hover:border-amber-400 bg-orange-50/40 text-amber-400 transition-colors gap-0.5">
-                        {ICON.plus('w-5 h-5')}
-                        <span className="text-[10px]">อัพโหลด</span>
-                      </div>
-                      <input type="file" accept="image/*" hidden onChange={e => {
-                        const f = e.target.files?.[0]
-                        if (f) compressImage(f, 900, 0.72).then(img =>
-                          onChange(pairs.map(p => p.id === pair.id ? { ...p, revealImage: img } : p))
-                        )
-                      }} />
-                    </label>
-                  )}
-                </div>
+              <div className="grid grid-cols-2 gap-4">
+                {imageSlot('รูปโจทย์', pair.questionImage, v => updatePair({ questionImage: v }), 'orange')}
+                {imageSlot('รูปเฉลย (แสดงเมื่อหมดเวลา)', pair.revealImage, v => updatePair({ revealImage: v }), 'amber')}
               </div>
             ) : (
               <input
                 value={pair.question ?? ''}
-                onChange={e => onChange(pairs.map(p => p.id === pair.id ? { ...p, question: e.target.value || undefined } : p))}
-                className="flex-1 bg-white border border-orange-100 rounded-lg px-2.5 py-1.5 text-gray-700 text-sm placeholder-gray-400 focus:outline-none focus:border-orange-400 focus:bg-white"
-                placeholder="คำถาม/บริบท เช่น 'ลูกค้า Jobthai' — แสดงใหญ่ระหว่างเล่น"
+                onChange={e => updatePair({ question: e.target.value || undefined })}
+                className="w-full h-11 px-3 rounded-lg border border-orange-200 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-400"
+                placeholder="เช่น 'ลูกค้า Jobthai' — แสดงตัวใหญ่ระหว่างเล่น"
               />
             )}
           </div>
