@@ -20,7 +20,15 @@ export async function POST(req: NextRequest) {
   fd.append('model', model)
   fd.append('image', image, 'image.png')
   fd.append('mask', mask, 'mask.png')
-  fd.append('prompt', prompt)
+  // The mask is a rough brush selection. Without guidance the model tends to paint a new
+  // object in the brush shape; tell it to edit what's already there and keep every outline.
+  const guardedPrompt = [
+    prompt,
+    'The masked area is only a rough hand-brushed selection, not a shape to draw.',
+    'Edit only the existing content inside it: keep every existing shape, outline, edge, size and position exactly as in the original.',
+    'Do not add new shapes, do not draw the outline of the selection, and do not change anything outside the selected area.',
+  ].join(' ')
+  fd.append('prompt', guardedPrompt)
   fd.append('size', '1024x1024')
   fd.append('n', '1')
 

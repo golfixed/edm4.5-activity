@@ -200,6 +200,64 @@ function maskCanvasToBlob(maskCanvas: HTMLCanvasElement, origCanvas: HTMLCanvasE
   })
 }
 
+// The image-edit model regenerates the whole picture and treats the mask only as a hint,
+// so it drifts outside the brushed area and sometimes paints the brush blob itself.
+// Blend the AI output back onto the original: only pixels under the (slightly feathered)
+// brush strokes come from the AI result; everything else stays pixel-identical to the original.
+function compositeMaskedEdit(
+  baseB64: string, aiB64: string,
+  maskCanvas: HTMLCanvasElement, origCanvas: HTMLCanvasElement, size: number,
+): Promise<string> {
+  const load = (b64: string) => new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = reject
+    img.src = `data:image/png;base64,${b64}`
+  })
+  return Promise.all([load(baseB64), load(aiB64)]).then(([base, ai]) => {
+    const scale = Math.min(size / origCanvas.width, size / origCanvas.height)
+    const dw = Math.round(origCanvas.width * scale), dh = Math.round(origCanvas.height * scale)
+    const dx = Math.round((size - dw) / 2), dy = Math.round((size - dh) / 2)
+
+    // Hard mask at AI size: painted (semi-transparent red) → fully opaque
+    const hard = document.createElement('canvas')
+    hard.width = size; hard.height = size
+    const hctx = hard.getContext('2d')!
+    hctx.drawImage(maskCanvas, dx, dy, dw, dh)
+    const md = hctx.getImageData(0, 0, size, size)
+    for (let i = 0; i < md.data.length; i += 4) {
+      const on = md.data[i + 3] > 10
+      md.data[i] = 0; md.data[i + 1] = 0; md.data[i + 2] = 0
+      md.data[i + 3] = on ? 255 : 0
+    }
+    hctx.putImageData(md, 0, 0)
+
+    // Feather the edge a little so the seam isn't visible
+    const soft = document.createElement('canvas')
+    soft.width = size; soft.height = size
+    const sctx = soft.getContext('2d')!
+    sctx.filter = `blur(${Math.max(1, Math.round(size / 512))}px)`
+    sctx.drawImage(hard, 0, 0)
+    sctx.filter = 'none'
+
+    // AI pixels restricted to the mask
+    const edited = document.createElement('canvas')
+    edited.width = size; edited.height = size
+    const ectx = edited.getContext('2d')!
+    ectx.drawImage(ai, 0, 0, size, size)
+    ectx.globalCompositeOperation = 'destination-in'
+    ectx.drawImage(soft, 0, 0)
+
+    // Original underneath, masked AI edit on top
+    const out = document.createElement('canvas')
+    out.width = size; out.height = size
+    const octx = out.getContext('2d')!
+    octx.drawImage(base, 0, 0, size, size)
+    octx.drawImage(edited, 0, 0)
+    return out.toDataURL('image/png').split(',')[1]
+  })
+}
+
 // Unsharp mask (3×3 kernel: center=5, cross=-1) to sharpen an upscaled image.
 // Runs on a 1024×1024 canvas in ~100–300 ms — called once at image load time.
 function sharpenCanvas(canvas: HTMLCanvasElement): void {
@@ -527,6 +585,7 @@ export default function ImageTwisterPage() {
     setAiLoading(true); setAiError(null); setAiResult(null); setAiOrigResult(null); setAiUsage(null)
     try {
       const orig = origCanvasRef.current
+      const maskCanvas = maskCanvasRef.current
       // Compute all three in parallel:
       //   imageBlob     → sent to OpenAI (1024×1024, centered on white bg)
       //   maskBlob      → user paint strokes as transparent mask
@@ -534,7 +593,7 @@ export default function ImageTwisterPage() {
       //                   guarantees pixel-perfect positional alignment with the AI-edited result
       const [imageBlob, maskBlob, sharpOrigB64] = await Promise.all([
         canvasToSquarePng(orig, AI_SIZE),
-        maskCanvasToBlob(maskCanvasRef.current, orig, AI_SIZE),
+        maskCanvasToBlob(maskCanvas, orig, AI_SIZE),
         new Promise<string>(resolve => {
           const c = document.createElement('canvas')
           c.width = AI_SIZE; c.height = AI_SIZE
@@ -556,7 +615,8 @@ export default function ImageTwisterPage() {
       setAiOrigResult(sharpOrigB64)
 
       const result = await callEditAPI(imageBlob, maskBlob, aiPrompt.trim())
-      setAiResult(result.image)
+      const composited = await compositeMaskedEdit(sharpOrigB64, result.image, maskCanvas, orig, AI_SIZE)
+      setAiResult(composited)
       if (result.usage) setAiUsage({ ...result.usage, quality: result.quality, model: result.model })
     } catch (err) {
       setAiError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาด')
