@@ -164,38 +164,36 @@ function canvasToSquarePng(canvas: HTMLCanvasElement, size: number): Promise<Blo
   })
 }
 
-function maskCanvasToBlob(maskCanvas: HTMLCanvasElement, origCanvas: HTMLCanvasElement, size: number): Promise<Blob> {
-  // Mask: opaque white = keep, transparent = edit region
+// Guide image for the AI: the original with the brushed area tinted red, so the model
+// can see both the selection and the content underneath it. (A real API mask makes the
+// model erase that area first, so it invents a new blob in the brush shape.)
+function guideCanvasToBlob(maskCanvas: HTMLCanvasElement, origCanvas: HTMLCanvasElement, size: number): Promise<Blob> {
   return new Promise(resolve => {
-    const c = document.createElement('canvas')
-    c.width = size; c.height = size
-    const ctx = c.getContext('2d')!
-    // Fill with opaque white (keep everything by default)
-    ctx.fillStyle = 'rgba(255,255,255,1)'
-    ctx.fillRect(0, 0, size, size)
-    // Read the user's paint strokes from maskCanvas (painted = red overlay)
     const scale = Math.min(size / origCanvas.width, size / origCanvas.height)
     const dw = Math.round(origCanvas.width * scale), dh = Math.round(origCanvas.height * scale)
     const dx = Math.round((size - dw) / 2), dy = Math.round((size - dh) / 2)
-    // Sample the mask paint canvas, scaled to AI_SIZE coordinates
-    const srcCtx = maskCanvas.getContext('2d')!
-    const srcData = srcCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height)
-    const maskData = ctx.getImageData(0, 0, size, size)
-    for (let py = dy; py < dy + dh; py++) {
-      for (let px = dx; px < dx + dw; px++) {
-        // Map AI_SIZE pixel back to maskCanvas pixel
-        const srcX = Math.round((px - dx) / scale * (maskCanvas.width / origCanvas.width))
-        const srcY = Math.round((py - dy) / scale * (maskCanvas.height / origCanvas.height))
-        const srcIdx = (Math.min(srcY, maskCanvas.height - 1) * maskCanvas.width + Math.min(srcX, maskCanvas.width - 1)) * 4
-        if (srcData.data[srcIdx + 3] > 10) {
-          // Painted area → transparent in mask (= region to edit)
-          const dstIdx = (py * size + px) * 4
-          maskData.data[dstIdx] = 0; maskData.data[dstIdx + 1] = 0
-          maskData.data[dstIdx + 2] = 0; maskData.data[dstIdx + 3] = 0
-        }
-      }
+
+    // Brush strokes → solid red
+    const tint = document.createElement('canvas')
+    tint.width = size; tint.height = size
+    const tctx = tint.getContext('2d')!
+    tctx.drawImage(maskCanvas, dx, dy, dw, dh)
+    const td = tctx.getImageData(0, 0, size, size)
+    for (let i = 0; i < td.data.length; i += 4) {
+      const on = td.data[i + 3] > 10
+      td.data[i] = 255; td.data[i + 1] = 0; td.data[i + 2] = 0
+      td.data[i + 3] = on ? 255 : 0
     }
-    ctx.putImageData(maskData, 0, 0)
+    tctx.putImageData(td, 0, 0)
+
+    const c = document.createElement('canvas')
+    c.width = size; c.height = size
+    const ctx = c.getContext('2d')!
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, size, size)
+    ctx.drawImage(origCanvas, dx, dy, dw, dh)
+    ctx.globalAlpha = 0.4
+    ctx.drawImage(tint, 0, 0)
     c.toBlob(b => resolve(b!), 'image/png')
   })
 }
@@ -563,10 +561,10 @@ export default function ImageTwisterPage() {
   }
 
   // ── AI generate ──────────────────────────────────────────────────────────────
-  const callEditAPI = useCallback(async (imageBlob: Blob, maskBlob: Blob, prompt: string) => {
+  const callEditAPI = useCallback(async (imageBlob: Blob, guideBlob: Blob, prompt: string) => {
     const fd = new FormData()
     fd.append('image', imageBlob, 'image.png')
-    fd.append('mask', maskBlob, 'mask.png')
+    fd.append('guide', guideBlob, 'guide.png')
     fd.append('prompt', prompt)
     fd.append('model', aiModel)
     const res = await fetch('/api/image-edit', { method: 'POST', body: fd })
@@ -588,12 +586,12 @@ export default function ImageTwisterPage() {
       const maskCanvas = maskCanvasRef.current
       // Compute all three in parallel:
       //   imageBlob     → sent to OpenAI (1024×1024, centered on white bg)
-      //   maskBlob      → user paint strokes as transparent mask
+      //   guideBlob     → same image with the brushed area tinted red (shows the AI where to edit)
       //   sharpOrigB64  → same source + centering as imageBlob, with unsharp-mask applied
       //                   guarantees pixel-perfect positional alignment with the AI-edited result
-      const [imageBlob, maskBlob, sharpOrigB64] = await Promise.all([
+      const [imageBlob, guideBlob, sharpOrigB64] = await Promise.all([
         canvasToSquarePng(orig, AI_SIZE),
-        maskCanvasToBlob(maskCanvas, orig, AI_SIZE),
+        guideCanvasToBlob(maskCanvas, orig, AI_SIZE),
         new Promise<string>(resolve => {
           const c = document.createElement('canvas')
           c.width = AI_SIZE; c.height = AI_SIZE
@@ -614,7 +612,7 @@ export default function ImageTwisterPage() {
       // Show sharpened original immediately — no need to wait for the API call
       setAiOrigResult(sharpOrigB64)
 
-      const result = await callEditAPI(imageBlob, maskBlob, aiPrompt.trim())
+      const result = await callEditAPI(imageBlob, guideBlob, aiPrompt.trim())
       const composited = await compositeMaskedEdit(sharpOrigB64, result.image, maskCanvas, orig, AI_SIZE)
       setAiResult(composited)
       if (result.usage) setAiUsage({ ...result.usage, quality: result.quality, model: result.model })

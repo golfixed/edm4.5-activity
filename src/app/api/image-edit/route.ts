@@ -8,25 +8,29 @@ export async function POST(req: NextRequest) {
 
   const body = await req.formData()
   const image = body.get('image') as File | null
-  const mask = body.get('mask') as File | null
+  const guide = body.get('guide') as File | null
   const prompt = body.get('prompt') as string | null
 
-  if (!image || !mask || !prompt)
-    return NextResponse.json({ error: 'Missing image, mask, or prompt' }, { status: 400 })
+  if (!image || !guide || !prompt)
+    return NextResponse.json({ error: 'Missing image, guide, or prompt' }, { status: 400 })
 
   const model = (body.get('model') as string | null) ?? 'gpt-image-2'
 
   const fd = new FormData()
   fd.append('model', model)
-  fd.append('image', image, 'image.png')
-  fd.append('mask', mask, 'mask.png')
-  // The mask is a rough brush selection. Without guidance the model tends to paint a new
-  // object in the brush shape; tell it to edit what's already there and keep every outline.
+  // No API mask: OpenAI erases the masked pixels before the model sees them, so it can't
+  // tell what was there and paints a new blob in the brush shape. Instead send the clean
+  // image plus a guide copy with the area tinted red. The client composites the result
+  // back through the brush mask, so nothing outside the selection can change.
+  fd.append('image[]', image, 'image.png')
+  fd.append('image[]', guide, 'guide.png')
   const guardedPrompt = [
-    prompt,
-    'The masked area is only a rough hand-brushed selection, not a shape to draw.',
-    'Edit only the existing content inside it: keep every existing shape, outline, edge, size and position exactly as in the original.',
-    'Do not add new shapes, do not draw the outline of the selection, and do not change anything outside the selected area.',
+    'You are given two images of the same picture.',
+    'Image 1 is the picture to edit. Image 2 is identical but has a translucent red highlight showing roughly which part to edit.',
+    `Edit instruction for the highlighted part: ${prompt}.`,
+    'Apply the change to the existing object(s) under the highlight in image 1, keeping their exact shape, outline, size and position.',
+    'The highlight is only a rough selection: do not draw its shape, do not add any red tint, and do not add new objects.',
+    'Return image 1 with only that change; everything else must stay identical, same framing and layout.',
   ].join(' ')
   fd.append('prompt', guardedPrompt)
   fd.append('size', '1024x1024')
