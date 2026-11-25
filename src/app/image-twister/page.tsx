@@ -240,12 +240,28 @@ function compositeMaskedEdit(
     }
     hctx.putImageData(md, 0, 0)
 
-    // Feather the edge a little so the seam isn't visible
+    // Grow the area well past the brush strokes. Users brush roughly, so an edited object
+    // (e.g. a letter) often sticks out of the strokes; cutting at the exact brush edge mixes
+    // old and new pixels into a ghosted mess. The model leaves the rest of the picture
+    // alone, so taking a wider margin from its output is safe.
+    const grown = document.createElement('canvas')
+    grown.width = size; grown.height = size
+    const gctx = grown.getContext('2d')!
+    const grow = Math.round(size / 24)
+    gctx.drawImage(hard, 0, 0)
+    for (const rad of [grow / 2, grow]) {
+      for (let a = 0; a < 24; a++) {
+        const t = (a / 24) * Math.PI * 2
+        gctx.drawImage(hard, Math.round(Math.cos(t) * rad), Math.round(Math.sin(t) * rad))
+      }
+    }
+
+    // Feather the edge so the seam isn't visible
     const soft = document.createElement('canvas')
     soft.width = size; soft.height = size
     const sctx = soft.getContext('2d')!
-    sctx.filter = `blur(${Math.max(1, Math.round(size / 512))}px)`
-    sctx.drawImage(hard, 0, 0)
+    sctx.filter = `blur(${Math.max(2, Math.round(size / 256))}px)`
+    sctx.drawImage(grown, 0, 0)
     sctx.filter = 'none'
 
     // AI pixels restricted to the mask
