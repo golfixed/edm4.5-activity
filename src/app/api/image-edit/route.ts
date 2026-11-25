@@ -20,17 +20,17 @@ export async function POST(req: NextRequest) {
   fd.append('model', model)
   // No API mask: OpenAI erases the masked pixels before the model sees them, so it can't
   // tell what was there and paints a new blob in the brush shape. Instead send the clean
-  // image plus a guide copy with the area tinted red. The client composites the result
+  // image plus a guide copy with the area outlined. The client composites the result
   // back through the brush mask, so nothing outside the selection can change.
   fd.append('image[]', image, 'image.png')
   fd.append('image[]', guide, 'guide.png')
   const guardedPrompt = [
     'You are given two images of the same picture.',
-    'Image 1 is the picture to edit. Image 2 is identical but has a translucent red highlight showing roughly which part to edit.',
-    `Edit instruction for the highlighted part: ${prompt}.`,
-    'Apply the change to the existing object(s) under the highlight in image 1, keeping their exact shape, outline, size and position.',
-    'The highlight is only a rough selection: do not draw its shape, do not add any red tint, and do not add new objects.',
-    'Return image 1 with only that change; everything else must stay identical, same framing and layout.',
+    'Image 1 is the picture to edit. Image 2 is the same picture with a cyan outline drawn around the area to edit.',
+    `Inside that outlined area of image 1, do this: ${prompt}.`,
+    'Make the change clearly visible.',
+    'The outline is only a selection marker: do not draw the outline or its shape, and do not add cyan anywhere.',
+    'Everything outside the outlined area must stay identical, with the same framing and layout. Return the edited image 1.',
   ].join(' ')
   fd.append('prompt', guardedPrompt)
   fd.append('size', '1024x1024')

@@ -164,27 +164,38 @@ function canvasToSquarePng(canvas: HTMLCanvasElement, size: number): Promise<Blo
   })
 }
 
-// Guide image for the AI: the original with the brushed area tinted red, so the model
-// can see both the selection and the content underneath it. (A real API mask makes the
-// model erase that area first, so it invents a new blob in the brush shape.)
+// Guide image for the AI: the original with the brushed area outlined (not filled), so the
+// model sees both the selection and the untouched content inside it. (A real API mask makes
+// the model erase that area first, so it invents a new blob in the brush shape.)
 function guideCanvasToBlob(maskCanvas: HTMLCanvasElement, origCanvas: HTMLCanvasElement, size: number): Promise<Blob> {
   return new Promise(resolve => {
     const scale = Math.min(size / origCanvas.width, size / origCanvas.height)
     const dw = Math.round(origCanvas.width * scale), dh = Math.round(origCanvas.height * scale)
     const dx = Math.round((size - dw) / 2), dy = Math.round((size - dh) / 2)
 
-    // Brush strokes → solid red
-    const tint = document.createElement('canvas')
-    tint.width = size; tint.height = size
-    const tctx = tint.getContext('2d')!
-    tctx.drawImage(maskCanvas, dx, dy, dw, dh)
-    const td = tctx.getImageData(0, 0, size, size)
-    for (let i = 0; i < td.data.length; i += 4) {
-      const on = td.data[i + 3] > 10
-      td.data[i] = 255; td.data[i + 1] = 0; td.data[i + 2] = 0
-      td.data[i + 3] = on ? 255 : 0
+    // Brush strokes → solid shape
+    const hard = document.createElement('canvas')
+    hard.width = size; hard.height = size
+    const hctx = hard.getContext('2d')!
+    hctx.drawImage(maskCanvas, dx, dy, dw, dh)
+    const hd = hctx.getImageData(0, 0, size, size)
+    for (let i = 0; i < hd.data.length; i += 4) hd.data[i + 3] = hd.data[i + 3] > 10 ? 255 : 0
+    hctx.putImageData(hd, 0, 0)
+
+    // Outline ring = shape dilated outward minus the shape itself
+    const ring = document.createElement('canvas')
+    ring.width = size; ring.height = size
+    const rctx = ring.getContext('2d')!
+    const r = Math.max(4, Math.round(size / 160))
+    for (let a = 0; a < 16; a++) {
+      const t = (a / 16) * Math.PI * 2
+      rctx.drawImage(hard, Math.round(Math.cos(t) * r), Math.round(Math.sin(t) * r))
     }
-    tctx.putImageData(td, 0, 0)
+    rctx.globalCompositeOperation = 'destination-out'
+    rctx.drawImage(hard, 0, 0)
+    rctx.globalCompositeOperation = 'source-in'
+    rctx.fillStyle = '#00e5ff' // bright cyan — rare in logos, contrasts with red/orange/dark
+    rctx.fillRect(0, 0, size, size)
 
     const c = document.createElement('canvas')
     c.width = size; c.height = size
@@ -192,8 +203,7 @@ function guideCanvasToBlob(maskCanvas: HTMLCanvasElement, origCanvas: HTMLCanvas
     ctx.fillStyle = '#ffffff'
     ctx.fillRect(0, 0, size, size)
     ctx.drawImage(origCanvas, dx, dy, dw, dh)
-    ctx.globalAlpha = 0.4
-    ctx.drawImage(tint, 0, 0)
+    ctx.drawImage(ring, 0, 0)
     c.toBlob(b => resolve(b!), 'image/png')
   })
 }
@@ -586,7 +596,7 @@ export default function ImageTwisterPage() {
       const maskCanvas = maskCanvasRef.current
       // Compute all three in parallel:
       //   imageBlob     → sent to OpenAI (1024×1024, centered on white bg)
-      //   guideBlob     → same image with the brushed area tinted red (shows the AI where to edit)
+      //   guideBlob     → same image with the brushed area outlined in cyan (shows the AI where to edit)
       //   sharpOrigB64  → same source + centering as imageBlob, with unsharp-mask applied
       //                   guarantees pixel-perfect positional alignment with the AI-edited result
       const [imageBlob, guideBlob, sharpOrigB64] = await Promise.all([
