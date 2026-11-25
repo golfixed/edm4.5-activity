@@ -503,6 +503,10 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
     const isImgChoice = (val?: string) => !!val && val.startsWith('data:image')
     const bothTextChoices = currentPair && !isImgChoice(currentPair.imageA) && !isImgChoice(currentPair.imageB)
     const showBigQuestion = !!currentPair?.questionImage && bothTextChoices
+    const questionText = currentPair?.question || currentPair?.label
+    // Text-only question (no question image, both choices are text): show it huge in the body
+    const showBigTextQuestion = !currentPair?.questionImage && !!bothTextChoices && !!questionText
+    const bigLayout = showBigQuestion || showBigTextQuestion
     const timerTextCls = pct > 0.5 ? 'text-emerald-600' : pct > 0.2 ? 'text-amber-500' : 'text-red-600'
     const meta = (
       <>
@@ -521,7 +525,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                 <img src={currentPair.questionImage} alt="คำถาม" className="max-h-14 max-w-xs object-contain rounded-lg" />
                 <span className="text-gray-500 text-xs mt-0.5 truncate block">{meta}</span>
               </>
-            ) : currentPair?.question && !showBigQuestion ? (
+            ) : currentPair?.question && !bigLayout ? (
               <>
                 <p className="text-gray-900 text-2xl font-bold leading-tight truncate">{currentPair.question}</p>
                 <span className="text-gray-500 text-sm truncate block">{meta}</span>
@@ -548,6 +552,12 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
           <div className={`h-full transition-all duration-1000 ease-linear ${timerColor}`} style={{ width: `${pct * 100}%` }} />
         </div>
 
+        {showBigTextQuestion && (
+          <div className="flex-1 flex items-center justify-center bg-white border-b border-orange-100 py-4 px-10 min-h-0">
+            <p className="text-gray-900 font-bold leading-normal text-center" style={{ fontSize: 'clamp(2.5rem, 6vw, 6rem)' }}>{questionText}</p>
+          </div>
+        )}
+
         {showBigQuestion && (
           <div className="flex-1 flex flex-col items-center gap-3 bg-white border-b border-orange-100 py-4 px-6 min-h-0 relative">
             {(currentPair!.question || currentPair!.label) && (
@@ -567,8 +577,8 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
           </div>
         )}
 
-        <div className={showBigQuestion ? 'flex-shrink-0 flex gap-4 px-4 pb-3 pt-3' : 'flex-1 flex gap-4 p-4 min-h-0'}
-          style={showBigQuestion ? { height: 220 } : undefined}>
+        <div className={bigLayout ? 'flex-shrink-0 flex gap-4 px-4 pb-3 pt-3' : 'flex-1 flex gap-4 p-4 min-h-0'}
+          style={bigLayout ? { height: showBigTextQuestion ? 280 : 220 } : undefined}>
           {(['A', 'B'] as const).map((side) => {
             const imgSrc = side === 'A' ? currentPair?.imageA : currentPair?.imageB
             const isCorrect = correct === side
@@ -582,13 +592,13 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                     : ''
                 }`}>
                   {revealed && correct !== undefined && (
-                    <div className={`flex-shrink-0 flex items-center justify-center ${isCorrect ? 'bg-green-500' : 'bg-red-500'}`} style={{ height: showBigQuestion ? 56 : 100 }}>
+                    <div className={`flex-shrink-0 flex items-center justify-center ${isCorrect ? 'bg-green-500' : 'bg-red-500'}`} style={{ height: bigLayout ? 56 : 100 }}>
                       {isCorrect ? (
-                        <svg width={showBigQuestion ? 44 : 80} height={showBigQuestion ? 44 : 80} viewBox="0 0 48 48" fill="none">
+                        <svg width={bigLayout ? 44 : 80} height={bigLayout ? 44 : 80} viewBox="0 0 48 48" fill="none">
                           <polyline points="6,26 18,40 42,10" stroke="white" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                       ) : (
-                        <svg width={showBigQuestion ? 44 : 80} height={showBigQuestion ? 44 : 80} viewBox="0 0 48 48" fill="none">
+                        <svg width={bigLayout ? 44 : 80} height={bigLayout ? 44 : 80} viewBox="0 0 48 48" fill="none">
                           <line x1="8" y1="8" x2="40" y2="40" stroke="white" strokeWidth="6" strokeLinecap="round"/>
                           <line x1="40" y1="8" x2="8" y2="40" stroke="white" strokeWidth="6" strokeLinecap="round"/>
                         </svg>
