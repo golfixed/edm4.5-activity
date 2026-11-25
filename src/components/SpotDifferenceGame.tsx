@@ -521,7 +521,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                 <img src={currentPair.questionImage} alt="คำถาม" className="max-h-14 max-w-xs object-contain rounded-lg" />
                 <span className="text-gray-500 text-xs mt-0.5 truncate block">{meta}</span>
               </>
-            ) : currentPair?.question ? (
+            ) : currentPair?.question && !showBigQuestion ? (
               <>
                 <p className="text-gray-900 text-2xl font-bold leading-tight truncate">{currentPair.question}</p>
                 <span className="text-gray-500 text-sm truncate block">{meta}</span>
@@ -549,13 +549,18 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
         </div>
 
         {showBigQuestion && (
-          <div className="flex-1 flex items-center justify-center bg-white border-b border-orange-100 py-3 px-6 min-h-0 relative">
-            <img
-              src={revealed && currentPair!.revealImage ? currentPair!.revealImage : currentPair!.questionImage}
-              alt={revealed && currentPair!.revealImage ? 'เฉลย' : 'คำถาม'}
-              className="max-h-full max-w-full object-contain rounded-xl"
-              draggable={false}
-            />
+          <div className="flex-1 flex flex-col items-center gap-3 bg-white border-b border-orange-100 py-4 px-6 min-h-0 relative">
+            {(currentPair!.question || currentPair!.label) && (
+              <p className="flex-shrink-0 text-gray-900 text-5xl font-bold leading-normal text-center">{currentPair!.question || currentPair!.label}</p>
+            )}
+            <div className="flex-1 min-h-0 w-full flex items-center justify-center">
+              <img
+                src={revealed && currentPair!.revealImage ? currentPair!.revealImage : currentPair!.questionImage}
+                alt={revealed && currentPair!.revealImage ? 'เฉลย' : 'คำถาม'}
+                className="max-h-full max-w-full object-contain rounded-xl"
+                draggable={false}
+              />
+            </div>
             {revealed && currentPair!.revealImage && (
               <span className="absolute top-2 right-3 text-white text-xs font-bold tracking-wide bg-amber-500 px-2.5 py-0.5 rounded-full shadow">เฉลย</span>
             )}

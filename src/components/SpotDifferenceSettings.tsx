@@ -622,25 +622,23 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
                 <button
                   onClick={() => {
                     setImageModePairIds(s => { const n = new Set(s); n.add(pair.id); return n })
-                    updatePair({ question: undefined })
                   }}
                   className={`${segBtn(isImageMode(pair))} border-l border-orange-200`}>
                   {ICON.image('w-4 h-4')}รูปภาพ
                 </button>
               </div>
             </div>
-            {isImageMode(pair) ? (
+            <input
+              value={pair.question ?? ''}
+              onChange={e => updatePair({ question: e.target.value || undefined })}
+              className="w-full h-11 px-3 rounded-lg border border-orange-200 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-400"
+              placeholder={isImageMode(pair) ? "ข้อความคำถาม (แสดงตัวใหญ่เหนือรูป)" : "เช่น 'ลูกค้า Jobthai' — แสดงตัวใหญ่ระหว่างเล่น"}
+            />
+            {isImageMode(pair) && (
               <div className="grid grid-cols-2 gap-4">
                 {imageSlot('รูปโจทย์', pair.questionImage, v => updatePair({ questionImage: v }), 'orange')}
                 {imageSlot('รูปเฉลย (แสดงเมื่อหมดเวลา)', pair.revealImage, v => updatePair({ revealImage: v }), 'amber')}
               </div>
-            ) : (
-              <input
-                value={pair.question ?? ''}
-                onChange={e => updatePair({ question: e.target.value || undefined })}
-                className="w-full h-11 px-3 rounded-lg border border-orange-200 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-400"
-                placeholder="เช่น 'ลูกค้า Jobthai' — แสดงตัวใหญ่ระหว่างเล่น"
-              />
             )}
           </div>
         </div>
@@ -765,22 +763,21 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
                 <span className="text-sm font-bold text-gray-900">คำถามที่แสดงระหว่างเล่น <span className="font-normal text-gray-500">(ไม่บังคับ)</span></span>
                 <div className="flex rounded-lg border border-orange-200 overflow-hidden">
                   <button onClick={() => { setPendingQMode('text'); setPendingQuestionImage(null); setPendingRevealImage(null) }} className={segBtn(pendingQMode === 'text')}>{ICON.text()}ข้อความ</button>
-                  <button onClick={() => { setPendingQMode('image'); setPendingQuestion('') }} className={`${segBtn(pendingQMode === 'image')} border-l border-orange-200`}>{ICON.image('w-4 h-4')}รูปภาพ</button>
+                  <button onClick={() => setPendingQMode('image')} className={`${segBtn(pendingQMode === 'image')} border-l border-orange-200`}>{ICON.image('w-4 h-4')}รูปภาพ</button>
                 </div>
               </div>
-              {pendingQMode === 'image' ? (
+              <input
+                value={pendingQuestion}
+                onChange={e => setPendingQuestion(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && addPair()}
+                className="w-full h-11 px-3 rounded-lg border border-orange-200 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-400"
+                placeholder={pendingQMode === 'image' ? "ข้อความคำถาม (แสดงตัวใหญ่เหนือรูป)" : "เช่น 'ลูกค้า Jobthai' — แสดงตัวใหญ่ระหว่างเล่น"}
+              />
+              {pendingQMode === 'image' && (
                 <div className="grid grid-cols-2 gap-4">
                   {slot('รูปโจทย์', pendingQuestionImage, setPendingQuestionImage, 'orange')}
                   {slot('รูปเฉลย (แสดงเมื่อหมดเวลา)', pendingRevealImage, setPendingRevealImage, 'amber')}
                 </div>
-              ) : (
-                <input
-                  value={pendingQuestion}
-                  onChange={e => setPendingQuestion(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && addPair()}
-                  className="w-full h-11 px-3 rounded-lg border border-orange-200 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-400"
-                  placeholder="เช่น 'ลูกค้า Jobthai' — แสดงตัวใหญ่ระหว่างเล่น"
-                />
               )}
             </div>
 
