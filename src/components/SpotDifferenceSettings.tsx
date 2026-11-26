@@ -652,7 +652,16 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
                     )}
                   </div>
 
-                  <button onClick={() => updatePair({ correctImage: side })}
+                  <button onClick={async () => {
+                    if (isCorrect) return
+                    // switching an answer that's already set is easy to do by accident — ask first
+                    if (pair.correctImage && !await confirm({
+                      title: `เปลี่ยนคำตอบเป็นตัวเลือก ${side}?`,
+                      message: `ข้อ ${i + 1} ตอนนี้ตั้งตัวเลือก ${pair.correctImage} เป็นคำตอบที่ถูก`,
+                      confirmLabel: `ใช้ตัวเลือก ${side}`,
+                    })) return
+                    updatePair({ correctImage: side })
+                  }}
                     className={`h-10 rounded-lg flex items-center justify-center gap-2 text-sm font-bold transition-colors ${isCorrect ? 'bg-green-500 text-white shadow-sm' : 'bg-white border border-orange-200 text-gray-600 hover:border-green-400 hover:text-green-700'}`}>
                     {ICON.check('w-4 h-4')}{isCorrect ? 'คำตอบที่ถูก' : 'ตั้งเป็นคำตอบที่ถูก'}
                   </button>
