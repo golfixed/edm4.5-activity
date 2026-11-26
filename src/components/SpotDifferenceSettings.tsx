@@ -100,19 +100,26 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
   const checkedSets = sets.filter(s => checkedSetIds.has(s.id))
   const allChecked = sets.length > 0 && checkedSets.length === sets.length
 
-  // Randomise the question order inside every checked set (Fisher–Yates)
+  // Pool every question from the checked sets, shuffle (Fisher–Yates) and deal them back out,
+  // so questions move between those sets; each set keeps its question count.
   const shuffleCheckedSets = async () => {
     if (checkedSets.length === 0) return
     const names = checkedSets.map(s => `"${s.name}"`).join(', ')
-    if (!await confirm({ title: 'สลับลำดับโจทย์?', message: `โจทย์ในชุด ${names} จะถูกเรียงลำดับใหม่แบบสุ่ม`, confirmLabel: 'สลับลำดับ' })) return
+    const message = checkedSets.length > 1
+      ? `โจทย์ทั้งหมดในชุด ${names} จะถูกสุ่มสลับข้ามชุดกัน (แต่ละชุดยังมีจำนวนโจทย์เท่าเดิม)`
+      : `โจทย์ในชุด ${names} จะถูกเรียงลำดับใหม่แบบสุ่ม`
+    if (!await confirm({ title: 'สลับโจทย์?', message, confirmLabel: 'สลับโจทย์' })) return
+    const pool = checkedSets.flatMap(s => s.pairs)
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[pool[i], pool[j]] = [pool[j], pool[i]]
+    }
+    let next = 0
     updateGame({
       imageSets: sets.map(s => {
         if (!checkedSetIds.has(s.id)) return s
-        const pairs = [...s.pairs]
-        for (let i = pairs.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1))
-          ;[pairs[i], pairs[j]] = [pairs[j], pairs[i]]
-        }
+        const pairs = pool.slice(next, next + s.pairs.length)
+        next += s.pairs.length
         return { ...s, pairs }
       }),
     })
@@ -312,7 +319,7 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                 <path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />
               </svg>
-              สลับลำดับโจทย์{checkedSets.length > 0 && ` (${checkedSets.length} ชุด)`}
+              สลับโจทย์{checkedSets.length > 0 && ` (${checkedSets.length} ชุด)`}
             </button>
             <div className="flex gap-1.5">
               <input
