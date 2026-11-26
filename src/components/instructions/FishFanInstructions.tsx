@@ -171,6 +171,7 @@ export default function FishFanInstructions(props: InstructionsPageProps) {
       subtitle="ใช้พัดโบกลมพาปลาเข้าไปในกระด้ง (จานพลาสติก)"
       drawing={<HowToPlayDrawing />}
       steps={['ถือพัดคนละ 1 อัน', 'โบกพัดให้ลมพาปลาไปข้างหน้า', 'พาปลาเข้าไปในกระด้ง']}
+      importantRule={<>ปลาที่เข้ากระด้งแล้ว ถ้าถูกพัดกระเด็นออกมา <span className="font-bold">จะไม่นับคะแนน</span></>}
       rules={<>
         <div className="flex items-center gap-4">
           <FishIcon color={YELLOW} fin={YELLOW_DARK} />

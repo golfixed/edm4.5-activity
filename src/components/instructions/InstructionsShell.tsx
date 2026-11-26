@@ -36,11 +36,13 @@ export interface InstructionsPageProps {
  * How-to-play page for a physical game (Human Bingo scoring-page layout): header with
  * บันทึกคะแนน, a drawing + numbered steps on the left, rules and a helper card on the right.
  */
-export default function InstructionsShell({ title, onBack, onRecordScore, onOpenSettings, headerExtra, heading, subtitle, drawing, steps, rules, helper }: InstructionsPageProps & {
+export default function InstructionsShell({ title, onBack, onRecordScore, onOpenSettings, headerExtra, heading, subtitle, drawing, steps, importantRule, rules, helper }: InstructionsPageProps & {
   heading: string
   subtitle: string
   drawing: ReactNode
   steps: string[]
+  /** highlighted rule shown under the steps */
+  importantRule?: ReactNode
   rules: ReactNode
   helper: ReactNode
 }) {
@@ -83,6 +85,16 @@ export default function InstructionsShell({ title, onBack, onRecordScore, onOpen
               </div>
             ))}
           </div>
+          {importantRule && (
+            <div className="flex-shrink-0 flex items-center gap-3 rounded-2xl bg-red-50 border-2 border-red-200 px-4 py-3 [@media(max-height:760px)]:py-2">
+              <span className="w-9 h-9 rounded-full bg-red-500 text-white flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 7v6M12 17h.01" />
+                </svg>
+              </span>
+              <span className="text-red-800 text-lg leading-snug"><span className="font-extrabold">กติกาสำคัญ</span> · {importantRule}</span>
+            </div>
+          )}
         </div>
 
         {/* Right: scoring rules + helper (calculator) */}
