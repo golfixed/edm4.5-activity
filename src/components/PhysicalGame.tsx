@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Game } from '@/lib/types'
 import AuctionPhase from './AuctionPhase'
 import ScoreRecordPanel from './ScoreRecordPanel'
-import FishFanInstructions, { isFishFanGame } from './FishFanInstructions'
+import { getGameInstructions } from './instructions'
 import GameMenu from './GameMenu'
 import { zoomFit } from '@/lib/zoomFit'
 
@@ -19,7 +19,7 @@ export default function PhysicalGame({ game, onBack, onOpenSettings }: Props) {
   const [scorePanelOpen, setScorePanelOpen] = useState(false)
   const [uiScale, setUiScale] = useState(1.0)
   // games with an instructions page open on it; the rest open on the home menu
-  const hasHowTo = isFishFanGame(game.name)
+  const howTo = getGameInstructions(game.name)
 
   const auctionItems = game.auctionItems ?? []
 
@@ -31,15 +31,15 @@ export default function PhysicalGame({ game, onBack, onOpenSettings }: Props) {
   const scorePanel = scorePanelOpen && (
     <ScoreRecordPanel
       game={game}
-      quickAdd={hasHowTo ? { label: 'ปลาแดง', points: 10 } : undefined}
+      quickAdd={howTo?.quickAdd}
       onClose={() => setScorePanelOpen(false)}
     />
   )
 
-  if (hasHowTo) {
+  if (howTo) {
     return (
       <>
-      <FishFanInstructions title={game.name} onBack={onBack} onRecordScore={() => setScorePanelOpen(true)} onOpenSettings={onOpenSettings}
+      <howTo.Page title={game.name} onBack={onBack} onRecordScore={() => setScorePanelOpen(true)} onOpenSettings={onOpenSettings}
         headerExtra={auctionItems.length > 0 && (
           <button onClick={() => setShowAuction(true)}
             className="flex items-center gap-1 px-3 py-1.5 border border-orange-200 rounded-lg text-orange-700 hover:bg-orange-50 transition-colors text-sm flex-shrink-0">
