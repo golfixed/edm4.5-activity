@@ -126,6 +126,15 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
         return { ...s, pairs }
       }),
     })
+    await confirm({
+      title: 'สลับโจทย์เรียบร้อย',
+      message: checkedSets.length > 1
+        ? `สุ่มโจทย์ ${pool.length} ข้อ ข้าม ${checkedSets.length} ชุดแล้ว`
+        : `สุ่มลำดับโจทย์ ${pool.length} ข้อในชุด ${names} แล้ว`,
+      confirmLabel: 'ตกลง',
+      tone: 'success',
+      hideCancel: true,
+    })
   }
 
   const updatePairs = (setId: string, pairs: ImagePair[]) =>

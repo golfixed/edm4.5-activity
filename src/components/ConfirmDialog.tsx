@@ -7,7 +7,9 @@ export interface ConfirmOptions {
   message?: React.ReactNode
   confirmLabel?: string
   cancelLabel?: string
-  tone?: 'danger' | 'primary'
+  tone?: 'danger' | 'primary' | 'success'
+  /** info/success notice: only the confirm button is shown */
+  hideCancel?: boolean
 }
 
 type ConfirmFn = (options: ConfirmOptions) => Promise<boolean>
@@ -45,8 +47,9 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
 }
 
 function ConfirmDialog({ options, onClose }: { options: ConfirmOptions; onClose: (ok: boolean) => void }) {
-  const { title, message, confirmLabel = 'ยืนยัน', cancelLabel = 'ยกเลิก', tone = 'primary' } = options
+  const { title, message, confirmLabel = 'ยืนยัน', cancelLabel = 'ยกเลิก', tone = 'primary', hideCancel = false } = options
   const danger = tone === 'danger'
+  const success = tone === 'success'
   const confirmRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -66,8 +69,12 @@ function ConfirmDialog({ options, onClose }: { options: ConfirmOptions; onClose:
       `}</style>
       <div className="absolute inset-0 bg-black/35 backdrop-blur-sm animate-[confirm-fade_0.15s_ease-out]" onClick={() => onClose(false)} />
       <div className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl border border-orange-100 p-6 flex flex-col items-center text-center animate-[confirm-pop_0.18s_ease-out]">
-        <span className={`w-14 h-14 rounded-full flex items-center justify-center mb-4 ${danger ? 'bg-red-50 text-red-500' : 'bg-orange-50 text-orange-500'}`}>
-          {danger ? (
+        <span className={`w-14 h-14 rounded-full flex items-center justify-center mb-4 ${danger ? 'bg-red-50 text-red-500' : success ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-500'}`}>
+          {success ? (
+            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12.5l4.5 4.5L19 7" />
+            </svg>
+          ) : danger ? (
             <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
               <path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 12.5h9l1-12.5M10 11v5M14 11v5" />
             </svg>
@@ -81,10 +88,12 @@ function ConfirmDialog({ options, onClose }: { options: ConfirmOptions; onClose:
         <h2 id="confirm-title" className="text-gray-900 text-xl font-bold leading-snug">{title}</h2>
         {message && <div className="text-gray-600 text-sm mt-2 leading-relaxed">{message}</div>}
         <div className="flex gap-3 w-full mt-6">
-          <button onClick={() => onClose(false)}
-            className="flex-1 h-11 rounded-xl bg-white hover:bg-orange-50 border border-orange-200 text-orange-700 font-semibold transition-colors">
-            {cancelLabel}
-          </button>
+          {!hideCancel && (
+            <button onClick={() => onClose(false)}
+              className="flex-1 h-11 rounded-xl bg-white hover:bg-orange-50 border border-orange-200 text-orange-700 font-semibold transition-colors">
+              {cancelLabel}
+            </button>
+          )}
           <button ref={confirmRef} onClick={() => onClose(true)}
             className={`flex-1 h-11 rounded-xl font-bold text-white transition-all focus:outline-none focus-visible:ring-4 ${danger
               ? 'bg-red-600 hover:bg-red-700 shadow-[0_6px_20px_rgba(220,38,38,0.3)] focus-visible:ring-red-200'
