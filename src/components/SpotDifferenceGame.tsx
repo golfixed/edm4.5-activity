@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useStore } from '@/lib/store'
 import { zoomFit } from '@/lib/zoomFit'
-import { Game, ImageSet } from '@/lib/types'
+import { Game, ImageSet, pairQuestionText } from '@/lib/types'
 import Link from 'next/link'
 import TeamSpinner from '@/components/TeamSpinner'
 import { useConfirm } from '@/components/ConfirmDialog'
@@ -503,7 +503,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
     const isImgChoice = (val?: string) => !!val && val.startsWith('data:image')
     const bothTextChoices = currentPair && !isImgChoice(currentPair.imageA) && !isImgChoice(currentPair.imageB)
     const showBigQuestion = !!currentPair?.questionImage && bothTextChoices
-    const questionText = currentPair?.question || currentPair?.label
+    const questionText = currentPair ? pairQuestionText(currentPair) : undefined
     // Text-only question (no question image, both choices are text): show it huge in the body
     const showBigTextQuestion = !currentPair?.questionImage && !!bothTextChoices && !!questionText
     const bigLayout = showBigQuestion || showBigTextQuestion
@@ -525,9 +525,9 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
                 <img src={currentPair.questionImage} alt="คำถาม" className="max-h-14 max-w-xs object-contain rounded-lg" />
                 <span className="text-gray-500 text-xs mt-0.5 truncate block">{meta}</span>
               </>
-            ) : currentPair?.question && !bigLayout ? (
+            ) : questionText && !bigLayout ? (
               <>
-                <p className="text-gray-900 text-2xl font-bold leading-tight truncate">{currentPair.question}</p>
+                <p className="text-gray-900 text-2xl font-bold leading-tight truncate">{questionText}</p>
                 <span className="text-gray-500 text-sm truncate block">{meta}</span>
               </>
             ) : (
@@ -560,8 +560,8 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
 
         {showBigQuestion && (
           <div className="flex-1 flex flex-col items-center gap-3 bg-white border-b border-orange-100 py-4 px-6 min-h-0 relative">
-            {(currentPair!.question || currentPair!.label) && (
-              <p className="flex-shrink-0 text-gray-900 text-5xl font-bold leading-normal text-center">{currentPair!.question || currentPair!.label}</p>
+            {questionText && (
+              <p className="flex-shrink-0 text-gray-900 text-5xl font-bold leading-normal text-center">{questionText}</p>
             )}
             <div className="flex-1 min-h-0 w-full flex items-center justify-center">
               <img

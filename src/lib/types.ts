@@ -17,6 +17,16 @@ export interface ImagePair {
   correctImage?: 'A' | 'B'
 }
 
+/**
+ * The question text shown during play. Older pairs kept it in `label` (a title field that has
+ * since been removed); auto-generated "ข้อที่ N" labels are not questions.
+ */
+export function pairQuestionText(pair: Pick<ImagePair, 'question' | 'label'>): string | undefined {
+  if (pair.question) return pair.question
+  if (pair.label && !/^ข้อที่ \d+$/.test(pair.label.trim())) return pair.label
+  return undefined
+}
+
 export interface ImageSet {
   id: string
   name: string

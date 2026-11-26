@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useStore } from '@/lib/store'
 import { zoomFit } from '@/lib/zoomFit'
-import { Game, ImageSet, ImagePair } from '@/lib/types'
+import { Game, ImageSet, ImagePair, pairQuestionText } from '@/lib/types'
 import { compressImage } from '@/lib/compressImage'
 import { resolveIconColor } from '@/lib/iconColors'
 import GameSettings from './GameSettings'
@@ -353,7 +353,6 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
   const [pendingB, setPendingB] = useState<string | null>(null)
   const [pendingBMode, setPendingBMode] = useState<'image' | 'text'>('image')
   const [pendingBText, setPendingBText] = useState('')
-  const [pendingLabel, setPendingLabel] = useState('')
   const [pendingQuestion, setPendingQuestion] = useState('')
   const [pendingQuestionImage, setPendingQuestionImage] = useState<string | null>(null)
   const [pendingRevealImage, setPendingRevealImage] = useState<string | null>(null)
@@ -380,7 +379,6 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
     onChange([...pairs, {
       id: String(Date.now()),
       imageA: valA, imageB: valB,
-      label: pendingLabel || `ข้อที่ ${pairs.length + 1}`,
       question: pendingQuestion || undefined,
       questionImage: pendingQuestionImage || undefined,
       revealImage: pendingRevealImage || undefined,
@@ -388,7 +386,7 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
     }])
     setPendingA(null); setPendingAMode('image'); setPendingAText('')
     setPendingB(null); setPendingBMode('image'); setPendingBText('')
-    setPendingLabel(''); setPendingQuestion(''); setPendingQuestionImage(null); setPendingRevealImage(null); setPendingQMode('text'); setPendingCorrect('A')
+    setPendingQuestion(''); setPendingQuestionImage(null); setPendingRevealImage(null); setPendingQMode('text'); setPendingCorrect('A')
   }
 
   const handleBulkUpload = (files: FileList) => {
@@ -402,7 +400,6 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
       ]).then(([imgA, imgB]) => ({
         id: String(Date.now() + i),
         imageA: imgA, imageB: imgB,
-        label: `ข้อที่ ${pairs.length + i / 2 + 1}`,
         correctImage: 'A' as const,
       })))
     }
@@ -489,12 +486,7 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
               </svg>
               <span className="min-w-[2.25rem] h-9 px-2 rounded-lg bg-orange-100 text-orange-700 font-bold flex items-center justify-center tabular-nums">{i + 1}</span>
             </div>
-            <input
-              value={pair.label ?? ''}
-              onChange={e => updatePair({ label: e.target.value })}
-              className="flex-1 min-w-0 h-10 px-3 rounded-lg border border-orange-200 bg-white text-gray-900 font-semibold placeholder-gray-400 focus:outline-none focus:border-orange-400"
-              placeholder="ชื่อโจทย์ (ไว้อ้างอิง)"
-            />
+            <div className="flex-1" />
             <label className="flex items-center gap-1.5 h-10 px-3 rounded-lg border border-orange-200 bg-white flex-shrink-0 cursor-text" title="เวลาเฉพาะข้อนี้ — เว้นว่างเพื่อใช้เวลาเริ่มต้นของเกม">
               {ICON.clock('w-4 h-4 text-orange-500')}
               <input
@@ -543,7 +535,7 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
               </div>
             )}
             <button onClick={async () => {
-                if (await confirm({ title: `ลบโจทย์ข้อ ${i + 1}?`, message: pair.label ? `"${pair.label}"` : undefined, confirmLabel: 'ลบโจทย์', tone: 'danger' })) onChange(pairs.filter(p => p.id !== pair.id))
+                if (await confirm({ title: `ลบโจทย์ข้อ ${i + 1}?`, message: pairQuestionText(pair) ? `"${pairQuestionText(pair)}"` : undefined, confirmLabel: 'ลบโจทย์', tone: 'danger' })) onChange(pairs.filter(p => p.id !== pair.id))
               }} title="ลบโจทย์นี้"
               className="flex items-center gap-1.5 h-10 px-3 rounded-lg border border-red-200 bg-white hover:bg-red-50 text-red-500 text-sm font-medium transition-colors flex-shrink-0">
               {ICON.trash}ลบ
@@ -629,8 +621,8 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
               </div>
             </div>
             <input
-              value={pair.question ?? ''}
-              onChange={e => updatePair({ question: e.target.value || undefined })}
+              value={pairQuestionText(pair) ?? ''}
+              onChange={e => updatePair({ question: e.target.value || undefined, label: undefined })}
               className="w-full h-11 px-3 rounded-lg border border-orange-200 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-400"
               placeholder={isImageMode(pair) ? "ข้อความคำถาม (แสดงตัวใหญ่เหนือรูป)" : "เช่น 'ลูกค้า Jobthai' — แสดงตัวใหญ่ระหว่างเล่น"}
             />
@@ -689,13 +681,7 @@ function PairsEditorFull({ pairs, onChange, sets, currentSetId, onMovePair }: Pa
             <div className="flex items-center gap-2.5 px-4 py-3 border-b border-dashed border-orange-200">
               <span className="w-9 h-9 rounded-lg bg-orange-500 text-white flex items-center justify-center flex-shrink-0">{ICON.plus('w-5 h-5')}</span>
               <span className="font-bold text-gray-900 flex-shrink-0">เพิ่มโจทย์ใหม่</span>
-              <input
-                value={pendingLabel}
-                onChange={e => setPendingLabel(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && addPair()}
-                placeholder="ชื่อโจทย์ (ไม่บังคับ)"
-                className="flex-1 min-w-0 h-10 px-3 rounded-lg border border-orange-200 bg-white text-gray-900 font-semibold placeholder-gray-400 placeholder:font-normal focus:outline-none focus:border-orange-400"
-              />
+              <div className="flex-1" />
               <label title="เลือกหลายรูปพร้อมกัน — จับคู่เป็น A, B ตามลำดับ"
                 className="flex items-center gap-1.5 h-10 px-3 rounded-lg border border-orange-200 bg-white hover:bg-orange-50 text-orange-700 text-sm font-medium cursor-pointer transition-colors flex-shrink-0">
                 {ICON.folder}นำเข้าหลายรูป
