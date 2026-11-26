@@ -147,6 +147,18 @@ function ScoresTab() {
 function TeamsTab() {
   const { teams, setTeams } = useStore()
   const confirm = useConfirm()
+  const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const [dropIndex, setDropIndex] = useState<number | null>(null)
+  const endDrag = () => { setDragIndex(null); setDropIndex(null) }
+  const dropAt = (i: number) => {
+    if (dragIndex !== null && dragIndex !== i) {
+      const next = [...teams]
+      const [moved] = next.splice(dragIndex, 1)
+      next.splice(i, 0, moved)
+      setTeams(next)
+    }
+    endDrag()
+  }
 
   const updateName = (id: string, name: string) => setTeams(teams.map((t) => (t.id === id ? { ...t, name } : t)))
   const updateCaptain = (id: string, captain: string) => setTeams(teams.map((t) => (t.id === id ? { ...t, captain } : t)))
@@ -169,16 +181,31 @@ function TeamsTab() {
 
       {/* Column headers */}
       <div className="flex items-center gap-3 px-4">
-        <span className="w-4 flex-shrink-0" />
+        <span className="w-[3.25rem] flex-shrink-0" />
         <span className="flex-1 text-xs font-bold uppercase tracking-wider text-orange-900/40">ชื่อทีม</span>
         <span className="flex-1 text-xs font-bold uppercase tracking-wider text-orange-900/40">หัวหน้าทีม</span>
         <span className="w-10 flex-shrink-0" />
       </div>
 
       <div className="flex flex-col gap-2">
-        {teams.map((team) => (
-          <div key={team.id} className="flex items-center gap-3 px-4 py-3 bg-white border border-orange-100 rounded-2xl shadow-sm">
-            <span className={`w-3.5 h-3.5 rounded-full flex-shrink-0 ${team.color}`} />
+        {teams.map((team, i) => (
+          <div key={team.id}
+            onDragOver={(e) => { e.preventDefault(); setDropIndex(i) }}
+            onDrop={() => dropAt(i)}
+            className={`flex items-center gap-3 px-4 py-3 bg-white border-2 rounded-2xl shadow-sm transition-all ${
+              dragIndex === i ? 'opacity-30 border-orange-100'
+                : dropIndex === i && dragIndex !== null ? 'border-orange-400 bg-orange-50'
+                : 'border-orange-100'
+            }`}>
+            <div draggable onDragStart={() => setDragIndex(i)} onDragEnd={endDrag}
+              className="flex items-center gap-2 cursor-grab active:cursor-grabbing select-none flex-shrink-0" title="ลากเพื่อเรียงลำดับ">
+              <svg className="w-4 h-4 text-gray-400" viewBox="0 0 16 16" fill="currentColor">
+                <circle cx="5" cy="4" r="1.2" /><circle cx="11" cy="4" r="1.2" />
+                <circle cx="5" cy="8" r="1.2" /><circle cx="11" cy="8" r="1.2" />
+                <circle cx="5" cy="12" r="1.2" /><circle cx="11" cy="12" r="1.2" />
+              </svg>
+              <span className={`w-3.5 h-3.5 rounded-full flex-shrink-0 ${team.color}`} />
+            </div>
             <div className="flex-1">
               <input
                 value={team.name}
