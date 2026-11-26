@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useStore } from '@/lib/store'
 import { zoomFit } from '@/lib/zoomFit'
 import { Game, ImageSet, ImagePair, pairQuestionText } from '@/lib/types'
@@ -47,6 +47,9 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
   const [uiScale, setUiScale] = useState(1.0)
   const [setDragIndex, setSetDragIndex] = useState<number | null>(null)
   const [setDropIndex, setSetDropIndex] = useState<number | null>(null)
+  // questions panel scrolls back to the top whenever another set is opened
+  const pairsScrollRef = useRef<HTMLDivElement>(null)
+  useEffect(() => { pairsScrollRef.current?.scrollTo({ top: 0 }) }, [selectedSetId])
   const [checkedSetIds, setCheckedSetIds] = useState<Set<string>>(() => new Set())
 
   const updateGame = (partial: Partial<Game>) =>
@@ -351,7 +354,7 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
                   {selectedSet.pairs.filter(p => p.correctImage).length}/{selectedSet.pairs.length} ตั้งเฉลยแล้ว
                 </span>
               </div>
-              <div className="flex-1 overflow-y-auto">
+              <div ref={pairsScrollRef} className="flex-1 overflow-y-auto">
                 <PairsEditorFull
                   pairs={selectedSet.pairs}
                   onChange={pairs => updatePairs(selectedSet.id, pairs)}
