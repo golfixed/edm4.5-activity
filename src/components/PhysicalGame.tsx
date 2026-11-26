@@ -21,9 +21,10 @@ export default function PhysicalGame({ game, onBack, onOpenSettings }: Props) {
   const [points, setPoints] = useState(1)
   const [showAuction, setShowAuction] = useState(false)
   // home = menu screen; howto = instructions page; score = team score record page
-  const [page, setPage] = useState<'home' | 'howto' | 'score'>('home')
-  const [uiScale, setUiScale] = useState(1.0)
+  // games with an instructions page open on it; the rest open on the home menu
   const hasHowTo = isFishFanGame(game.name)
+  const [page, setPage] = useState<'home' | 'howto' | 'score'>(hasHowTo ? 'howto' : 'home')
+  const [uiScale, setUiScale] = useState(1.0)
 
   const gameScores = scores.filter((s) => s.gameId === game.id)
 
@@ -49,7 +50,15 @@ export default function PhysicalGame({ game, onBack, onOpenSettings }: Props) {
   }
 
   if (page === 'howto' && hasHowTo) {
-    return <FishFanInstructions title={game.name} onBack={() => setPage('home')} onOpenSettings={onOpenSettings} />
+    return (
+      <FishFanInstructions title={game.name} onBack={onBack} onRecordScore={() => setPage('score')} onOpenSettings={onOpenSettings}
+        headerExtra={auctionItems.length > 0 && (
+          <button onClick={() => setShowAuction(true)}
+            className="flex items-center gap-1 px-3 py-1.5 border border-orange-200 rounded-lg text-orange-700 hover:bg-orange-50 transition-colors text-sm flex-shrink-0">
+            🎁 ประมูล
+          </button>
+        )} />
+    )
   }
 
   if (page === 'home') {
@@ -119,7 +128,7 @@ export default function PhysicalGame({ game, onBack, onOpenSettings }: Props) {
       <div className="relative z-10 flex flex-col h-full">
         {/* Top bar */}
         <div className="flex items-center justify-between px-6 py-3 flex-shrink-0">
-          <button onClick={() => setPage('home')} className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm">
+          <button onClick={() => setPage(hasHowTo ? 'howto' : 'home')} className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
             กลับ
           </button>

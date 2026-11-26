@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import GameMenu from './GameMenu'
 import { zoomFit } from '@/lib/zoomFit'
 
@@ -171,7 +171,13 @@ function FishIcon({ color, fin }: { color: string; fin: string }) {
   )
 }
 
-export default function FishFanInstructions({ title, onBack, onOpenSettings }: { title: string; onBack: () => void; onOpenSettings?: () => void }) {
+export default function FishFanInstructions({ title, onBack, onRecordScore, onOpenSettings, headerExtra }: {
+  title: string
+  onBack?: (e: React.MouseEvent) => void
+  onRecordScore: () => void
+  onOpenSettings?: () => void
+  headerExtra?: ReactNode
+}) {
   const [uiScale, setUiScale] = useState(1.0)
   const [yellow, setYellow] = useState(EXAMPLE.yellow)
   const [red, setRed] = useState(EXAMPLE.red)
@@ -193,7 +199,17 @@ export default function FishFanInstructions({ title, onBack, onOpenSettings }: {
           <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
           กลับ
         </button>
-        <h1 className="text-gray-900 font-bold text-xl mx-auto">วิธีเล่น · {title}</h1>
+        <h1 className="text-gray-900 font-bold text-xl mx-auto">{title}</h1>
+        {headerExtra}
+        <button onClick={onRecordScore}
+          className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-bold text-white bg-gradient-to-b from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 shadow-[0_3px_10px_rgba(194,65,12,0.3)] transition-all flex-shrink-0">
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M7 4h10v5a5 5 0 0 1-10 0z" />
+            <path d="M7 6H4.5v1.5A3.5 3.5 0 0 0 8 11M17 6h2.5v1.5A3.5 3.5 0 0 1 16 11" />
+            <path d="M12 14v3M8.5 20h7M9.5 20l.5-3h4l.5 3" />
+          </svg>
+          บันทึกคะแนน
+        </button>
         <GameMenu uiScale={uiScale} onScaleChange={setUiScale} onOpenSettings={onOpenSettings} />
       </div>
 
