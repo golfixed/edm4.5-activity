@@ -42,7 +42,7 @@ export default function PhysicalGame({ game, onBack, onOpenSettings }: Props) {
       <howTo.Page title={game.name} onBack={onBack} onRecordScore={() => setScorePanelOpen(true)} onOpenSettings={onOpenSettings}
         headerExtra={auctionItems.length > 0 && (
           <button onClick={() => setShowAuction(true)}
-            className="flex items-center gap-1 px-3 py-1.5 border border-orange-200 rounded-lg text-orange-700 hover:bg-orange-50 transition-colors text-sm flex-shrink-0">
+            className="flex items-center gap-1 px-3 h-9 border border-orange-200 rounded-lg text-orange-700 hover:bg-orange-50 transition-colors text-sm flex-shrink-0">
             🎁 ประมูล
           </button>
         )} />
@@ -56,7 +56,7 @@ export default function PhysicalGame({ game, onBack, onOpenSettings }: Props) {
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-orange-50" style={zoomFit(uiScale)}>
       <div className="flex-shrink-0 flex items-center justify-between gap-2 px-6 py-4 bg-white border-b border-orange-100 shadow-sm">
-        <button onClick={onBack} className="flex items-center gap-1 px-3 py-1.5 border border-orange-200 rounded-lg text-orange-700 hover:bg-orange-50 transition-colors text-sm flex-shrink-0">
+        <button onClick={onBack} className="flex items-center gap-1 px-3 h-9 border border-orange-200 rounded-lg text-orange-700 hover:bg-orange-50 transition-colors text-sm flex-shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
           กลับ
         </button>

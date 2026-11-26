@@ -99,7 +99,7 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
       {/* ── Top bar ─────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3 px-6 py-4 bg-white border-b border-orange-100 shadow-sm flex-shrink-0">
         <button onClick={onClose}
-          className="flex items-center gap-1 px-3 py-1.5 bg-white hover:bg-orange-50 border border-orange-200 text-orange-700 rounded-lg text-sm transition-colors flex-shrink-0">
+          className="flex items-center gap-1 px-3 h-9 bg-white hover:bg-orange-50 border border-orange-200 text-orange-700 rounded-lg text-sm transition-colors flex-shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
@@ -154,12 +154,12 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
           {/* Scale */}
           <div className="flex items-center border border-orange-200 rounded-lg overflow-hidden">
             <button onClick={() => setUiScale(s => Math.max(0.75, +(s - 0.1).toFixed(1)))}
-              className="w-7 h-9 flex items-center justify-center text-orange-700 hover:bg-orange-50 select-none">{ICON.minus}</button>
-            <span className="text-gray-500 text-xs w-10 text-center border-x border-orange-100 h-9 flex items-center justify-center tabular-nums">
+              className="w-7 h-[34px] flex items-center justify-center text-orange-700 hover:bg-orange-50 select-none">{ICON.minus}</button>
+            <span className="text-gray-500 text-xs w-10 text-center border-x border-orange-100 h-[34px] flex items-center justify-center tabular-nums">
               {Math.round(uiScale * 100)}%
             </span>
             <button onClick={() => setUiScale(s => Math.min(2.0, +(s + 0.1).toFixed(1)))}
-              className="w-7 h-9 flex items-center justify-center text-orange-700 hover:bg-orange-50 select-none">{ICON.plus()}</button>
+              className="w-7 h-[34px] flex items-center justify-center text-orange-700 hover:bg-orange-50 select-none">{ICON.plus()}</button>
           </div>
         </div>
       </div>

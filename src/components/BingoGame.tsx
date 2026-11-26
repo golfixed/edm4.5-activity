@@ -540,7 +540,7 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
   const sidePane = sideImageWidth != null
   const headerCls = 'flex-shrink-0 flex items-center gap-2 px-6 py-4 bg-white border-b border-orange-100 shadow-sm'
   const titleCls = 'text-gray-900 font-bold text-xl'
-  const backBtnCls = 'flex items-center gap-1 px-3 py-1.5 border border-orange-200 rounded-lg text-orange-700 hover:bg-orange-50 transition-colors text-sm flex-shrink-0'
+  const backBtnCls = 'flex items-center gap-1 px-3 h-9 border border-orange-200 rounded-lg text-orange-700 hover:bg-orange-50 transition-colors text-sm flex-shrink-0'
   const outlineBtnCls = 'bg-white hover:bg-orange-50 border border-orange-200 text-orange-700 transition-colors'
   const primaryBtnCls = 'bg-gradient-to-b from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white shadow-[0_6px_20px_rgba(194,65,12,0.35)] transition-all'
   const barBtnCls = 'flex-shrink-0 flex items-center gap-2 px-4 font-semibold rounded-xl shadow-md whitespace-nowrap bg-white/95 backdrop-blur hover:bg-orange-50 border border-orange-200 text-orange-700 transition-colors'
@@ -701,7 +701,7 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
             <h1 className={`${titleCls} mx-auto`}>ตัวอย่างกระดาษ</h1>
             <button
               onClick={() => exportCardsDirectToPDF(cards, game.name)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm flex-shrink-0 ${outlineBtnCls}`}
+              className={`flex items-center gap-1.5 px-3 h-9 rounded-lg text-sm flex-shrink-0 ${outlineBtnCls}`}
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                 <path d="M7 8V3.5h10V8" />
@@ -712,12 +712,12 @@ export default function BingoGame({ game, onBack, onOpenSettings }: { game: Game
               Print PDF
             </button>
             <button onClick={() => setPreviewIdx((i) => (i - 1 + cards.length) % cards.length)} title="แผ่นก่อนหน้า"
-              className={`flex items-center justify-center w-9 h-[34px] rounded-lg flex-shrink-0 ${outlineBtnCls}`}>{backIcon}</button>
-            <div className="bg-orange-50 border border-orange-200 rounded-lg px-3 py-1.5 text-orange-800 text-sm font-semibold whitespace-nowrap flex-shrink-0">
+              className={`flex items-center justify-center w-9 h-9 rounded-lg flex-shrink-0 ${outlineBtnCls}`}>{backIcon}</button>
+            <div className="bg-orange-50 border border-orange-200 rounded-lg px-3 h-9 flex items-center text-orange-800 text-sm font-semibold whitespace-nowrap flex-shrink-0">
               แผ่น {previewIdx + 1} / {cards.length}
             </div>
             <button onClick={() => setPreviewIdx((i) => (i + 1) % cards.length)} title="แผ่นถัดไป"
-              className={`flex items-center justify-center w-9 h-[34px] rounded-lg flex-shrink-0 ${outlineBtnCls}`}>
+              className={`flex items-center justify-center w-9 h-9 rounded-lg flex-shrink-0 ${outlineBtnCls}`}>
               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
             </button>
             {gameMenu}

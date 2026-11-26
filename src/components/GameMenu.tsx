@@ -11,11 +11,11 @@ export const UI_SCALE_MAX = 2
 /** − 100% + stepper for a game screen's UI scale (steps of 10%). */
 export function ScaleControls({ scale, onChange }: { scale: number; onChange: (next: number) => void }) {
   const step = (d: number) => onChange(Math.min(UI_SCALE_MAX, Math.max(UI_SCALE_MIN, +(scale + d).toFixed(1))))
-  const btn = 'w-8 h-8 flex items-center justify-center text-orange-700 hover:bg-orange-50 transition-colors disabled:opacity-40'
+  const btn = 'w-8 h-[34px] flex items-center justify-center text-orange-700 hover:bg-orange-50 transition-colors disabled:opacity-40'
   return (
     <div className="flex items-center border border-orange-200 bg-white rounded-lg overflow-hidden flex-shrink-0">
       <button onClick={() => step(-0.1)} disabled={scale <= UI_SCALE_MIN} className={btn} title="ลดขนาด">{minusIcon}</button>
-      <span className="text-orange-800/60 text-xs w-11 text-center tabular-nums border-x border-orange-100 h-8 flex items-center justify-center">
+      <span className="text-orange-800/60 text-xs w-11 text-center tabular-nums border-x border-orange-100 h-[34px] flex items-center justify-center">
         {Math.round(scale * 100)}%
       </span>
       <button onClick={() => step(0.1)} disabled={scale >= UI_SCALE_MAX} className={btn} title="เพิ่มขนาด">{plusIcon}</button>
@@ -49,7 +49,7 @@ export default function GameMenu({ uiScale, onScaleChange, onOpenSettings, child
     <div ref={ref} className="relative flex-shrink-0">
       <button
         onClick={() => setOpen((o) => !o)}
-        className={`w-8 h-8 flex items-center justify-center rounded-lg border border-orange-200 text-orange-700 hover:bg-orange-50 transition-colors ${open ? 'bg-orange-50' : 'bg-white'}`}
+        className={`w-9 h-9 flex items-center justify-center rounded-lg border border-orange-200 text-orange-700 hover:bg-orange-50 transition-colors ${open ? 'bg-orange-50' : 'bg-white'}`}
         title="เพิ่มเติม" aria-haspopup="menu" aria-expanded={open}
       >
         <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor"><circle cx="3" cy="8" r="1.5" /><circle cx="8" cy="8" r="1.5" /><circle cx="13" cy="8" r="1.5" /></svg>

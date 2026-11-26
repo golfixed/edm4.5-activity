@@ -26,7 +26,7 @@ export default function ScoreboardPage() {
   }, [router])
 
   const segBtn = (active: boolean) =>
-    `px-4 py-1.5 text-sm font-semibold transition-colors ${active
+    `px-4 h-[34px] text-sm font-semibold transition-colors ${active
       ? 'bg-gradient-to-b from-orange-500 to-red-600 text-white'
       : 'bg-white text-orange-700 hover:bg-orange-50'}`
 
@@ -34,7 +34,7 @@ export default function ScoreboardPage() {
     <div className="h-screen flex flex-col overflow-hidden bg-orange-50">
       {/* Header */}
       <div className="flex items-center justify-between gap-3 px-6 py-4 bg-white border-b border-orange-100 shadow-sm flex-shrink-0">
-        <button onClick={handleBack} className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm bg-white hover:bg-orange-50 border border-orange-200 text-orange-700 transition-colors">
+        <button onClick={handleBack} className="flex items-center gap-1 px-3 h-9 rounded-lg text-sm bg-white hover:bg-orange-50 border border-orange-200 text-orange-700 transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
           กลับ
         </button>

@@ -233,7 +233,7 @@ export default function SpotDifferenceGame({ game, onBack, onOpenSettings }: Pro
 
   const backBtn = (onClick: (e: React.MouseEvent) => void) => (
     <button onClick={onClick}
-      className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm flex-shrink-0 ${outlineBtnCls}`}>
+      className={`flex items-center gap-1 px-3 h-9 rounded-lg text-sm flex-shrink-0 ${outlineBtnCls}`}>
       {chevronLeft}กลับ
     </button>
   )

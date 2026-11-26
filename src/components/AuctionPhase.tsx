@@ -50,7 +50,7 @@ export default function AuctionPhase({ items, gameName, onClose }: Props) {
         <div className="flex items-center gap-3">
           <button
             onClick={onClose}
-            className="flex items-center gap-1 px-3 py-1.5 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm"
+            className="flex items-center gap-1 px-3 h-9 border border-white/40 rounded-lg text-white hover:bg-white/10 transition-colors text-sm"
           >
             ✕ ปิด
           </button>
