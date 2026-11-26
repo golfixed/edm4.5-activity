@@ -151,6 +151,7 @@ export default function RocketCupInstructions(props: InstructionsPageProps) {
       subtitle="เป่าแก้วกระดาษที่ติดหลอดบนเชือก ให้พุ่งไปถึงเก้าอี้อีกฝั่ง"
       drawing={<HowToPlayDrawing />}
       steps={['เริ่มที่เก้าอี้ฝั่งหนึ่ง', 'เป่าปากแก้วให้พุ่งไปตามเชือก', 'ถึงเก้าอี้อีกฝั่ง = เข้าเส้นชัย']}
+      importantRule={<>ห้ามใช้อุปกรณ์หรือวิธีอื่นช่วยให้แก้วเคลื่อนที่ <span className="font-bold">ใช้ปากเป่าเท่านั้น</span></>}
       rules={<>
         <p className="text-gray-600 text-lg leading-snug">ให้คะแนนตามลำดับที่แก้วถึงเก้าอี้อีกฝั่งภายในเวลา</p>
         <div className="grid grid-cols-2 gap-x-6 gap-y-3 [@media(max-height:760px)]:gap-y-1.5">
