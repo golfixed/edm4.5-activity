@@ -49,10 +49,11 @@ export default function GameMenu({ uiScale, onScaleChange, onOpenSettings, child
     <div ref={ref} className="relative flex-shrink-0">
       <button
         onClick={() => setOpen((o) => !o)}
-        className={`w-9 h-9 flex items-center justify-center rounded-lg border border-orange-200 text-orange-700 hover:bg-orange-50 transition-colors ${open ? 'bg-orange-50' : 'bg-white'}`}
-        title="เพิ่มเติม" aria-haspopup="menu" aria-expanded={open}
+        className={`h-9 px-3 flex items-center gap-1.5 rounded-lg border border-orange-200 text-orange-700 text-sm hover:bg-orange-50 transition-colors whitespace-nowrap ${open ? 'bg-orange-50' : 'bg-white'}`}
+        aria-haspopup="menu" aria-expanded={open}
       >
         <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor"><circle cx="3" cy="8" r="1.5" /><circle cx="8" cy="8" r="1.5" /><circle cx="13" cy="8" r="1.5" /></svg>
+        เพิ่มเติม
       </button>
       {open && (
         <div role="menu"
