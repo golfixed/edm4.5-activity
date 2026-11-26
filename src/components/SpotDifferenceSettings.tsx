@@ -47,6 +47,7 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
   const [uiScale, setUiScale] = useState(1.0)
   const [setDragIndex, setSetDragIndex] = useState<number | null>(null)
   const [setDropIndex, setSetDropIndex] = useState<number | null>(null)
+  const [checkedSetIds, setCheckedSetIds] = useState<Set<string>>(() => new Set())
 
   const updateGame = (partial: Partial<Game>) =>
     setGames(games.map(g => g.id === game.id ? { ...g, ...partial } : g))
@@ -89,6 +90,33 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
     setSetDropIndex(null)
   }
   const handleSetDragEnd = () => { setSetDragIndex(null); setSetDropIndex(null) }
+
+  const toggleChecked = (id: string) => setCheckedSetIds(prev => {
+    const next = new Set(prev)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    return next
+  })
+  const checkedSets = sets.filter(s => checkedSetIds.has(s.id))
+  const allChecked = sets.length > 0 && checkedSets.length === sets.length
+
+  // Randomise the question order inside every checked set (Fisher–Yates)
+  const shuffleCheckedSets = async () => {
+    if (checkedSets.length === 0) return
+    const names = checkedSets.map(s => `"${s.name}"`).join(', ')
+    if (!await confirm({ title: 'สลับลำดับโจทย์?', message: `โจทย์ในชุด ${names} จะถูกเรียงลำดับใหม่แบบสุ่ม`, confirmLabel: 'สลับลำดับ' })) return
+    updateGame({
+      imageSets: sets.map(s => {
+        if (!checkedSetIds.has(s.id)) return s
+        const pairs = [...s.pairs]
+        for (let i = pairs.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1))
+          ;[pairs[i], pairs[j]] = [pairs[j], pairs[i]]
+        }
+        return { ...s, pairs }
+      }),
+    })
+  }
 
   const updatePairs = (setId: string, pairs: ImagePair[]) =>
     updateGame({ imageSets: sets.map(s => s.id === setId ? { ...s, pairs } : s) })
@@ -209,7 +237,12 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
         {/* Left: sets list */}
         <div className="w-56 flex flex-col border-r border-orange-100 flex-shrink-0">
           <div className="h-12 px-4 flex items-center justify-between border-b border-orange-100 flex-shrink-0">
-            <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider">ชุดภาพ</span>
+            <label className="flex items-center gap-2 cursor-pointer" title="เลือกทุกชุด">
+              <input type="checkbox" checked={allChecked}
+                onChange={() => setCheckedSetIds(allChecked ? new Set() : new Set(sets.map(s => s.id)))}
+                className="w-4 h-4 accent-orange-500 cursor-pointer" />
+              <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider">ชุดภาพ</span>
+            </label>
             <span className="text-gray-500 text-xs">{totalPairs} โจทย์รวม</span>
           </div>
 
@@ -244,6 +277,10 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
                       <circle cx="5" cy="12" r="1.2"/><circle cx="11" cy="12" r="1.2"/>
                     </svg>
                   </div>
+                  <input type="checkbox" checked={checkedSetIds.has(set.id)}
+                    onChange={() => toggleChecked(set.id)}
+                    onClick={e => e.stopPropagation()}
+                    className="w-4 h-4 accent-orange-500 cursor-pointer flex-shrink-0" title="เลือกชุดนี้" />
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium truncate">{set.name}</div>
                     <div className="text-xs text-gray-500 mt-0.5">
@@ -269,7 +306,14 @@ export default function SpotDifferenceSettings({ game, onClose }: Props) {
             )}
           </div>
 
-          <div className="p-2.5 border-t border-orange-100 flex-shrink-0">
+          <div className="p-2.5 border-t border-orange-100 flex-shrink-0 space-y-2">
+            <button onClick={shuffleCheckedSets} disabled={checkedSets.length === 0}
+              className="w-full flex items-center justify-center gap-1.5 h-9 rounded-lg border border-orange-200 bg-white hover:bg-orange-50 text-orange-700 text-sm font-semibold transition-colors disabled:opacity-40 disabled:hover:bg-white">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />
+              </svg>
+              สลับลำดับโจทย์{checkedSets.length > 0 && ` (${checkedSets.length} ชุด)`}
+            </button>
             <div className="flex gap-1.5">
               <input
                 value={newSetName}
